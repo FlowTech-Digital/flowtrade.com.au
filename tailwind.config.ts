@@ -52,10 +52,15 @@ const config: Config = {
         },
         // FlowTrade brand colors
         flowtrade: {
-          blue: '#2563eb',
-          'blue-dark': '#1d4ed8',
+          cyan: '#00d4ff',
+          'cyan-dark': '#00b8e6',
+          'cyan-light': '#33ddff',
           orange: '#f97316',
           'orange-dark': '#ea580c',
+          'orange-light': '#fb923c',
+          navy: '#0a0e17',
+          'navy-light': '#111827',
+          'navy-lighter': '#1f2937',
         },
       },
       borderRadius: {
