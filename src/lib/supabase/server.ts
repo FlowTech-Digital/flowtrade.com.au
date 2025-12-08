@@ -1,12 +1,23 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// Build-time safety: Provide fallbacks for static generation
+// Real values are injected at runtime via CloudFlare Pages env vars
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+
 export async function createServerSupabaseClient() {
+  // Skip client creation during build if no real env vars
+  if (supabaseUrl === 'https://placeholder.supabase.co') {
+    // Return null for SSG/build time - pages should handle this gracefully
+    return null as any
+  }
+
   const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
