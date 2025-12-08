@@ -30,7 +30,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -39,112 +39,303 @@
             --accent-cyan: #00F5FF;
             --dark-bg: #0A1628;
             --dark-secondary: #16213E;
+            --dark-card: #1A2744;
             --slate: #64748B;
             --light-gray: #E2E8F0;
             --white: #FFFFFF;
+            --success-green: #10B981;
+            --warning-orange: #F59E0B;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        html { scroll-behavior: smooth; }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-secondary) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: var(--dark-bg);
             color: var(--white);
-            padding: 2rem;
+            line-height: 1.6;
         }
         
-        .container { max-width: 900px; text-align: center; }
-        
-        .logo-section { margin-bottom: 1.5rem; }
-        
-        .logo-text {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 4rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            background: rgba(10, 22, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 116, 139, 0.2);
         }
         
-        .logo-text .flow { color: var(--white); }
-        .logo-text .trade { color: var(--primary-cyan); }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
-        .tagline {
+        .nav-logo {
             font-family: 'Montserrat', sans-serif;
             font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-cyan);
-            margin-bottom: 2rem;
+            font-weight: 700;
+            text-decoration: none;
         }
         
-        .description {
-            font-size: 1.125rem;
-            line-height: 1.8;
-            color: rgba(255,255,255,0.85);
-            margin-bottom: 3rem;
-            max-width: 650px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        .nav-logo .flow { color: var(--white); }
+        .nav-logo .trade { color: var(--primary-cyan); }
         
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--secondary-teal) 100%);
+        .nav-cta {
+            background: var(--primary-cyan);
             color: var(--dark-bg);
-            padding: 1rem 2.5rem;
+            padding: 0.625rem 1.25rem;
             border-radius: 50px;
-            font-size: 1.125rem;
             font-weight: 600;
-            margin-bottom: 3rem;
+            font-size: 0.875rem;
             text-decoration: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
-        .cta-button:hover {
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2rem 4rem;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-secondary) 50%, var(--dark-bg) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--primary-cyan);
+            margin-bottom: 2rem;
+        }
+        
+        .hero-logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-logo .flow { color: var(--white); }
+        .hero-logo .trade { color: var(--primary-cyan); }
+        
+        .hero-tagline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--primary-cyan);
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-description {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-form {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-input {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            border: 2px solid rgba(100, 116, 139, 0.3);
+            border-radius: 50px;
+            background: rgba(255,255,255,0.05);
+            color: var(--white);
+            width: 300px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .hero-input:focus {
+            border-color: var(--primary-cyan);
+        }
+        
+        .hero-input::placeholder {
+            color: var(--slate);
+        }
+        
+        .hero-button {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--secondary-teal) 100%);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .hero-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
         }
         
-        .features {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 3rem;
+        .hero-note {
+            font-size: 0.875rem;
+            color: var(--slate);
         }
         
-        .feature {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(100, 116, 139, 0.3);
+        /* Section Styles */
+        .section {
+            padding: 6rem 2rem;
+        }
+        
+        .section-alt {
+            background: var(--dark-secondary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-label {
+            display: inline-block;
+            color: var(--primary-cyan);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Problem Section */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .problem-card {
+            background: var(--dark-card);
+            border: 1px solid rgba(100, 116, 139, 0.2);
             border-radius: 16px;
-            padding: 2rem 1.5rem;
-            width: 260px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .problem-stat {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--warning-orange);
+            margin-bottom: 0.5rem;
+        }
+        
+        .problem-label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .problem-desc {
+            font-size: 0.9rem;
+            color: var(--slate);
+        }
+        
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
             transition: transform 0.2s ease, border-color 0.2s ease;
         }
         
-        .feature:hover {
+        .feature-card:hover {
             transform: translateY(-4px);
             border-color: rgba(0, 212, 255, 0.4);
         }
         
         .feature-icon {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 1rem;
+            width: 56px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 180, 216, 0.1) 100%);
-            border-radius: 12px;
+            border-radius: 14px;
+            margin-bottom: 1.25rem;
         }
         
         .feature-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             stroke: var(--primary-cyan);
             fill: none;
             stroke-width: 2;
@@ -155,80 +346,682 @@
         .feature-title {
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-stat {
+            color: var(--success-green);
+            font-size: 0.875rem;
+            font-weight: 600;
             margin-bottom: 0.75rem;
-            color: var(--white);
         }
         
         .feature-desc {
             font-size: 0.9rem;
             color: var(--slate);
-            line-height: 1.5;
+            line-height: 1.6;
         }
         
-        .powered-by {
+        /* How It Works Section */
+        .steps-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--secondary-teal) 100%);
+            color: var(--dark-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .step-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-time {
+            color: var(--primary-cyan);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .step-desc {
+            font-size: 0.9rem;
+            color: var(--slate);
+        }
+        
+        .step-arrow {
+            display: none;
+            position: absolute;
+            top: 36px;
+            right: -1.25rem;
+            color: var(--slate);
+        }
+        
+        @media (min-width: 900px) {
+            .step-arrow { display: block; }
+            .step:last-child .step-arrow { display: none; }
+        }
+        
+        /* Industries Section */
+        .industries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .industry-card {
+            background: var(--dark-card);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .industry-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+        
+        .industry-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .industry-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--dark-secondary) 0%, var(--dark-bg) 100%);
+            text-align: center;
+        }
+        
+        .cta-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 180, 216, 0.05) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 24px;
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cta-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+        }
+        
+        .cta-benefits {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .cta-benefit {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .cta-benefit svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--success-green);
+            fill: none;
+        }
+        
+        .cta-form {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* FAQ Section */
+        .faq-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 1.5rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--white);
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question:hover {
+            color: var(--primary-cyan);
+        }
+        
+        .faq-icon {
+            font-size: 1.5rem;
+            color: var(--primary-cyan);
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding-bottom: 1.5rem;
+        }
+        
+        .faq-answer p {
+            color: var(--slate);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--dark-bg);
+            border-top: 1px solid rgba(100, 116, 139, 0.2);
+            padding: 3rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .footer-logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .footer-logo .flow { color: var(--white); }
+        .footer-logo .trade { color: var(--primary-cyan); }
+        
+        .footer-powered {
             font-size: 0.875rem;
             color: var(--slate);
-            margin-top: 2rem;
         }
         
-        .powered-by a {
+        .footer-powered a {
             color: var(--primary-cyan);
             text-decoration: none;
-            transition: opacity 0.2s ease;
         }
         
-        .powered-by a:hover { opacity: 0.8; }
+        .footer-powered a:hover {
+            text-decoration: underline;
+        }
         
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .footer-link {
+            color: var(--slate);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-link:hover {
+            color: var(--primary-cyan);
+        }
+        
+        .footer-copy {
+            font-size: 0.875rem;
+            color: var(--slate);
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
-            .logo-text { font-size: 2.75rem; }
-            .tagline { font-size: 1.25rem; }
-            .features { flex-direction: column; align-items: center; }
-            .feature { width: 100%; max-width: 320px; }
+            .hero-logo { font-size: 3rem; }
+            .hero-tagline { font-size: 1.25rem; }
+            .hero-description { font-size: 1rem; }
+            .hero-input { width: 100%; }
+            .section-title { font-size: 2rem; }
+            .problem-stat { font-size: 2.5rem; }
+            .footer-content { flex-direction: column; text-align: center; }
+            .footer-links { flex-wrap: wrap; justify-content: center; }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-logo { font-size: 2.5rem; }
+            .nav-logo { font-size: 1.25rem; }
+            .section { padding: 4rem 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-section">
-            <div class="logo-text"><span class="flow">FLOW</span><span class="trade">TRADE</span></div>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo"><span class="flow">FLOW</span><span class="trade">TRADE</span></a>
+            <a href="#waitlist" class="nav-cta">Join Waitlist</a>
         </div>
-        
-        <p class="tagline">Trade Automation, Simplified.</p>
-        
-        <p class="description">
-            AI-powered automation for Australian trades businesses. 
-            Streamline quoting, scheduling, compliance, and operations. 
-            Less admin. More jobs. Better margins.
-        </p>
-        
-        <a href="#" class="cta-button">Coming Soon</a>
-        
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                </div>
-                <div class="feature-title">Smart Quoting</div>
-                <div class="feature-desc">75% faster estimates with AI-powered calculations and material pricing</div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <span class="hero-badge">🚀 Coming Soon to Australia</span>
+            <h1 class="hero-logo"><span class="flow">FLOW</span><span class="trade">TRADE</span></h1>
+            <p class="hero-tagline">Trade Automation, Simplified.</p>
+            <p class="hero-description">
+                AI-powered automation for Australian trades businesses. 
+                Streamline quoting, scheduling, compliance, and operations. 
+                Less admin. More jobs. Better margins.
+            </p>
+            <form class="hero-form" onsubmit="handleSubmit(event)">
+                <input type="email" class="hero-input" placeholder="Enter your email" required>
+                <button type="submit" class="hero-button">Get Early Access</button>
+            </form>
+            <p class="hero-note">Join 100+ tradies already on the waitlist. No spam, ever.</p>
+        </div>
+    </section>
+    
+    <!-- Problem Section -->
+    <section class="section section-alt" id="problem">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">The Problem</span>
+                <h2 class="section-title">Admin Is Killing Your Margins</h2>
+                <p class="section-subtitle">Australian tradies are drowning in paperwork instead of doing what they do best—quality work.</p>
             </div>
-            <div class="feature">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-stat">40%</div>
+                    <div class="problem-label">Time on Paperwork</div>
+                    <div class="problem-desc">Average tradie spends 2+ days per week on admin instead of billable work</div>
                 </div>
-                <div class="feature-title">Route Optimization</div>
-                <div class="feature-desc">30% reduction in travel time and fuel costs with intelligent scheduling</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="problem-card">
+                    <div class="problem-stat">$27K</div>
+                    <div class="problem-label">Lost Revenue/Year</div>
+                    <div class="problem-desc">Manual quoting errors and missed follow-ups cost businesses thousands annually</div>
                 </div>
-                <div class="feature-title">Compliance</div>
-                <div class="feature-desc">Automated safety, licensing, and payroll compliance management</div>
+                <div class="problem-card">
+                    <div class="problem-stat">68%</div>
+                    <div class="problem-label">Compliance Stress</div>
+                    <div class="problem-desc">Tradies cite compliance tracking as their biggest admin headache</div>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-stat">3.5h</div>
+                    <div class="problem-label">Wasted Daily</div>
+                    <div class="problem-desc">Poor scheduling and route planning leads to unnecessary travel time</div>
+                </div>
             </div>
         </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Features</span>
+                <h2 class="section-title">Everything You Need, Nothing You Don't</h2>
+                <p class="section-subtitle">Purpose-built for Australian trades. No bloat, no steep learning curve.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </div>
+                    <div class="feature-title">Smart Quoting</div>
+                    <div class="feature-stat">↑ 75% faster estimates</div>
+                    <div class="feature-desc">AI-powered calculations with live material pricing. Send professional quotes in minutes, not hours.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div class="feature-title">Route Optimization</div>
+                    <div class="feature-stat">↓ 30% travel reduction</div>
+                    <div class="feature-desc">Intelligent scheduling that plans your day for maximum efficiency. Less driving, more earning.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="feature-title">Compliance Autopilot</div>
+                    <div class="feature-stat">100% audit-ready</div>
+                    <div class="feature-desc">Automated safety docs, licensing renewals, and payroll compliance. Never miss a deadline.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div class="feature-title">Job Scheduling</div>
+                    <div class="feature-stat">Drag & drop simplicity</div>
+                    <div class="feature-desc">Visual calendar with crew assignment, job dependencies, and automatic conflict detection.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                    </div>
+                    <div class="feature-title">Invoice Automation</div>
+                    <div class="feature-stat">Get paid 2x faster</div>
+                    <div class="feature-desc">Auto-generate invoices on job completion. Integrated payment links and reminder sequences.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
+                    <div class="feature-title">Customer Portal</div>
+                    <div class="feature-stat">24/7 self-service</div>
+                    <div class="feature-desc">Clients book, track jobs, and pay online. Fewer phone calls, happier customers.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    <div class="feature-title">Material Tracking</div>
+                    <div class="feature-stat">Zero stockouts</div>
+                    <div class="feature-desc">Inventory management with supplier pricing and auto-reorder points. Know what you have, always.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div class="feature-title">Profit Dashboard</div>
+                    <div class="feature-stat">Real-time insights</div>
+                    <div class="feature-desc">See profit per job, team performance, and trends at a glance. Data-driven decisions made easy.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section class="section section-alt" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">How It Works</span>
+                <h2 class="section-title">Up and Running in 3 Steps</h2>
+                <p class="section-subtitle">No complex setup. No IT degree required. Just connect and go.</p>
+            </div>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Connect Your Business</h3>
+                    <div class="step-time">5 minute setup</div>
+                    <p class="step-desc">Import your clients, jobs, and pricing from spreadsheets or other software. We handle the heavy lifting.</p>
+                    <span class="step-arrow">→</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">AI Learns Your Patterns</h3>
+                    <div class="step-time">First week</div>
+                    <p class="step-desc">FlowTrade studies your quoting history, job types, and preferences to personalize automation for your business.</p>
+                    <span class="step-arrow">→</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Automate & Scale</h3>
+                    <div class="step-time">Ongoing</div>
+                    <p class="step-desc">Quoting, scheduling, invoicing, and compliance run on autopilot. You focus on the work that matters.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Industries Section -->
+    <section class="section" id="industries">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Built For</span>
+                <h2 class="section-title">Made for Australian Tradies</h2>
+                <p class="section-subtitle">Whether you're a solo operator or running a crew, FlowTrade scales with you.</p>
+            </div>
+            <div class="industries-grid">
+                <div class="industry-card">
+                    <div class="industry-icon">⚡</div>
+                    <div class="industry-name">Electricians</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">🔧</div>
+                    <div class="industry-name">Plumbers</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">❄️</div>
+                    <div class="industry-name">HVAC Techs</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">🏗️</div>
+                    <div class="industry-name">Builders</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">🌳</div>
+                    <div class="industry-name">Landscapers</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">🎨</div>
+                    <div class="industry-name">Painters</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">✨</div>
+                    <div class="industry-name">Cleaners</div>
+                </div>
+                <div class="industry-card">
+                    <div class="industry-icon">🔩</div>
+                    <div class="industry-name">All Trades</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="section cta-section" id="waitlist">
+        <div class="container">
+            <div class="cta-box">
+                <h2 class="cta-title">Be First in Line</h2>
+                <p class="cta-subtitle">Join the waitlist for early access and exclusive founding member benefits.</p>
+                <div class="cta-benefits">
+                    <div class="cta-benefit">
+                        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2"/></svg>
+                        <span>Priority access</span>
+                    </div>
+                    <div class="cta-benefit">
+                        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2"/></svg>
+                        <span>Founding member pricing</span>
+                    </div>
+                    <div class="cta-benefit">
+                        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2"/></svg>
+                        <span>Direct input on features</span>
+                    </div>
+                </div>
+                <form class="cta-form" onsubmit="handleSubmit(event)">
+                    <input type="email" class="hero-input" placeholder="Enter your email" required>
+                    <button type="submit" class="hero-button">Join the Waitlist</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FAQ Section -->
+    <section class="section section-alt" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">FAQ</span>
+                <h2 class="section-title">Questions? We've Got Answers</h2>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>What trades does FlowTrade support?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>FlowTrade is built for any service-based trade business in Australia. Whether you're an electrician, plumber, builder, HVAC tech, landscaper, painter, cleaner, or any other trade—we've got you covered. Our AI adapts to your specific trade's quoting patterns and compliance requirements.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>How long does setup take?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Most businesses are up and running in 5-10 minutes. You can import existing client lists and job history from spreadsheets or connect directly to popular accounting software. Our onboarding wizard guides you through every step.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>What integrations are available?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>FlowTrade integrates with popular Australian accounting software (Xero, MYOB, QuickBooks), Google Calendar, Outlook, Stripe, and more. We're constantly adding new integrations based on customer requests.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Is my data secure?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Absolutely. We use bank-grade encryption, Australian-based servers, and comply with Australian Privacy Principles. Your business data is yours—we never sell or share it. Regular security audits ensure your information stays protected.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>What's the pricing?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>We'll announce pricing closer to launch, but early waitlist members will receive exclusive founding member rates locked in for life. Our goal is to make FlowTrade accessible for solo operators while scaling up for growing teams.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>When will FlowTrade launch?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>We're targeting early 2025 for our beta launch with select waitlist members. Join the waitlist to be first in line and help shape the product with your feedback.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="footer-logo"><span class="flow">FLOW</span><span class="trade">TRADE</span></div>
+                <div class="footer-powered">Powered by <a href="https://flowtechai.com.au" target="_blank" rel="noopener">FlowTech AI</a></div>
+            </div>
+            <div class="footer-links">
+                <a href="#features" class="footer-link">Features</a>
+                <a href="#how-it-works" class="footer-link">How It Works</a>
+                <a href="#faq" class="footer-link">FAQ</a>
+                <a href="mailto:hello@flowtrade.com.au" class="footer-link">Contact</a>
+            </div>
+            <div class="footer-copy">© 2025 FlowTrade. All rights reserved.</div>
+        </div>
+    </footer>
+    
+    <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const isActive = faqItem.classList.contains('active');
+                
+                // Close all FAQ items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Open clicked item if it wasn't already open
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
         
-        <p class="powered-by">Powered by <a href="https://flowtechai.com.au" target="_blank" rel="noopener">FlowTech AI</a></p>
-    </div>
+        // Form submission placeholder
+        function handleSubmit(event) {
+            event.preventDefault();
+            const email = event.target.querySelector('input[type="email"]').value;
+            
+            // Placeholder - replace with actual form handling
+            alert('Thanks for joining the waitlist! We\'ll be in touch at ' + email);
+            event.target.reset();
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
