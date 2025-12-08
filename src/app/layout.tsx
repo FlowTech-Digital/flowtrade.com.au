@@ -21,14 +21,9 @@ export const metadata: Metadata = {
   publisher: 'FlowTech AI PTY LTD',
   metadataBase: new URL('https://flowtrade.com.au'),
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
+    icon: { url: '/favicon.svg', type: 'image/svg+xml' },
     shortcut: '/favicon.svg',
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: '/favicon.svg',
   },
   manifest: '/site.webmanifest',
   openGraph: {
