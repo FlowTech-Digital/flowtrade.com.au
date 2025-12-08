@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,14 +18,16 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     
-    // TODO: Implement Supabase auth
-    console.log('Login attempt:', { email })
+    const { error: signInError } = await signIn(email, password)
     
-    // Placeholder - redirect to dashboard
-    setTimeout(() => {
+    if (signInError) {
+      setError(signInError.message)
       setLoading(false)
-      router.push('/dashboard')
-    }, 1000)
+      return
+    }
+    
+    // Success - redirect to dashboard
+    router.push('/dashboard')
   }
 
   return (
