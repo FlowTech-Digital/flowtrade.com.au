@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -77,13 +76,12 @@ export default function SignupPage() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center">
-          <Image
-            src="/logo-header.png"
+          <img
+            src="/logo-header.svg"
             alt="FlowTrade"
             width={180}
             height={40}
             className="mb-6"
-            priority
           />
           <h2 className="text-xl text-white">Create your account</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -127,7 +125,8 @@ export default function SignupPage() {
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
-              ))}
+              ))
+              }
             </select>
           </div>
 
