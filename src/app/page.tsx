@@ -4,9 +4,11 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center space-y-8">
-        <h1 className="text-4xl font-bold text-flowtrade-blue">
-          FlowTrade
-        </h1>
+        <img 
+          src="/flowtrade-logo.svg" 
+          alt="FlowTrade" 
+          className="h-16 w-auto mx-auto"
+        />
         <p className="text-xl text-muted-foreground max-w-2xl">
           Smart Estimating for Australian Trades.
           AI-powered quoting for HVAC, Electrical, and Plumbing businesses.
