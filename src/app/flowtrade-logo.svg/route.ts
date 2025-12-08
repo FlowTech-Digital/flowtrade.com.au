@@ -1,10 +1,12 @@
+// Force Node.js runtime (edge runtime doesn't support fs)
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
 export async function GET() {
   try {
-    // Read SVG from public folder
     const svgPath = join(process.cwd(), 'public', 'flowtrade-logo.svg')
     const svgContent = readFileSync(svgPath, 'utf-8')
     
