@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize for CloudFlare Pages
-  output: 'standalone',
-  
   // Image optimization - use CloudFlare Images or disable
   images: {
     unoptimized: true,
