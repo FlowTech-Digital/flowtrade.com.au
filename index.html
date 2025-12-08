@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowTrade | Trade Automation, Simplified.</title>
+    <meta name="description" content="AI-powered automation platform for Australian trades businesses. Less admin. More jobs. Better margins.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066CC;
+            --primary-dark: #004C99;
+            --accent: #00B4D8;
+            --dark: #1A1A2E;
+            --light: #F8F9FA;
+            --white: #FFFFFF;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #16213E 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            padding: 2rem;
+        }
+        
+        .container { max-width: 800px; text-align: center; }
+        
+        .logo-text {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo-text span { color: var(--accent); }
+        
+        .tagline {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 2rem;
+        }
+        
+        .description {
+            font-size: 1.125rem;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .coming-soon {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+        
+        .features {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+        
+        .feature {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 200px;
+        }
+        
+        .feature-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+        .feature-title { font-weight: 600; margin-bottom: 0.5rem; }
+        .feature-desc { font-size: 0.875rem; color: rgba(255,255,255,0.6); }
+        
+        .powered-by {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2rem;
+        }
+        
+        .powered-by a { color: var(--accent); text-decoration: none; }
+        
+        @media (max-width: 768px) {
+            .logo-text { font-size: 2.5rem; }
+            .tagline { font-size: 1.25rem; }
+            .features { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-text">FLOW<span>TRADE</span></div>
+        </div>
+        
+        <p class="tagline">Trade Automation, Simplified.</p>
+        
+        <p class="description">
+            AI-powered automation for Australian trades businesses. 
+            Streamline quoting, scheduling, compliance, and operations. 
+            Less admin. More jobs. Better margins.
+        </p>
+        
+        <div class="coming-soon">Coming Soon</div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📋</div>
+                <div class="feature-title">Smart Quoting</div>
+                <div class="feature-desc">75% faster estimates with AI-powered calculations</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📍</div>
+                <div class="feature-title">Route Optimization</div>
+                <div class="feature-desc">30% reduction in travel time and fuel costs</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <div class="feature-title">Compliance</div>
+                <div class="feature-desc">Automated safety, licensing and payroll compliance</div>
+            </div>
+        </div>
+        
+        <p class="powered-by">Powered by <a href="https://flowtechai.com.au" target="_blank">FlowTech AI</a></p>
+    </div>
+</body>
+</html>
