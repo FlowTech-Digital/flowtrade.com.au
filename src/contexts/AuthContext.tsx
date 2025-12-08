@@ -4,12 +4,20 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, AuthError, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
+type SignUpWithOrgParams = {
+  email: string
+  password: string
+  businessName: string
+  primaryTrade: string
+}
+
 type AuthContextType = {
   user: User | null
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<{ error: AuthError | null }>
+  signUpWithOrg: (params: SignUpWithOrgParams) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>
 }
@@ -21,24 +29,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   
-  // Create client once - may be null during build
   const supabase = createClient()
 
   useEffect(() => {
-    // Skip auth setup if no real Supabase client (build time)
     if (!supabase) {
       setLoading(false)
       return
     }
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -59,8 +63,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: { data: metadata }
+    })
+    return { error }
+  }
+
+  const signUpWithOrg = async ({ email, password, businessName, primaryTrade }: SignUpWithOrgParams) => {
+    if (!supabase) return { error: { message: 'Auth not available' } as AuthError }
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
       options: {
-        data: metadata
+        data: {
+          business_name: businessName,
+          primary_trade: primaryTrade
+        }
       }
     })
     return { error }
@@ -80,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signUpWithOrg, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )
