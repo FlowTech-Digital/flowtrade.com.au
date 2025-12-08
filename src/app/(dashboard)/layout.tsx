@@ -61,7 +61,7 @@ export default function DashboardLayout({
           <div className="flex items-center h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard">
               <img
-                src="/logo-header.svg"
+                src="/flowtrade-logo.svg"
                 alt="FlowTrade"
                 width={140}
                 height={32}
@@ -113,7 +113,7 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-6 bg-flowtrade-navy-light border-b border-flowtrade-navy-lighter lg:hidden">
           <Link href="/dashboard">
             <img
-              src="/logo-header.svg"
+              src="/flowtrade-logo.svg"
               alt="FlowTrade"
               width={120}
               height={28}

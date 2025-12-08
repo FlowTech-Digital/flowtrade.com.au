@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -37,7 +36,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center">
           <img
-            src="/logo-header.svg"
+            src="/flowtrade-logo.svg"
             alt="FlowTrade"
             width={180}
             height={40}

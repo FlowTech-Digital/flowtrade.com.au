@@ -77,7 +77,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="flex flex-col items-center">
           <img
-            src="/logo-header.svg"
+            src="/flowtrade-logo.svg"
             alt="FlowTrade"
             width={180}
             height={40}
@@ -125,8 +125,7 @@ export default function SignupPage() {
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
-              ))
-              }
+              ))}
             </select>
           </div>
 
