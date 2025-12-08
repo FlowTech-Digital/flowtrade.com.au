@@ -36,6 +36,8 @@ FlowTrade streamlines operations for trades businesses with intelligent automati
 
 Pushes to `main` automatically deploy to CloudFlare Pages via GitHub Actions.
 
+**Status**: [![Deploy](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/deploy.yml/badge.svg)](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/deploy.yml)
+
 ## Part of FlowTech AI
 
 FlowTrade is a division of [FlowTech AI](https://flowtechai.com.au) - Multi-Agent Automation.
