@@ -36,13 +36,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center">
-          <Image
-            src="/logo-header.png"
+          <img
+            src="/logo-header.svg"
             alt="FlowTrade"
             width={180}
             height={40}
             className="mb-6"
-            priority
           />
           <h2 className="text-xl text-white">Sign in to your account</h2>
         </div>
