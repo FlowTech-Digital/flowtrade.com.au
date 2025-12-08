@@ -157,6 +157,13 @@
         .hero-logo .flow { color: var(--white); }
         .hero-logo .trade { color: var(--primary-cyan); }
         
+        /* Hero logo image sizing */
+        .hero-logo img {
+            width: 950px;
+            max-width: 100%;
+            height: auto;
+        }
+        
         .hero-tagline {
             font-family: 'Montserrat', sans-serif;
             font-size: 1.75rem;
@@ -638,7 +645,14 @@
         
         /* Responsive */
         @media (max-width: 768px) {
+            .hero {
+                padding: 6rem 1rem 4rem;
+            }
             .hero-logo { font-size: 3rem; }
+            .hero-logo img {
+                width: 100%;
+                max-width: none;
+            }
             .hero-tagline { font-size: 1.25rem; }
             .hero-description { font-size: 1rem; }
             .hero-input { width: 100%; }
@@ -649,6 +663,9 @@
         }
         
         @media (max-width: 480px) {
+            .hero {
+                padding: 5rem 0.75rem 3rem;
+            }
             .hero-logo { font-size: 2.5rem; }
             .nav-logo { font-size: 1.25rem; }
             .section { padding: 4rem 1.5rem; }
