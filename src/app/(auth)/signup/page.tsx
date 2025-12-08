@@ -3,9 +3,21 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+
+const TRADE_OPTIONS = [
+  { value: 'hvac', label: 'HVAC / Air Conditioning' },
+  { value: 'electrical', label: 'Electrical' },
+  { value: 'plumbing', label: 'Plumbing' },
+  { value: 'roofing', label: 'Roofing' },
+  { value: 'guttering', label: 'Guttering' },
+  { value: 'fencing', label: 'Fencing' },
+  { value: 'general_construction', label: 'General Construction' },
+]
 
 export default function SignupPage() {
   const router = useRouter()
+  const { signUpWithOrg } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,20 +33,42 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
 
+    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       setLoading(false)
       return
     }
-    
-    // TODO: Implement Supabase auth + organization creation
-    console.log('Signup attempt:', formData)
-    
-    // Placeholder - redirect to dashboard
-    setTimeout(() => {
+
+    // Validate password strength
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
       setLoading(false)
-      router.push('/dashboard')
-    }, 1000)
+      return
+    }
+
+    // Validate business name
+    if (formData.businessName.trim().length < 2) {
+      setError('Please enter a valid business name')
+      setLoading(false)
+      return
+    }
+
+    const { error: signUpError } = await signUpWithOrg({
+      email: formData.email,
+      password: formData.password,
+      businessName: formData.businessName.trim(),
+      primaryTrade: formData.trade,
+    })
+    
+    if (signUpError) {
+      setError(signUpError.message)
+      setLoading(false)
+      return
+    }
+    
+    // Success - redirect to dashboard
+    router.push('/dashboard')
   }
 
   return (
@@ -80,9 +114,11 @@ export default function SignupPage() {
               onChange={(e) => setFormData({ ...formData, trade: e.target.value })}
               className="mt-1 block w-full rounded-lg border border-input px-3 py-2 focus:border-flowtrade-blue focus:ring-flowtrade-blue"
             >
-              <option value="hvac">HVAC / Air Conditioning</option>
-              <option value="electrical">Electrical</option>
-              <option value="plumbing">Plumbing</option>
+              {TRADE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
