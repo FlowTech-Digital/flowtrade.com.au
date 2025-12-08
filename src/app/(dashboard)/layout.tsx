@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { Home, FileText, Users, Settings, LogOut, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -61,12 +60,12 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard">
-              <Image
-                src="/logo-header.png"
+              <img
+                src="/logo-header.svg"
                 alt="FlowTrade"
                 width={140}
                 height={32}
-                priority
+                className="h-8 w-auto"
               />
             </Link>
           </div>
@@ -113,12 +112,12 @@ export default function DashboardLayout({
         {/* Top bar for mobile */}
         <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-6 bg-flowtrade-navy-light border-b border-flowtrade-navy-lighter lg:hidden">
           <Link href="/dashboard">
-            <Image
-              src="/logo-header.png"
+            <img
+              src="/logo-header.svg"
               alt="FlowTrade"
               width={120}
               height={28}
-              priority
+              className="h-7 w-auto"
             />
           </Link>
           <button
