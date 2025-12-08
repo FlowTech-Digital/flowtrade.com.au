@@ -648,7 +648,14 @@
             .hero {
                 padding: 6rem 1rem 4rem;
             }
-            .hero-logo { font-size: 3rem; }
+            .hero-logo { 
+                font-size: 3rem;
+                /* Break out of container constraints using viewport width */
+                width: 95vw;
+                position: relative;
+                left: 50%;
+                transform: translateX(-50%);
+            }
             .hero-logo img {
                 width: 100%;
                 max-width: none;
@@ -664,9 +671,12 @@
         
         @media (max-width: 480px) {
             .hero {
-                padding: 5rem 0.75rem 3rem;
+                padding: 5rem 0.5rem 3rem;
             }
-            .hero-logo { font-size: 2.5rem; }
+            .hero-logo { 
+                font-size: 2.5rem;
+                width: 98vw;
+            }
             .nav-logo { font-size: 1.25rem; }
             .section { padding: 4rem 1.5rem; }
         }
