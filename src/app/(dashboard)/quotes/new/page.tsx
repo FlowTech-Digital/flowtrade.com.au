@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -31,7 +33,7 @@ type Customer = {
   company_name: string | null
   email: string | null
   phone: string | null
-  street_address: string | null
+  address_line1: string | null
   suburb: string | null
   state: string | null
   postcode: string | null
@@ -106,7 +108,7 @@ export default function CreateQuotePage() {
     company_name: '',
     email: '',
     phone: '',
-    street_address: '',
+    address_line1: '',
     suburb: '',
     state: 'NSW',
     postcode: '',
@@ -178,7 +180,7 @@ export default function CreateQuotePage() {
       const searchTerm = `%${customerSearch}%`
       const { data } = await supabase
         .from('customers')
-        .select('id, first_name, last_name, company_name, email, phone, street_address, suburb, state, postcode')
+        .select('id, first_name, last_name, company_name, email, phone, address_line1, suburb, state, postcode')
         .eq('org_id', orgId)
         .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company_name.ilike.${searchTerm},email.ilike.${searchTerm}`)
         .limit(10)
@@ -237,7 +239,7 @@ export default function CreateQuotePage() {
       customer_id: customer.id,
       customer: customer,
       job_site_address: prev.job_site_address || 
-        [customer.street_address, customer.suburb, customer.state, customer.postcode]
+        [customer.address_line1, customer.suburb, customer.state, customer.postcode]
           .filter(Boolean).join(', ')
     }))
     setCustomerSearch('')
@@ -281,7 +283,7 @@ export default function CreateQuotePage() {
         company_name: '',
         email: '',
         phone: '',
-        street_address: '',
+        address_line1: '',
         suburb: '',
         state: 'NSW',
         postcode: '',
@@ -1137,8 +1139,8 @@ export default function CreateQuotePage() {
                 <label className="block text-sm font-medium text-gray-300 mb-1">Street Address</label>
                 <input
                   type="text"
-                  value={newCustomer.street_address}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, street_address: e.target.value }))}
+                  value={newCustomer.address_line1}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, address_line1: e.target.value }))}
                   className="w-full px-3 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                 />
               </div>
