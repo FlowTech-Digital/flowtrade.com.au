@@ -89,7 +89,7 @@ export async function deleteLogo(logoUrl: string, orgId: string): Promise<boolea
     // Extract file path from URL
     const url = new URL(logoUrl)
     const pathMatch = url.pathname.match(/\/logos\/(.+)$/)
-    if (!pathMatch) return false
+    if (!pathMatch || !pathMatch[1]) return false
 
     const filePath = pathMatch[1]
     
