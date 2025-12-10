@@ -45,7 +45,7 @@ export async function uploadLogo(file: File, orgId: string): Promise<UploadResul
 
   try {
     // Upload to Supabase Storage
-    const { data, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(LOGO_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
