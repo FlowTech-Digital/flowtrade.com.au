@@ -70,7 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithOrg = async ({ email, password, businessName, primaryTrade }: SignUpWithOrgParams) => {
     if (!supabase) return { error: { message: 'Auth not available' } as AuthError }
-    const { error } = await supabase.auth.signUp({
+    
+    // Step 1: Create auth user
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -80,7 +82,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     })
-    return { error }
+    
+    if (authError) {
+      return { error: authError }
+    }
+
+    // Step 2: Wait for session to be established
+    // The trigger on_auth_user_created will create public.users record
+    // We need the session to call RPC as authenticated user
+    if (!data.session) {
+      // Email confirmation might be required - user needs to verify
+      // In this case, org will be created on first login after verification
+      // For now, return success - org creation happens on confirmation callback
+      return { error: null }
+    }
+
+    // Step 3: Create organization via RPC
+    // This calls create_organization_for_user which:
+    // - Creates organizations record with 14-day trial
+    // - Triggers on_organization_created → creates org_settings
+    // - Updates users.org_id to link user to org
+    const { error: orgError } = await supabase.rpc('create_organization_for_user', {
+      org_name: businessName,
+      contact_email: email,
+      contact_phone: null,
+      trade_type: primaryTrade,
+      abn_number: null
+    })
+    
+    if (orgError) {
+      console.error('Organization creation failed:', orgError)
+      // Auth succeeded but org failed - user exists but without org
+      // They can retry org creation from onboarding or contact support
+      return { 
+        error: { 
+          message: 'Account created but organization setup failed. Please try again or contact support.',
+          name: 'OrgCreationError',
+          status: 500
+        } as AuthError 
+      }
+    }
+    
+    return { error: null }
   }
 
   const signOut = async () => {
