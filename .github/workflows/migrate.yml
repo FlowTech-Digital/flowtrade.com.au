@@ -1,0 +1,63 @@
+name: Run Database Migration
+
+on:
+  push:
+    paths:
+      - 'supabase/migrations/*.sql'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      migration_file:
+        description: 'Specific migration file to run (leave empty for all new)'
+        required: false
+        type: string
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Get changed migration files
+        id: changed-files
+        run: |
+          if [ -n "${{ github.event.inputs.migration_file }}" ]; then
+            echo "files=${{ github.event.inputs.migration_file }}" >> $GITHUB_OUTPUT
+          else
+            # Get SQL files changed in this push
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'supabase/migrations/*.sql' | tr '\n' ' ')
+            echo "files=$CHANGED" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run migrations
+        if: steps.changed-files.outputs.files != ''
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          echo "Running migrations: ${{ steps.changed-files.outputs.files }}"
+          for file in ${{ steps.changed-files.outputs.files }}; do
+            if [ -f "$file" ]; then
+              echo "Executing: $file"
+              psql "$DATABASE_URL" -f "$file"
+              echo "✅ Completed: $file"
+            fi
+          done
+      
+      - name: Verify migration
+        if: steps.changed-files.outputs.files != ''
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          echo "Verifying migration..."
+          psql "$DATABASE_URL" -c "SELECT routine_name FROM information_schema.routines WHERE routine_schema = 'public' ORDER BY routine_name;"
+          echo "✅ Migration verification complete"
