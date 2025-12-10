@@ -9,11 +9,9 @@ import {
   Plus, 
   Search, 
   Filter,
-  MoreHorizontal,
   Eye,
   Copy,
   Pencil,
-  Trash2,
   Loader2,
   Clock,
   CheckCircle,
@@ -53,7 +51,6 @@ export default function QuotesPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [orgId, setOrgId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchQuotes() {
@@ -77,8 +74,6 @@ export default function QuotesPage() {
         setLoading(false)
         return
       }
-
-      setOrgId(userData.org_id)
 
       // Fetch quotes with customer info
       const { data: quotesData, error: quotesError } = await supabase
