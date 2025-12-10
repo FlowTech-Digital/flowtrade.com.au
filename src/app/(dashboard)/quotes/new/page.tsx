@@ -434,16 +434,16 @@ export default function CreateQuotePage() {
     if (formData.line_items.length > 0) {
       const lineItems = formData.line_items.map((item, index) => ({
         quote_id: quote.id,
-        position: index + 1,
+        item_order: index + 1,
         item_type: item.item_type,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
         unit_price: item.unit_price,
-        cost_price: item.cost_price,
-        total: item.total,
+        unit_cost: item.cost_price,
+        line_total: item.total,
         is_optional: item.is_optional,
-        tax_inclusive: false,
+        is_taxable: false,
       }))
 
       const { error: itemsError } = await supabase
