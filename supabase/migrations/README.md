@@ -46,3 +46,8 @@ WHERE schemaname = 'public';
 SELECT tgname FROM pg_trigger 
 WHERE tgname = 'on_auth_user_created';
 ```
+
+## Changelog
+
+- 2025-12-11: Initial auth automation migration
+- 2025-12-11: Secret configured, workflow re-triggered
