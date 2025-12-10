@@ -119,7 +119,7 @@ export default function CreateQuotePage() {
     customer: null,
     job_site_address: '',
     job_description: '',
-    valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     line_items: [],
     deposit_required: true,
     deposit_type: 'percentage',
