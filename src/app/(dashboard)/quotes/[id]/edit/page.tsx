@@ -59,9 +59,9 @@ type DbLineItem = {
   quantity: number
   unit: string
   unit_price: number
-  cost_price: number | null
+  unit_cost: number | null
   is_optional: boolean | null
-  total: number
+  line_total: number
 }
 
 type FormData = {
@@ -213,12 +213,12 @@ export default function EditQuotePage() {
       setQuoteNumber(quoteData.quote_number)
       setQuoteStatus(quoteData.status)
 
-      // Fetch line items
+      // Fetch line items - use correct column names
       const { data: itemsData } = await supabase
         .from('quote_line_items')
         .select('*')
         .eq('quote_id', quoteId)
-        .order('position', { ascending: true })
+        .order('item_order', { ascending: true })
 
       // Convert database line items to form format
       const lineItems: LineItem[] = ((itemsData || []) as DbLineItem[]).map((item: DbLineItem) => ({
@@ -228,9 +228,9 @@ export default function EditQuotePage() {
         quantity: item.quantity,
         unit: item.unit,
         unit_price: item.unit_price,
-        cost_price: item.cost_price || 0,
+        cost_price: item.unit_cost || 0,
         is_optional: item.is_optional || false,
-        total: item.total,
+        total: item.line_total,
       }))
 
       // Populate form with quote data
@@ -464,7 +464,7 @@ export default function EditQuotePage() {
       return
     }
 
-    // Update quote
+    // Update quote - use correct column name: gst_amount (not tax_amount)
     const { error: quoteError } = await supabase
       .from('quotes')
       .update({
@@ -473,7 +473,7 @@ export default function EditQuotePage() {
         job_description: formData.job_description,
         subtotal: totals.subtotal,
         tax_rate: 10,
-        tax_amount: totals.tax,
+        gst_amount: totals.tax,
         total: totals.total,
         deposit_required: formData.deposit_required,
         deposit_amount: formData.deposit_required && formData.deposit_type === 'amount' 
@@ -497,20 +497,20 @@ export default function EditQuotePage() {
     // Delete existing line items and recreate
     await supabase.from('quote_line_items').delete().eq('quote_id', quoteId)
 
-    // Create new line items
+    // Create new line items - use correct column names
     if (formData.line_items.length > 0) {
       const lineItems = formData.line_items.map((item, index) => ({
         quote_id: quoteId,
-        position: index + 1,
+        item_order: index + 1,
         item_type: item.item_type,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
         unit_price: item.unit_price,
-        cost_price: item.cost_price,
-        total: item.total,
+        unit_cost: item.cost_price,
+        line_total: item.total,
         is_optional: item.is_optional,
-        tax_inclusive: false,
+        is_taxable: false,
       }))
 
       const { error: itemsError } = await supabase
