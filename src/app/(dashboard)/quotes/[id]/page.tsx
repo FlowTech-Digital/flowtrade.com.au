@@ -40,7 +40,7 @@ type Quote = {
   job_description: string
   subtotal: number
   tax_rate: number
-  tax_amount: number
+  gst_amount: number
   total: number
   deposit_required: boolean
   deposit_amount: number | null
@@ -69,14 +69,14 @@ type Quote = {
 
 type LineItem = {
   id: string
-  position: number
+  item_order: number
   item_type: 'labor' | 'materials' | 'equipment' | 'other'
   description: string
   quantity: number
   unit: string
   unit_price: number
-  cost_price: number
-  total: number
+  unit_cost: number
+  line_total: number
   is_optional: boolean
 }
 
@@ -149,7 +149,7 @@ export default function QuoteDetailPage() {
         .from('quote_line_items')
         .select('*')
         .eq('quote_id', quoteId)
-        .order('position', { ascending: true })
+        .order('item_order', { ascending: true })
 
       setLineItems(itemsData || [])
 
@@ -292,7 +292,7 @@ export default function QuoteDetailPage() {
         job_description: quote.job_description,
         subtotal: quote.subtotal,
         tax_rate: quote.tax_rate,
-        tax_amount: quote.tax_amount,
+        gst_amount: quote.gst_amount,
         total: quote.total,
         deposit_required: quote.deposit_required,
         deposit_amount: quote.deposit_amount,
@@ -316,16 +316,16 @@ export default function QuoteDetailPage() {
     if (lineItems.length > 0) {
       const newLineItems = lineItems.map((item, index) => ({
         quote_id: newQuote.id,
-        position: index + 1,
+        item_order: index + 1,
         item_type: item.item_type,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
         unit_price: item.unit_price,
-        cost_price: item.cost_price,
-        total: item.total,
+        unit_cost: item.unit_cost,
+        line_total: item.line_total,
         is_optional: item.is_optional,
-        tax_inclusive: false,
+        is_taxable: false,
       }))
 
       await supabase.from('quote_line_items').insert(newLineItems)
@@ -638,7 +638,7 @@ export default function QuoteDetailPage() {
                         <td className="text-center px-4 py-4 text-gray-300">{item.quantity}</td>
                         <td className="text-center px-4 py-4 text-gray-300">{item.unit}</td>
                         <td className="text-right px-4 py-4 text-gray-300">{formatCurrency(item.unit_price)}</td>
-                        <td className="text-right px-6 py-4 text-white font-medium">{formatCurrency(item.total)}</td>
+                        <td className="text-right px-6 py-4 text-white font-medium">{formatCurrency(item.line_total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -690,7 +690,7 @@ export default function QuoteDetailPage() {
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>GST ({quote.tax_rate}%)</span>
-                <span>{formatCurrency(quote.tax_amount)}</span>
+                <span>{formatCurrency(quote.gst_amount)}</span>
               </div>
               <div className="border-t border-flowtrade-navy-lighter pt-3 flex justify-between text-white font-semibold text-xl">
                 <span>Total</span>
