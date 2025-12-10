@@ -49,6 +49,19 @@ type LineItem = {
   total: number
 }
 
+// Database row type for quote_line_items
+type DbLineItem = {
+  id: string
+  item_type: 'labor' | 'materials' | 'equipment' | 'other'
+  description: string
+  quantity: number
+  unit: string
+  unit_price: number
+  cost_price: number | null
+  is_optional: boolean | null
+  total: number
+}
+
 type FormData = {
   customer_id: string | null
   customer: Customer | null
@@ -206,7 +219,7 @@ export default function EditQuotePage() {
         .order('position', { ascending: true })
 
       // Convert database line items to form format
-      const lineItems: LineItem[] = (itemsData || []).map(item => ({
+      const lineItems: LineItem[] = ((itemsData || []) as DbLineItem[]).map((item: DbLineItem) => ({
         id: item.id,
         item_type: item.item_type,
         description: item.description,
