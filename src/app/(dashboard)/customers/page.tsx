@@ -204,7 +204,7 @@ export default function CustomersPage() {
               onEdit={handleOpenModal}
               onDelete={setDeleteConfirm}
             />
-          )}
+          ))}
         </div>
       )}
 
