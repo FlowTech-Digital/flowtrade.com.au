@@ -148,7 +148,8 @@ export default function QuotesPage() {
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.draft
+    const config = STATUS_CONFIG[status] || STATUS_CONFIG['draft']
+    if (!config) return null
     const Icon = config.icon
     
     return (
