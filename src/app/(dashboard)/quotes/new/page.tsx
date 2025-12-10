@@ -401,14 +401,14 @@ export default function CreateQuotePage() {
       .insert({
         org_id: orgId,
         quote_number: quoteNumber,
-        version: 1,
+        quote_version: 1,
         status: 'draft',
         customer_id: formData.customer_id,
         job_site_address: formData.job_site_address,
         job_description: formData.job_description,
         subtotal: totals.subtotal,
         tax_rate: 10,
-        tax_amount: totals.tax,
+        gst_amount: totals.tax,
         total: totals.total,
         deposit_required: formData.deposit_required,
         deposit_amount: formData.deposit_required && formData.deposit_type === 'amount' 
