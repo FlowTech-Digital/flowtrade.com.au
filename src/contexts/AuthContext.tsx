@@ -103,11 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // - Triggers on_organization_created → creates org_settings
     // - Updates users.org_id to link user to org
     const { error: orgError } = await supabase.rpc('create_organization_for_user', {
-      org_name: businessName,
-      contact_email: email,
-      contact_phone: null,
-      trade_type: primaryTrade,
-      abn_number: null
+      p_name: businessName,
+      p_email: email,
+      p_phone: null,
+      p_primary_trade: primaryTrade,
+      p_abn: null
     })
     
     if (orgError) {
