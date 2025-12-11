@@ -191,12 +191,14 @@ export default function JobDetailPage() {
     })
   }
 
-  // Format time
+  // Format time - FIXED: Safe array destructuring with fallbacks
   const formatTime = (timeString: string | null) => {
     if (!timeString) return null
     // timeString is in HH:MM:SS format
-    const [hours, minutes] = timeString.split(':')
-    const hour = parseInt(hours)
+    const parts = timeString.split(':')
+    const hours = parts[0] || '0'
+    const minutes = parts[1] || '00'
+    const hour = parseInt(hours, 10)
     const ampm = hour >= 12 ? 'PM' : 'AM'
     const hour12 = hour % 12 || 12
     return `${hour12}:${minutes} ${ampm}`
@@ -384,7 +386,7 @@ export default function JobDetailPage() {
             onClick={() => setSuccessMessage(null)}
             className="ml-2 text-green-400 hover:text-green-300"
           >
-            \u00d7
+            ×
           </button>
         </div>
       )}
@@ -398,7 +400,7 @@ export default function JobDetailPage() {
             onClick={() => setError(null)}
             className="ml-2 text-red-400 hover:text-red-300"
           >
-            \u00d7
+            ×
           </button>
         </div>
       )}
