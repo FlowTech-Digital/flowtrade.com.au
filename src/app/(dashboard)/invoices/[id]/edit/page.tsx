@@ -50,6 +50,16 @@ type LineItem = {
   isModified?: boolean
 }
 
+// Database row type for invoice line items
+type LineItemRow = {
+  id: string
+  description: string
+  quantity: number
+  unit_price: number
+  amount: number
+  sort_order: number
+}
+
 type InvoiceData = {
   id: string
   invoice_number: string
@@ -193,7 +203,7 @@ export default function EditInvoicePage() {
         setDueDate(invoiceData.due_date || '')
         setNotes(invoiceData.notes || '')
 
-        const items = (itemsData || []).map(item => ({
+        const items = ((itemsData || []) as LineItemRow[]).map((item: LineItemRow) => ({
           id: item.id,
           description: item.description,
           quantity: item.quantity,
