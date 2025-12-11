@@ -323,12 +323,25 @@ export default function EditInvoicePage() {
 
   const updateLineItem = (index: number, field: keyof LineItem, value: string | number) => {
     const updated = [...lineItems]
-    const item: LineItem = { ...updated[index] }
+    const currentItem = updated[index]
+    
+    // Create a new item with explicit required fields
+    const item: LineItem = {
+      id: currentItem.id,
+      description: currentItem.description,
+      quantity: currentItem.quantity,
+      unit_price: currentItem.unit_price,
+      amount: currentItem.amount,
+      sort_order: currentItem.sort_order,
+      isNew: currentItem.isNew,
+      isDeleted: currentItem.isDeleted,
+      isModified: currentItem.isModified
+    }
     
     if (field === 'quantity' || field === 'unit_price') {
       const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value
       item[field] = numValue
-      item.amount = (item.quantity ?? 0) * (item.unit_price ?? 0)
+      item.amount = item.quantity * item.unit_price
     } else if (field === 'description') {
       item.description = value as string
     }
@@ -348,8 +361,7 @@ export default function EditInvoicePage() {
     
     if (item.id && !item.isNew) {
       // Mark existing item for deletion
-      item.isDeleted = true
-      updated[index] = item
+      updated[index] = { ...item, isDeleted: true }
     } else {
       // Remove new item entirely
       updated.splice(index, 1)
