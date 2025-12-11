@@ -115,7 +115,7 @@ export default function DashboardLayout({
         <div className="flex flex-col h-full">
           {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
-            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/dashboard" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
               <img
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
@@ -125,7 +125,6 @@ export default function DashboardLayout({
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              <span className="text-xl font-bold text-white">FlowTrade</span>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -199,7 +198,7 @@ export default function DashboardLayout({
         <div className="flex flex-col h-full">
           {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
           <div className="flex items-center h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center">
               <img
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
@@ -209,7 +208,6 @@ export default function DashboardLayout({
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              <span className="text-xl font-bold text-white">FlowTrade</span>
             </Link>
           </div>
 
@@ -285,7 +283,7 @@ export default function DashboardLayout({
           </button>
 
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center">
             <img
               src="/flowtrade-logo.svg"
               alt="FlowTrade"
@@ -294,7 +292,6 @@ export default function DashboardLayout({
                 e.currentTarget.style.display = 'none'
               }}
             />
-            <span className="text-lg font-bold text-white">FlowTrade</span>
           </Link>
 
           {/* Sign out */}
