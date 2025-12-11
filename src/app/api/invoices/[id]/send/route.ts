@@ -1,10 +1,11 @@
 // FlowTrade Invoice Send API
-// Sends invoice emails via Resend
+// Sends invoice emails via Resend with Portal Link
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { InvoiceEmail } from '@/lib/email/templates/InvoiceEmail'
+import { generatePortalToken } from '@/lib/portal/tokens'
 
 export const runtime = 'edge'
 
@@ -74,6 +75,45 @@ export async function POST(
       )
     }
 
+    // Generate portal token for invoice (30-day expiration for invoices)
+    let portalUrl: string | null = null;
+    
+    // Check if a valid token already exists for this invoice
+    const { data: existingToken } = await supabase
+      .from('portal_tokens')
+      .select('token')
+      .eq('resource_id', id)
+      .eq('token_type', 'invoice')
+      .eq('is_revoked', false)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (existingToken) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
+      portalUrl = `${baseUrl}/portal/invoice/${existingToken.token}`;
+    } else {
+      // Generate new token
+      const token = generatePortalToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30); // 30-day expiration for invoices
+
+      const { error: tokenError } = await supabase.from('portal_tokens').insert({
+        customer_id: invoice.customer.id,
+        org_id: invoice.org_id,
+        token,
+        token_type: 'invoice',
+        resource_id: id,
+        expires_at: expiresAt.toISOString()
+      });
+
+      if (!tokenError) {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
+        portalUrl = `${baseUrl}/portal/invoice/${token}`;
+      } else {
+        console.error('Failed to create portal token:', tokenError);
+      }
+    }
+
     // Format currency
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-AU', {
@@ -121,7 +161,8 @@ export async function POST(
         businessEmail,
         businessPhone,
         jobDescription: invoice.job?.job_notes || undefined,
-        viewInvoiceUrl: `https://flowtrade.com.au/invoices/${invoice.id}`,
+        viewInvoiceUrl: portalUrl || `https://flowtrade.com.au/invoices/${invoice.id}`,
+        payNowUrl: portalUrl || undefined,
       }),
     })
 
@@ -141,13 +182,25 @@ export async function POST(
         .eq('id', id)
     }
 
-    // Log the email send
+    // Log the email send with portal URL
+    await supabase.from('invoice_events').insert({
+      invoice_id: id,
+      event_type: 'email_sent',
+      event_data: {
+        to: invoice.customer.email,
+        subject: `Invoice ${invoice.invoice_number} from ${businessName}`,
+        portal_url: portalUrl,
+        resend_id: emailData?.id
+      }
+    })
+
     console.log(`Invoice ${invoice.invoice_number} sent to ${invoice.customer.email}`, emailData)
 
     return NextResponse.json({
       success: true,
       message: `Invoice sent to ${invoice.customer.email}`,
       emailId: emailData?.id,
+      portalUrl: portalUrl,
       status: invoice.status === 'draft' ? 'sent' : invoice.status
     })
 
