@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { 
   ArrowLeft,
   FileText,
@@ -18,9 +19,22 @@ import {
   Phone,
   MapPin,
   Calendar,
-  DollarSign,
   Briefcase
 } from 'lucide-react'
+
+// Dynamic import for PDF download (client-side only)
+const InvoicePDFDownload = dynamic(
+  () => import('@/components/invoices/InvoicePDFDownload').then(mod => mod.InvoicePDFDownload),
+  { 
+    ssr: false,
+    loading: () => (
+      &lt;button disabled className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan/50 text-flowtrade-navy rounded-lg"&gt;
+        &lt;Loader2 className="h-4 w-4 animate-spin" /&gt;
+        Loading...
+      &lt;/button&gt;
+    )
+  }
+)
 
 type Invoice = {
   id: string
@@ -59,7 +73,7 @@ type Invoice = {
   } | null
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record&lt;string, { label: string; color: string; bg: string; icon: React.ElementType }&gt; = {
   draft: { label: 'Draft', color: 'text-gray-400', bg: 'bg-gray-900/30', icon: FileText },
   sent: { label: 'Sent', color: 'text-blue-400', bg: 'bg-blue-900/30', icon: Send },
   paid: { label: 'Paid', color: 'text-green-400', bg: 'bg-green-900/30', icon: CheckCircle },
@@ -67,7 +81,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   cancelled: { label: 'Cancelled', color: 'text-orange-400', bg: 'bg-orange-900/30', icon: XCircle },
 }
 
-const VALID_TRANSITIONS: Record<string, string[]> = {
+const VALID_TRANSITIONS: Record&lt;string, string[]&gt; = {
   draft: ['sent', 'cancelled'],
   sent: ['paid', 'overdue', 'cancelled'],
   overdue: ['paid', 'cancelled'],
@@ -75,15 +89,15 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   cancelled: [],
 }
 
-export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id: string }&gt; }) {
   const resolvedParams = use(params)
   const { user } = useAuth()
   const router = useRouter()
-  const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [invoice, setInvoice] = useState&lt;Invoice | null&gt;(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     async function fetchInvoice() {
       if (!user) return
 
@@ -147,7 +161,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     fetchInvoice()
   }, [user, resolvedParams.id])
 
-  const updateStatus = async (newStatus: string) => {
+  const updateStatus = async (newStatus: string) =&gt; {
     if (!invoice) return
     
     setUpdating(true)
@@ -167,7 +181,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       }
 
       const { invoice: updatedInvoice } = await response.json()
-      setInvoice(prev => prev ? { ...prev, ...updatedInvoice } : null)
+      setInvoice(prev =&gt; prev ? { ...prev, ...updatedInvoice } : null)
     } catch (error) {
       console.error('Error updating invoice:', error)
     } finally {
@@ -175,7 +189,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  const formatCurrency = (amount: number | null) => {
+  const formatCurrency = (amount: number | null) =&gt; {
     if (amount === null || amount === undefined) return '—'
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
@@ -183,7 +197,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }).format(amount)
   }
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null) =&gt; {
     if (!dateString) return '—'
     return new Date(dateString).toLocaleDateString('en-AU', {
       day: 'numeric',
@@ -192,281 +206,312 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     })
   }
 
-  const getCustomerName = (customer: Invoice['customer']) => {
+  const getCustomerName = (customer: Invoice['customer']) =&gt; {
     if (!customer) return 'No Customer'
     if (customer.company_name) return customer.company_name
     return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
   }
 
-  const getCustomerAddress = (customer: Invoice['customer']) => {
+  const getCustomerAddress = (customer: Invoice['customer']) =&gt; {
     if (!customer) return null
     const parts = [
       customer.address_line1,
       customer.address_line2,
       [customer.city, customer.state, customer.postcode].filter(Boolean).join(' ')
     ].filter(Boolean)
-    return parts.length > 0 ? parts : null
+    return parts.length &gt; 0 ? parts : null
   }
 
-  const StatusBadge = ({ status }: { status: string }) => {
+  const StatusBadge = ({ status }: { status: string }) =&gt; {
     const config = STATUS_CONFIG[status] || STATUS_CONFIG['draft']
     if (!config) return null
     const Icon = config.icon
     
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${config.bg} ${config.color}`}>
-        <Icon className="h-4 w-4" />
+      &lt;span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${config.bg} ${config.color}`}&gt;
+        &lt;Icon className="h-4 w-4" /&gt;
         {config.label}
-      </span>
+      &lt;/span&gt;
     )
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" />
-      </div>
+      &lt;div className="flex items-center justify-center min-h-[400px]"&gt;
+        &lt;Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" /&gt;
+      &lt;/div&gt;
     )
   }
 
   if (!invoice) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-xl font-medium text-white mb-2">Invoice not found</h2>
-        <button
-          onClick={() => router.push('/invoices')}
+      &lt;div className="text-center py-12"&gt;
+        &lt;h2 className="text-xl font-medium text-white mb-2"&gt;Invoice not found&lt;/h2&gt;
+        &lt;button
+          onClick={() =&gt; router.push('/invoices')}
           className="text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-        >
+        &gt;
           Back to Invoices
-        </button>
-      </div>
+        &lt;/button&gt;
+      &lt;/div&gt;
     )
   }
 
   const availableTransitions = VALID_TRANSITIONS[invoice.status] || []
   const customerAddress = getCustomerAddress(invoice.customer)
 
-  return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push('/invoices')}
-            className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">{invoice.invoice_number}</h1>
-            <p className="text-gray-400 mt-1">{getCustomerName(invoice.customer)}</p>
-          </div>
-        </div>
-        <StatusBadge status={invoice.status} />
-      </div>
+  // Prepare invoice data for PDF
+  const pdfInvoiceData = {
+    invoice_number: invoice.invoice_number,
+    invoice_date: invoice.invoice_date,
+    due_date: invoice.due_date,
+    subtotal: invoice.subtotal,
+    tax_rate: invoice.tax_rate,
+    tax_amount: invoice.tax_amount,
+    total: invoice.total,
+    notes: invoice.notes,
+    customer: invoice.customer ? {
+      first_name: invoice.customer.first_name,
+      last_name: invoice.customer.last_name,
+      company_name: invoice.customer.company_name,
+      email: invoice.customer.email,
+      phone: invoice.customer.phone,
+      address_line1: invoice.customer.address_line1,
+      address_line2: invoice.customer.address_line2,
+      city: invoice.customer.city,
+      state: invoice.customer.state,
+      postcode: invoice.customer.postcode,
+    } : null,
+    job: invoice.job ? {
+      job_number: invoice.job.job_number,
+      job_notes: invoice.job.job_notes,
+    } : null,
+  }
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  return (
+    &lt;div&gt;
+      {/* Header */}
+      &lt;div className="flex items-center justify-between mb-8"&gt;
+        &lt;div className="flex items-center gap-4"&gt;
+          &lt;button
+            onClick={() =&gt; router.push('/invoices')}
+            className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
+          &gt;
+            &lt;ArrowLeft className="h-5 w-5" /&gt;
+          &lt;/button&gt;
+          &lt;div&gt;
+            &lt;h1 className="text-2xl font-bold text-white"&gt;{invoice.invoice_number}&lt;/h1&gt;
+            &lt;p className="text-gray-400 mt-1"&gt;{getCustomerName(invoice.customer)}&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="flex items-center gap-3"&gt;
+          &lt;InvoicePDFDownload invoice={pdfInvoiceData} /&gt;
+          &lt;StatusBadge status={invoice.status} /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div className="grid grid-cols-1 lg:grid-cols-3 gap-6"&gt;
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        &lt;div className="lg:col-span-2 space-y-6"&gt;
           {/* Invoice Details */}
-          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Invoice Details</h2>
+          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
+            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Invoice Details&lt;/h2&gt;
             
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Invoice Date</p>
-                <div className="flex items-center gap-2 text-white">
-                  <Calendar className="h-4 w-4 text-gray-500" />
+            &lt;div className="grid grid-cols-2 gap-6"&gt;
+              &lt;div&gt;
+                &lt;p className="text-sm text-gray-400 mb-1"&gt;Invoice Date&lt;/p&gt;
+                &lt;div className="flex items-center gap-2 text-white"&gt;
+                  &lt;Calendar className="h-4 w-4 text-gray-500" /&gt;
                   {formatDate(invoice.invoice_date)}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Due Date</p>
-                <div className="flex items-center gap-2 text-white">
-                  <Clock className="h-4 w-4 text-gray-500" />
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div&gt;
+                &lt;p className="text-sm text-gray-400 mb-1"&gt;Due Date&lt;/p&gt;
+                &lt;div className="flex items-center gap-2 text-white"&gt;
+                  &lt;Clock className="h-4 w-4 text-gray-500" /&gt;
                   {formatDate(invoice.due_date)}
-                </div>
-              </div>
-              {invoice.payment_date && (
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Payment Date</p>
-                  <div className="flex items-center gap-2 text-green-400">
-                    <CheckCircle className="h-4 w-4" />
+                &lt;/div&gt;
+              &lt;/div&gt;
+              {invoice.payment_date &amp;&amp; (
+                &lt;div&gt;
+                  &lt;p className="text-sm text-gray-400 mb-1"&gt;Payment Date&lt;/p&gt;
+                  &lt;div className="flex items-center gap-2 text-green-400"&gt;
+                    &lt;CheckCircle className="h-4 w-4" /&gt;
                     {formatDate(invoice.payment_date)}
-                  </div>
-                </div>
+                  &lt;/div&gt;
+                &lt;/div&gt;
               )}
-              {invoice.job && (
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Related Job</p>
-                  <button
-                    onClick={() => router.push(`/jobs/${invoice.job!.id}`)}
+              {invoice.job &amp;&amp; (
+                &lt;div&gt;
+                  &lt;p className="text-sm text-gray-400 mb-1"&gt;Related Job&lt;/p&gt;
+                  &lt;button
+                    onClick={() =&gt; router.push(`/jobs/${invoice.job!.id}`)}
                     className="flex items-center gap-2 text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-                  >
-                    <Briefcase className="h-4 w-4" />
+                  &gt;
+                    &lt;Briefcase className="h-4 w-4" /&gt;
                     {invoice.job.job_number}
-                  </button>
-                </div>
+                  &lt;/button&gt;
+                &lt;/div&gt;
               )}
-            </div>
+            &lt;/div&gt;
 
             {/* Amount Breakdown */}
-            <div className="mt-6 pt-6 border-t border-flowtrade-navy-lighter">
-              <div className="space-y-3">
-                <div className="flex justify-between text-gray-400">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(invoice.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-gray-400">
-                  <span>GST ({invoice.tax_rate}%)</span>
-                  <span>{formatCurrency(invoice.tax_amount)}</span>
-                </div>
-                <div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-flowtrade-navy-lighter">
-                  <span>Total</span>
-                  <span>{formatCurrency(invoice.total)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            &lt;div className="mt-6 pt-6 border-t border-flowtrade-navy-lighter"&gt;
+              &lt;div className="space-y-3"&gt;
+                &lt;div className="flex justify-between text-gray-400"&gt;
+                  &lt;span&gt;Subtotal&lt;/span&gt;
+                  &lt;span&gt;{formatCurrency(invoice.subtotal)}&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div className="flex justify-between text-gray-400"&gt;
+                  &lt;span&gt;GST ({invoice.tax_rate}%)&lt;/span&gt;
+                  &lt;span&gt;{formatCurrency(invoice.tax_amount)}&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-flowtrade-navy-lighter"&gt;
+                  &lt;span&gt;Total&lt;/span&gt;
+                  &lt;span&gt;{formatCurrency(invoice.total)}&lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
 
           {/* Notes */}
-          {invoice.notes && (
-            <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Notes</h2>
-              <p className="text-gray-300 whitespace-pre-wrap">{invoice.notes}</p>
-            </div>
+          {invoice.notes &amp;&amp; (
+            &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
+              &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Notes&lt;/h2&gt;
+              &lt;p className="text-gray-300 whitespace-pre-wrap"&gt;{invoice.notes}&lt;/p&gt;
+            &lt;/div&gt;
           )}
 
           {/* Status Actions */}
-          {availableTransitions.length > 0 && (
-            <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Actions</h2>
-              <div className="flex flex-wrap gap-3">
-                {availableTransitions.includes('sent') && (
-                  <button
-                    onClick={() => updateStatus('sent')}
+          {availableTransitions.length &gt; 0 &amp;&amp; (
+            &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
+              &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Actions&lt;/h2&gt;
+              &lt;div className="flex flex-wrap gap-3"&gt;
+                {availableTransitions.includes('sent') &amp;&amp; (
+                  &lt;button
+                    onClick={() =&gt; updateStatus('sent')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  &gt;
+                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;Send className="h-4 w-4" /&gt;}
                     Mark as Sent
-                  </button>
+                  &lt;/button&gt;
                 )}
-                {availableTransitions.includes('paid') && (
-                  <button
-                    onClick={() => updateStatus('paid')}
+                {availableTransitions.includes('paid') &amp;&amp; (
+                  &lt;button
+                    onClick={() =&gt; updateStatus('paid')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                  >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                  &gt;
+                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;CheckCircle className="h-4 w-4" /&gt;}
                     Mark as Paid
-                  </button>
+                  &lt;/button&gt;
                 )}
-                {availableTransitions.includes('overdue') && (
-                  <button
-                    onClick={() => updateStatus('overdue')}
+                {availableTransitions.includes('overdue') &amp;&amp; (
+                  &lt;button
+                    onClick={() =&gt; updateStatus('overdue')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <AlertCircle className="h-4 w-4" />}
+                  &gt;
+                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;AlertCircle className="h-4 w-4" /&gt;}
                     Mark as Overdue
-                  </button>
+                  &lt;/button&gt;
                 )}
-                {availableTransitions.includes('cancelled') && (
-                  <button
-                    onClick={() => updateStatus('cancelled')}
+                {availableTransitions.includes('cancelled') &amp;&amp; (
+                  &lt;button
+                    onClick={() =&gt; updateStatus('cancelled')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-gray-300 rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors disabled:opacity-50"
-                  >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                  &gt;
+                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;XCircle className="h-4 w-4" /&gt;}
                     Cancel Invoice
-                  </button>
+                  &lt;/button&gt;
                 )}
-              </div>
-            </div>
+              &lt;/div&gt;
+            &lt;/div&gt;
           )}
-        </div>
+        &lt;/div&gt;
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        &lt;div className="space-y-6"&gt;
           {/* Customer Info */}
-          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Customer</h2>
+          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
+            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Customer&lt;/h2&gt;
             
             {invoice.customer ? (
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-white font-medium">{getCustomerName(invoice.customer)}</p>
-                    {invoice.customer.company_name && invoice.customer.first_name && (
-                      <p className="text-sm text-gray-400">
+              &lt;div className="space-y-4"&gt;
+                &lt;div className="flex items-start gap-3"&gt;
+                  &lt;Building2 className="h-5 w-5 text-gray-500 mt-0.5" /&gt;
+                  &lt;div&gt;
+                    &lt;p className="text-white font-medium"&gt;{getCustomerName(invoice.customer)}&lt;/p&gt;
+                    {invoice.customer.company_name &amp;&amp; invoice.customer.first_name &amp;&amp; (
+                      &lt;p className="text-sm text-gray-400"&gt;
                         {invoice.customer.first_name} {invoice.customer.last_name}
-                      </p>
+                      &lt;/p&gt;
                     )}
-                  </div>
-                </div>
+                  &lt;/div&gt;
+                &lt;/div&gt;
                 
-                {invoice.customer.email && (
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-gray-500" />
-                    <a 
+                {invoice.customer.email &amp;&amp; (
+                  &lt;div className="flex items-center gap-3"&gt;
+                    &lt;Mail className="h-5 w-5 text-gray-500" /&gt;
+                    &lt;a 
                       href={`mailto:${invoice.customer.email}`}
                       className="text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-                    >
+                    &gt;
                       {invoice.customer.email}
-                    </a>
-                  </div>
+                    &lt;/a&gt;
+                  &lt;/div&gt;
                 )}
                 
-                {invoice.customer.phone && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-gray-500" />
-                    <a 
+                {invoice.customer.phone &amp;&amp; (
+                  &lt;div className="flex items-center gap-3"&gt;
+                    &lt;Phone className="h-5 w-5 text-gray-500" /&gt;
+                    &lt;a 
                       href={`tel:${invoice.customer.phone}`}
                       className="text-gray-300 hover:text-white"
-                    >
+                    &gt;
                       {invoice.customer.phone}
-                    </a>
-                  </div>
+                    &lt;/a&gt;
+                  &lt;/div&gt;
                 )}
                 
-                {customerAddress && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                    <div className="text-gray-300">
-                      {customerAddress.map((line, i) => (
-                        <p key={i}>{line}</p>
+                {customerAddress &amp;&amp; (
+                  &lt;div className="flex items-start gap-3"&gt;
+                    &lt;MapPin className="h-5 w-5 text-gray-500 mt-0.5" /&gt;
+                    &lt;div className="text-gray-300"&gt;
+                      {customerAddress.map((line, i) =&gt; (
+                        &lt;p key={i}&gt;{line}&lt;/p&gt;
                       ))}
-                    </div>
-                  </div>
+                    &lt;/div&gt;
+                  &lt;/div&gt;
                 )}
-              </div>
+              &lt;/div&gt;
             ) : (
-              <p className="text-gray-500">No customer information</p>
+              &lt;p className="text-gray-500"&gt;No customer information&lt;/p&gt;
             )}
-          </div>
+          &lt;/div&gt;
 
           {/* Quick Stats */}
-          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Summary</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Status</span>
-                <StatusBadge status={invoice.status} />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Total</span>
-                <span className="text-xl font-bold text-white">{formatCurrency(invoice.total)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Created</span>
-                <span className="text-gray-300">{formatDate(invoice.created_at)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
+            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Summary&lt;/h2&gt;
+            &lt;div className="space-y-4"&gt;
+              &lt;div className="flex items-center justify-between"&gt;
+                &lt;span className="text-gray-400"&gt;Status&lt;/span&gt;
+                &lt;StatusBadge status={invoice.status} /&gt;
+              &lt;/div&gt;
+              &lt;div className="flex items-center justify-between"&gt;
+                &lt;span className="text-gray-400"&gt;Total&lt;/span&gt;
+                &lt;span className="text-xl font-bold text-white"&gt;{formatCurrency(invoice.total)}&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div className="flex items-center justify-between"&gt;
+                &lt;span className="text-gray-400"&gt;Created&lt;/span&gt;
+                &lt;span className="text-gray-300"&gt;{formatDate(invoice.created_at)}&lt;/span&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
   )
 }
