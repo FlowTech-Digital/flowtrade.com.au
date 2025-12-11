@@ -1,10 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
+// Type helper for Supabase client
+type SupabaseClient = NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>
+
 // Generate next job number for org
-async function generateJobNumber(supabase: ReturnType<typeof createClient>, orgId: string): Promise<string> {
+async function generateJobNumber(supabase: SupabaseClient, orgId: string): Promise<string> {
   // Get the highest job_number for this org
   const { data: existingJobs } = await supabase
     .from('jobs')
@@ -31,7 +34,11 @@ async function generateJobNumber(supabase: ReturnType<typeof createClient>, orgI
 // GET /api/jobs - List all jobs for the org
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
+    
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -81,7 +88,11 @@ export async function GET(_request: NextRequest) {
 // POST /api/jobs - Create a new job
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
+    
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
