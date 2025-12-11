@@ -325,6 +325,9 @@ export default function EditInvoicePage() {
     const updated = [...lineItems]
     const currentItem = updated[index]
     
+    // Guard against undefined (should never happen but TypeScript requires it)
+    if (!currentItem) return
+    
     // Create a new item with explicit required fields
     const item: LineItem = {
       id: currentItem.id,
@@ -358,6 +361,9 @@ export default function EditInvoicePage() {
   const removeLineItem = (index: number) => {
     const updated = [...lineItems]
     const item = updated[index]
+    
+    // Guard against undefined
+    if (!item) return
     
     if (item.id && !item.isNew) {
       // Mark existing item for deletion
