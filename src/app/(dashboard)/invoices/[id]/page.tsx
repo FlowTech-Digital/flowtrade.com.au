@@ -22,6 +22,8 @@ import {
   Briefcase
 } from 'lucide-react'
 
+export const runtime = 'edge'
+
 // Dynamic import for PDF download (client-side only)
 const InvoicePDFDownload = dynamic(
   () => import('@/components/invoices/InvoicePDFDownload').then(mod => mod.InvoicePDFDownload),
