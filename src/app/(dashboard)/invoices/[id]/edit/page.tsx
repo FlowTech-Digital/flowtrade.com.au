@@ -80,7 +80,6 @@ export default function EditInvoicePage() {
   // Invoice data
   const [invoice, setInvoice] = useState<InvoiceData | null>(null)
   const [lineItems, setLineItems] = useState<LineItem[]>([])
-  const [originalLineItems, setOriginalLineItems] = useState<LineItem[]>([])
 
   // Form fields
   const [issueDate, setIssueDate] = useState('')
@@ -203,7 +202,6 @@ export default function EditInvoicePage() {
           sort_order: item.sort_order
         }))
         setLineItems(items)
-        setOriginalLineItems(JSON.parse(JSON.stringify(items)))
 
         // Fetch available jobs for this customer
         if (invoiceData.customer_id) {
@@ -437,7 +435,7 @@ export default function EditInvoicePage() {
 
       // Create new items
       if (itemsToCreate.length > 0) {
-        const newItems = itemsToCreate.map((item, idx) => ({
+        const newItems = itemsToCreate.map((item) => ({
           invoice_id: invoiceId,
           description: item.description,
           quantity: item.quantity,
@@ -757,7 +755,7 @@ export default function EditInvoicePage() {
 
             {activeLineItems.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                No line items. Click "Add Item" to add one.
+                No line items. Click &quot;Add Item&quot; to add one.
               </div>
             )}
           </div>
