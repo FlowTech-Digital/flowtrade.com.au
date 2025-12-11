@@ -100,30 +100,6 @@ export default function DashboardLayout({
     )
   }
 
-  // Logo component - shows org logo if available, otherwise FlowTrade logo
-  const LogoDisplay = ({ className = "h-8 w-auto" }: { className?: string }) => {
-    if (orgInfo?.logo_url) {
-      return (
-        <div className="flex items-center gap-3">
-          <img
-            src={orgInfo.logo_url}
-            alt={orgInfo.name}
-            className={`${className} object-contain bg-white rounded p-1`}
-          />
-        </div>
-      )
-    }
-    return (
-      <img
-        src="/flowtrade-logo.svg"
-        alt="FlowTrade"
-        width={140}
-        height={32}
-        className={className}
-      />
-    )
-  }
-
   return (
     <div className="flex min-h-screen bg-flowtrade-navy">
       {/* Mobile menu backdrop */}
@@ -137,10 +113,16 @@ export default function DashboardLayout({
       {/* Mobile sidebar drawer */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-flowtrade-navy-light border-r border-flowtrade-navy-lighter transform transition-transform duration-300 ease-in-out lg:hidden ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          {/* Logo with close button */}
+          {/* FlowTrade Logo (always visible) */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <LogoDisplay />
+              <img
+                src="/flowtrade-logo.svg"
+                alt="FlowTrade"
+                width={140}
+                height={32}
+                className="h-8 w-auto"
+              />
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -150,10 +132,25 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* Organization name if logo present */}
-          {orgInfo?.logo_url && orgInfo?.name && (
-            <div className="px-6 py-2 border-b border-flowtrade-navy-lighter">
-              <p className="text-sm text-gray-400 truncate">{orgInfo.name}</p>
+          {/* Organization branding (secondary - when logo exists) */}
+          {orgInfo && (
+            <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
+              <div className="flex items-center gap-3">
+                {orgInfo.logo_url ? (
+                  <img
+                    src={orgInfo.logo_url}
+                    alt={orgInfo.name}
+                    className="h-10 w-10 object-contain bg-white rounded p-1 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 bg-flowtrade-navy-lighter rounded flex items-center justify-center flex-shrink-0">
+                    <span className="text-flowtrade-cyan font-bold text-lg">
+                      {orgInfo.name?.charAt(0) || 'O'}
+                    </span>
+                  </div>
+                )}
+                <p className="text-sm text-gray-300 truncate font-medium">{orgInfo.name}</p>
+              </div>
             </div>
           )}
 
@@ -197,17 +194,38 @@ export default function DashboardLayout({
       {/* Desktop Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-flowtrade-navy-light border-r border-flowtrade-navy-lighter hidden lg:block">
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* FlowTrade Logo (always visible) */}
           <div className="flex items-center h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard">
-              <LogoDisplay />
+              <img
+                src="/flowtrade-logo.svg"
+                alt="FlowTrade"
+                width={140}
+                height={32}
+                className="h-8 w-auto"
+              />
             </Link>
           </div>
 
-          {/* Organization name if logo present */}
-          {orgInfo?.logo_url && orgInfo?.name && (
-            <div className="px-6 py-2 border-b border-flowtrade-navy-lighter">
-              <p className="text-sm text-gray-400 truncate">{orgInfo.name}</p>
+          {/* Organization branding (secondary - when logo exists) */}
+          {orgInfo && (
+            <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
+              <div className="flex items-center gap-3">
+                {orgInfo.logo_url ? (
+                  <img
+                    src={orgInfo.logo_url}
+                    alt={orgInfo.name}
+                    className="h-10 w-10 object-contain bg-white rounded p-1 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 bg-flowtrade-navy-lighter rounded flex items-center justify-center flex-shrink-0">
+                    <span className="text-flowtrade-cyan font-bold text-lg">
+                      {orgInfo.name?.charAt(0) || 'O'}
+                    </span>
+                  </div>
+                )}
+                <p className="text-sm text-gray-300 truncate font-medium">{orgInfo.name}</p>
+              </div>
             </div>
           )}
 
@@ -262,7 +280,13 @@ export default function DashboardLayout({
 
           {/* Logo */}
           <Link href="/dashboard">
-            <LogoDisplay className="h-7 w-auto" />
+            <img
+              src="/flowtrade-logo.svg"
+              alt="FlowTrade"
+              width={120}
+              height={28}
+              className="h-7 w-auto"
+            />
           </Link>
 
           {/* Sign out */}
