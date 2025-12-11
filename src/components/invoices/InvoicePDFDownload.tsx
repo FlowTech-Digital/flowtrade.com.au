@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Download, Loader2 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 
 type InvoiceCustomer = {
   first_name: string | null
@@ -40,36 +42,82 @@ type BusinessInfo = {
   address: string
   email: string
   phone: string
+  logo_url?: string | null
 }
 
 type InvoicePDFDownloadProps = {
   invoice: InvoiceData
-  business?: BusinessInfo
   className?: string
   variant?: 'primary' | 'secondary'
 }
 
-// Default business info - can be customized per organization later
-const DEFAULT_BUSINESS: BusinessInfo = {
-  name: 'Your Business Name',
-  abn: '00 000 000 000',
-  address: 'Your Business Address',
-  email: 'contact@yourbusiness.com',
-  phone: '0400 000 000',
-}
-
 export function InvoicePDFDownload({
   invoice,
-  business = DEFAULT_BUSINESS,
   className = '',
   variant = 'primary',
 }: InvoicePDFDownloadProps) {
+  const { user } = useAuth()
   const [generating, setGenerating] = useState(false)
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null)
+
+  // Fetch organization info for the PDF
+  useEffect(() => {
+    async function fetchOrgInfo() {
+      if (!user) return
+      
+      const supabase = createClient()
+      if (!supabase) return
+
+      // Get user's org_id
+      const { data: userData } = await supabase
+        .from('users')
+        .select('org_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (!userData?.org_id) return
+
+      // Get organization details
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name, abn, email, phone, address_line1, suburb, state, postcode, logo_url')
+        .eq('id', userData.org_id)
+        .single()
+
+      if (orgData) {
+        // Build address string
+        const addressParts = [
+          orgData.address_line1,
+          [orgData.suburb, orgData.state, orgData.postcode].filter(Boolean).join(' ')
+        ].filter(Boolean)
+
+        setBusinessInfo({
+          name: orgData.name || 'Your Business Name',
+          abn: orgData.abn || '00 000 000 000',
+          address: addressParts.join(', ') || 'Your Business Address',
+          email: orgData.email || 'contact@yourbusiness.com',
+          phone: orgData.phone || '0400 000 000',
+          logo_url: orgData.logo_url,
+        })
+      }
+    }
+
+    fetchOrgInfo()
+  }, [user])
 
   const handleDownload = async () => {
     setGenerating(true)
     
     try {
+      // Use fetched business info or defaults
+      const business: BusinessInfo = businessInfo || {
+        name: 'Your Business Name',
+        abn: '00 000 000 000',
+        address: 'Your Business Address',
+        email: 'contact@yourbusiness.com',
+        phone: '0400 000 000',
+      }
+
       // Dynamically import @react-pdf/renderer to avoid SSR issues
       // This is required for CloudFlare Pages edge runtime compatibility
       const [{ pdf }, { InvoicePDFTemplate }] = await Promise.all([

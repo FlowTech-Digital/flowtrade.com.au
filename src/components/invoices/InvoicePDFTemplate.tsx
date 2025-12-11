@@ -1,6 +1,6 @@
 'use client'
 
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 
 // Define types for the invoice data
@@ -41,6 +41,7 @@ type BusinessInfo = {
   address: string
   email: string
   phone: string
+  logo_url?: string | null
 }
 
 const styles = StyleSheet.create({
@@ -58,10 +59,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#0891b2',
   },
+  headerLeft: {
+    flexDirection: 'column',
+  },
   logo: {
+    width: 120,
+    height: 60,
+    objectFit: 'contain',
+    marginBottom: 10,
+  },
+  businessName: {
     fontSize: 24,
     fontFamily: 'Helvetica-Bold',
     color: '#0891b2',
+  },
+  businessNameWithLogo: {
+    fontSize: 16,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
   },
   logoSubtext: {
     fontSize: 10,
@@ -288,15 +303,23 @@ type InvoicePDFTemplateProps = {
 
 export function InvoicePDFTemplate({ invoice, business }: InvoicePDFTemplateProps) {
   const customerAddress = getCustomerAddress(invoice.customer)
+  const hasLogo = business.logo_url && business.logo_url.length > 0
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.logo}>FlowTrade</Text>
-            <Text style={styles.logoSubtext}>Trade Job Management</Text>
+          <View style={styles.headerLeft}>
+            {hasLogo && (
+              <Image src={business.logo_url!} style={styles.logo} />
+            )}
+            <Text style={hasLogo ? styles.businessNameWithLogo : styles.businessName}>
+              {business.name}
+            </Text>
+            {!hasLogo && (
+              <Text style={styles.logoSubtext}>Trade Job Management</Text>
+            )}
           </View>
           <View>
             <Text style={styles.invoiceTitle}>INVOICE</Text>
