@@ -37,12 +37,13 @@ async function getInvoiceByToken(token: string) {
 
   // Log access
   const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+  const ipHeader = headersList.get('x-forwarded-for') || headersList.get('x-real-ip');
+  const ip = ipHeader ? ipHeader.split(',')[0].trim() : 'unknown';
   const userAgent = headersList.get('user-agent') || 'unknown';
 
   await supabase.from('portal_access_logs').insert({
     token_id: tokenData.id,
-    ip_address: ip.split(',')[0].trim(),
+    ip_address: ip,
     user_agent: userAgent,
     action: 'view_invoice'
   });
