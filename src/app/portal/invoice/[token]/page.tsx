@@ -6,6 +6,8 @@ import { InvoicePortalView } from '@/components/portal/InvoicePortalView';
 import { TokenExpiredView } from '@/components/portal/TokenExpiredView';
 import { headers } from 'next/headers';
 
+export const runtime = 'edge';
+
 interface PageProps {
   params: Promise<{ token: string }>;
   searchParams: Promise<{ payment?: string }>;

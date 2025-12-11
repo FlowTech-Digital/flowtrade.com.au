@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 
+export const runtime = 'edge';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
