@@ -20,6 +20,38 @@ import {
 
 type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
 
+type Invoice = {
+  id: string
+  status: string
+  total: number | null
+  created_at: string
+  customer_id: string | null
+}
+
+type Job = {
+  id: string
+  status: string
+  total_amount: number | null
+  created_at: string
+  customer_id: string | null
+}
+
+type Quote = {
+  id: string
+  status: string
+  total: number | null
+  created_at: string
+  customer_id: string | null
+}
+
+type Customer = {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  company_name: string | null
+  created_at: string
+}
+
 type RevenueData = {
   totalRevenue: number
   previousRevenue: number
@@ -170,21 +202,21 @@ export default function ReportsPage() {
           .lt('created_at', startISO)
       ])
 
-      const invoices = invoicesResult.data || []
-      const jobs = jobsResult.data || []
-      const quotes = quotesResult.data || []
-      const customers = customersResult.data || []
-      const prevInvoices = prevInvoicesResult.data || []
+      const invoices = (invoicesResult.data || []) as Invoice[]
+      const jobs = (jobsResult.data || []) as Job[]
+      const quotes = (quotesResult.data || []) as Quote[]
+      const customers = (customersResult.data || []) as Customer[]
+      const prevInvoices = (prevInvoicesResult.data || []) as Invoice[]
 
       // Calculate Revenue Data
-      const paidInvoices = invoices.filter(inv => inv.status === 'paid')
-      const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
-      const previousRevenue = prevInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+      const paidInvoices = invoices.filter((inv: Invoice) => inv.status === 'paid')
+      const totalRevenue = paidInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.total || 0), 0)
+      const previousRevenue = prevInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.total || 0), 0)
       const averageInvoice = paidInvoices.length > 0 ? totalRevenue / paidInvoices.length : 0
 
       // Monthly breakdown
       const monthlyMap = new Map<string, number>()
-      paidInvoices.forEach(inv => {
+      paidInvoices.forEach((inv: Invoice) => {
         const date = new Date(inv.created_at)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
         monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + (inv.total || 0))
@@ -202,15 +234,15 @@ export default function ReportsPage() {
       })
 
       // Calculate Job Metrics
-      const completedJobs = jobs.filter(j => ['completed', 'invoiced'].includes(j.status)).length
+      const completedJobs = jobs.filter((j: Job) => ['completed', 'invoiced'].includes(j.status)).length
       const completionRate = jobs.length > 0 ? (completedJobs / jobs.length) * 100 : 0
-      const jobsWithValue = jobs.filter(j => j.total_amount && j.total_amount > 0)
+      const jobsWithValue = jobs.filter((j: Job) => j.total_amount && j.total_amount > 0)
       const averageJobValue = jobsWithValue.length > 0
-        ? jobsWithValue.reduce((sum, j) => sum + (j.total_amount || 0), 0) / jobsWithValue.length
+        ? jobsWithValue.reduce((sum: number, j: Job) => sum + (j.total_amount || 0), 0) / jobsWithValue.length
         : 0
 
       const jobStatusMap = new Map<string, number>()
-      jobs.forEach(j => {
+      jobs.forEach((j: Job) => {
         jobStatusMap.set(j.status, (jobStatusMap.get(j.status) || 0) + 1)
       })
 
@@ -223,15 +255,15 @@ export default function ReportsPage() {
       })
 
       // Calculate Quote Metrics
-      const acceptedQuotes = quotes.filter(q => q.status === 'accepted').length
-      const declinedQuotes = quotes.filter(q => q.status === 'declined').length
+      const acceptedQuotes = quotes.filter((q: Quote) => q.status === 'accepted').length
+      const declinedQuotes = quotes.filter((q: Quote) => q.status === 'declined').length
       const conversionRate = quotes.length > 0 ? (acceptedQuotes / quotes.length) * 100 : 0
-      const quotesWithValue = quotes.filter(q => q.total && q.total > 0)
-      const totalQuoteValue = quotesWithValue.reduce((sum, q) => sum + (q.total || 0), 0)
+      const quotesWithValue = quotes.filter((q: Quote) => q.total && q.total > 0)
+      const totalQuoteValue = quotesWithValue.reduce((sum: number, q: Quote) => sum + (q.total || 0), 0)
       const averageQuoteValue = quotesWithValue.length > 0 ? totalQuoteValue / quotesWithValue.length : 0
 
       const quoteStatusMap = new Map<string, number>()
-      quotes.forEach(q => {
+      quotes.forEach((q: Quote) => {
         quoteStatusMap.set(q.status, (quoteStatusMap.get(q.status) || 0) + 1)
       })
 
@@ -246,21 +278,21 @@ export default function ReportsPage() {
       })
 
       // Calculate Customer Metrics
-      const newCustomers = customers.filter(c => {
+      const newCustomers = customers.filter((c: Customer) => {
         const created = new Date(c.created_at)
         return created >= start && created <= end
       }).length
 
       // Get customer revenue from paid invoices
       const customerRevenueMap = new Map<string, { revenue: number; jobs: number }>()
-      paidInvoices.forEach(inv => {
+      paidInvoices.forEach((inv: Invoice) => {
         if (inv.customer_id) {
           const existing = customerRevenueMap.get(inv.customer_id) || { revenue: 0, jobs: 0 }
           existing.revenue += inv.total || 0
           customerRevenueMap.set(inv.customer_id, existing)
         }
       })
-      jobs.forEach(job => {
+      jobs.forEach((job: Job) => {
         if (job.customer_id) {
           const existing = customerRevenueMap.get(job.customer_id) || { revenue: 0, jobs: 0 }
           existing.jobs += 1
@@ -269,7 +301,7 @@ export default function ReportsPage() {
       })
 
       const topCustomers = customers
-        .map(c => {
+        .map((c: Customer) => {
           const data = customerRevenueMap.get(c.id) || { revenue: 0, jobs: 0 }
           const name = c.company_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unnamed'
           return {
@@ -283,7 +315,7 @@ export default function ReportsPage() {
         .sort((a, b) => b.totalRevenue - a.totalRevenue)
         .slice(0, 5)
 
-      const activeCustomerIds = new Set([...paidInvoices.map(i => i.customer_id), ...jobs.map(j => j.customer_id)].filter(Boolean))
+      const activeCustomerIds = new Set([...paidInvoices.map((i: Invoice) => i.customer_id), ...jobs.map((j: Job) => j.customer_id)].filter(Boolean))
 
       setCustomerMetrics({
         totalCustomers: customers.length,
