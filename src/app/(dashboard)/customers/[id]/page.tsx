@@ -48,6 +48,12 @@ const STATUS_CONFIG = {
   expired: { label: 'Expired', icon: AlertCircle, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
 }
 
+// Helper function to format contact name
+const getContactName = (customer: Customer) => {
+  const parts = [customer.first_name, customer.last_name].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : 'No contact name'
+}
+
 export default function CustomerDetailPage() {
   const { user } = useAuth()
   const router = useRouter()
@@ -166,10 +172,12 @@ export default function CustomerDetailPage() {
     }
 
     const cleanData = {
-      business_name: formData.business_name,
-      contact_name: formData.contact_name,
+      company_name: formData.company_name,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       email: formData.email || null,
       phone: formData.phone || null,
+      mobile: formData.mobile || null,
       address_line1: formData.address_line1 || null,
       address_line2: formData.address_line2 || null,
       suburb: formData.suburb || null,
@@ -250,6 +258,7 @@ export default function CustomerDetailPage() {
 
   const revenue = getRevenueSummary()
   const address = formatAddress()
+  const contactName = getContactName(customer)
 
   return (
     <div>
@@ -268,8 +277,8 @@ export default function CustomerDetailPage() {
                 <Building className="h-6 w-6 text-flowtrade-cyan" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">{customer.business_name}</h1>
-                <p className="text-gray-400">{customer.contact_name}</p>
+                <h1 className="text-2xl font-bold text-white">{customer.company_name}</h1>
+                <p className="text-gray-400">{contactName}</p>
               </div>
             </div>
           </div>
@@ -312,7 +321,7 @@ export default function CustomerDetailPage() {
                   <User className="h-5 w-5 text-flowtrade-cyan" />
                   <div>
                     <p className="text-xs text-gray-500">Contact Name</p>
-                    <p className="text-white">{customer.contact_name}</p>
+                    <p className="text-white">{contactName}</p>
                   </div>
                 </div>
                 {customer.email && (
@@ -519,7 +528,7 @@ export default function CustomerDetailPage() {
               </div>
             </div>
             <p className="text-gray-300 mb-6">
-              Are you sure you want to delete <strong>{customer.business_name}</strong>?
+              Are you sure you want to delete <strong>{customer.company_name}</strong>?
               {quotes.length > 0 && (
                 <span className="block mt-2 text-yellow-400">
                   Warning: This customer has {quotes.length} quote{quotes.length !== 1 ? 's' : ''} associated.
