@@ -23,11 +23,11 @@ type Invoice = {
   invoice_number: string
   status: string
   subtotal: number
-  tax_amount: number
+  gst_amount: number
   total: number
-  invoice_date: string
+  issue_date: string
   due_date: string | null
-  payment_date: string | null
+  paid_at: string | null
   created_at: string
   notes: string | null
   customer: {
@@ -88,11 +88,11 @@ export default function InvoicesPage() {
           invoice_number,
           status,
           subtotal,
-          tax_amount,
+          gst_amount,
           total,
-          invoice_date,
+          issue_date,
           due_date,
-          payment_date,
+          paid_at,
           created_at,
           notes,
           customer:customers(
@@ -317,7 +317,7 @@ export default function InvoicesPage() {
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Customer</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
                   <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Total</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Invoice Date</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Issue Date</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Due Date</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Job #</th>
                   <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Actions</th>
@@ -343,7 +343,7 @@ export default function InvoicesPage() {
                       <span className="text-white font-medium">{formatCurrency(invoice.total)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-gray-400">{formatDate(invoice.invoice_date)}</span>
+                      <span className="text-gray-400">{formatDate(invoice.issue_date)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-gray-400">{formatDate(invoice.due_date)}</span>
