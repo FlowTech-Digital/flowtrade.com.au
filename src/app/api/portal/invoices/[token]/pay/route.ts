@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { rateLimit } from '@/lib/rate-limit';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import Stripe from 'stripe';
-
-const limiter = rateLimit({
-  interval: 60 * 1000,
-  uniqueTokenPerInterval: 500,
-});
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-11-20.acacia',
@@ -20,10 +15,10 @@ export async function POST(
     const { token } = await params;
     
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
-    try {
-      await limiter.check(10, ip.split(',')[0].trim());
-    } catch {
+    const ip = getClientIp(request);
+    const rateLimitResult = rateLimit(`pay:${ip}`, { interval: 60 * 1000, limit: 10 });
+    
+    if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -128,7 +123,7 @@ export async function POST(
     // Log the payment initiation in portal access logs
     await supabase.from('portal_access_logs').insert({
       token_id: tokenData.id,
-      ip_address: ip.split(',')[0].trim(),
+      ip_address: ip,
       user_agent: request.headers.get('user-agent') || 'unknown',
       action: 'initiate_payment'
     });
