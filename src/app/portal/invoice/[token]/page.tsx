@@ -121,7 +121,7 @@ export default async function InvoicePortalPage({ params, searchParams }: PagePr
     }
     return (
       <PortalLayout>
-        <TokenExpiredView type="invoice" reason={result.error} />
+        <TokenExpiredView errorType={result.error} />
       </PortalLayout>
     );
   }
