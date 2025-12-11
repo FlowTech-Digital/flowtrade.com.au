@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { uploadLogo, updateOrgLogo, deleteLogo } from '@/lib/supabase/storage'
-import { Building2, Mail, Phone, FileText, Upload, X, Loader2, Check, AlertCircle } from 'lucide-react'
+import { Building2, Mail, Phone, FileText, Upload, X, Loader2, Check, AlertCircle, MapPin } from 'lucide-react'
 
 type Organization = {
   id: string
@@ -14,6 +14,11 @@ type Organization = {
   abn: string | null
   logo_url: string | null
   primary_trade: string | null
+  address_line1: string | null
+  address_line2: string | null
+  suburb: string | null
+  state: string | null
+  postcode: string | null
 }
 
 export default function SettingsPage() {
@@ -29,7 +34,12 @@ export default function SettingsPage() {
     name: '',
     email: '',
     phone: '',
-    abn: ''
+    abn: '',
+    address_line1: '',
+    address_line2: '',
+    suburb: '',
+    state: '',
+    postcode: ''
   })
   
   // Drag state
@@ -62,7 +72,7 @@ export default function SettingsPage() {
       // Get organization details
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .select('id, name, email, phone, abn, logo_url, primary_trade')
+        .select('id, name, email, phone, abn, logo_url, primary_trade, address_line1, address_line2, suburb, state, postcode')
         .eq('id', userData.org_id)
         .single()
 
@@ -77,7 +87,12 @@ export default function SettingsPage() {
         name: orgData.name || '',
         email: orgData.email || '',
         phone: orgData.phone || '',
-        abn: orgData.abn || ''
+        abn: orgData.abn || '',
+        address_line1: orgData.address_line1 || '',
+        address_line2: orgData.address_line2 || '',
+        suburb: orgData.suburb || '',
+        state: orgData.state || '',
+        postcode: orgData.postcode || ''
       })
       setLoading(false)
     }
@@ -86,7 +101,7 @@ export default function SettingsPage() {
   }, [user])
 
   // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -113,6 +128,11 @@ export default function SettingsPage() {
         email: formData.email || null,
         phone: formData.phone || null,
         abn: formData.abn || null,
+        address_line1: formData.address_line1 || null,
+        address_line2: formData.address_line2 || null,
+        suburb: formData.suburb || null,
+        state: formData.state || null,
+        postcode: formData.postcode || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', org.id)
@@ -192,6 +212,19 @@ export default function SettingsPage() {
     setMessage({ type: 'success', text: 'Logo removed' })
     setUploading(false)
   }
+
+  // Australian states for dropdown
+  const australianStates = [
+    { value: '', label: 'Select state...' },
+    { value: 'NSW', label: 'New South Wales' },
+    { value: 'VIC', label: 'Victoria' },
+    { value: 'QLD', label: 'Queensland' },
+    { value: 'WA', label: 'Western Australia' },
+    { value: 'SA', label: 'South Australia' },
+    { value: 'TAS', label: 'Tasmania' },
+    { value: 'ACT', label: 'Australian Capital Territory' },
+    { value: 'NT', label: 'Northern Territory' }
+  ]
 
   if (loading) {
     return (
@@ -294,86 +327,187 @@ export default function SettingsPage() {
       <form onSubmit={handleSave} className="bg-flowtrade-navy-light rounded-xl p-6 border border-flowtrade-navy-lighter">
         <h2 className="text-lg font-semibold text-white mb-4">Organization Details</h2>
         
-        <div className="space-y-4">
-          {/* Business Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              <Building2 className="h-4 w-4 inline mr-2" />
-              Business Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              <Mail className="h-4 w-4 inline mr-2" />
-              Business Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="contact@yourbusiness.com.au"
-              className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              <Phone className="h-4 w-4 inline mr-2" />
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="0400 000 000"
-              className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-            />
-          </div>
-
-          {/* ABN */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              <FileText className="h-4 w-4 inline mr-2" />
-              ABN
-            </label>
-            <input
-              type="text"
-              name="abn"
-              value={formData.abn}
-              onChange={handleChange}
-              placeholder="XX XXX XXX XXX"
-              className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-            />
-          </div>
-
-          {/* Primary Trade (read-only) */}
-          {org?.primary_trade && (
+        <div className="space-y-6">
+          {/* Business Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Business Information</h3>
+            
+            {/* Business Name */}
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Primary Trade
+                <Building2 className="h-4 w-4 inline mr-2" />
+                Business Name
               </label>
               <input
                 type="text"
-                value={org.primary_trade.charAt(0).toUpperCase() + org.primary_trade.slice(1)}
-                disabled
-                className="w-full px-4 py-2 bg-flowtrade-navy-lighter border border-flowtrade-navy-lighter rounded-lg text-gray-500 cursor-not-allowed"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
               />
-              <p className="text-xs text-gray-600 mt-1">Contact support to change your primary trade</p>
             </div>
-          )}
+
+            {/* ABN */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <FileText className="h-4 w-4 inline mr-2" />
+                ABN
+              </label>
+              <input
+                type="text"
+                name="abn"
+                value={formData.abn}
+                onChange={handleChange}
+                placeholder="XX XXX XXX XXX"
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+              />
+            </div>
+
+            {/* Primary Trade (read-only) */}
+            {org?.primary_trade && (
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Primary Trade
+                </label>
+                <input
+                  type="text"
+                  value={org.primary_trade.charAt(0).toUpperCase() + org.primary_trade.slice(1)}
+                  disabled
+                  className="w-full px-4 py-2 bg-flowtrade-navy-lighter border border-flowtrade-navy-lighter rounded-lg text-gray-500 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-600 mt-1">Contact support to change your primary trade</p>
+              </div>
+            )}
+          </div>
+
+          {/* Contact Details Section */}
+          <div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Contact Details</h3>
+            
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <Mail className="h-4 w-4 inline mr-2" />
+                Business Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="contact@yourbusiness.com.au"
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <Phone className="h-4 w-4 inline mr-2" />
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="0400 000 000"
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Address Section */}
+          <div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <MapPin className="h-4 w-4 inline mr-2" />
+              Business Address
+            </h3>
+            
+            {/* Address Line 1 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Street Address
+              </label>
+              <input
+                type="text"
+                name="address_line1"
+                value={formData.address_line1}
+                onChange={handleChange}
+                placeholder="123 Main Street"
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+              />
+            </div>
+
+            {/* Address Line 2 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Address Line 2 <span className="text-gray-600">(optional)</span>
+              </label>
+              <input
+                type="text"
+                name="address_line2"
+                value={formData.address_line2}
+                onChange={handleChange}
+                placeholder="Unit 1, Building A"
+                className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+              />
+            </div>
+
+            {/* Suburb, State, Postcode Row */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Suburb */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Suburb
+                </label>
+                <input
+                  type="text"
+                  name="suburb"
+                  value={formData.suburb}
+                  onChange={handleChange}
+                  placeholder="Sydney"
+                  className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                />
+              </div>
+
+              {/* State */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  State
+                </label>
+                <select
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                >
+                  {australianStates.map(state => (
+                    <option key={state.value} value={state.value}>
+                      {state.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Postcode */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Postcode
+                </label>
+                <input
+                  type="text"
+                  name="postcode"
+                  value={formData.postcode}
+                  onChange={handleChange}
+                  placeholder="2000"
+                  maxLength={4}
+                  className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Save Button */}
