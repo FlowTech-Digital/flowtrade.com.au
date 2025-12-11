@@ -23,7 +23,6 @@ import {
   Pause,
   FileText,
   AlertCircle,
-  DollarSign,
   Play,
   CircleCheck,
   Receipt

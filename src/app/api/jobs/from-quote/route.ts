@@ -72,9 +72,7 @@ export async function POST(request: NextRequest) {
 
     if (jobNumberError) {
       console.error('Job number generation error:', jobNumberError)
-      // Fallback to timestamp-based number
-      const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14)
-      // Continue with fallback
+      // Continue with fallback - jobNumberResult will be null
     }
 
     const jobNumber = jobNumberResult || `JOB-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Date.now().toString().slice(-4)}`
