@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge';
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
