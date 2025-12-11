@@ -19,7 +19,8 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Briefcase
+  Briefcase,
+  Pencil
 } from 'lucide-react'
 
 export const runtime = 'edge'
@@ -262,6 +263,7 @@ export default function InvoiceDetailPage() {
 
   const availableTransitions = VALID_TRANSITIONS[invoice.status] || []
   const customerAddress = getCustomerAddress(invoice.customer)
+  const canEdit = invoice.status === 'draft' || invoice.status === 'sent'
 
   // Prepare invoice data for PDF
   const pdfInvoiceData = {
@@ -308,6 +310,15 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {canEdit && (
+            <button
+              onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
+              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </button>
+          )}
           <InvoicePDFDownload invoice={pdfInvoiceData} />
           <StatusBadge status={invoice.status} />
         </div>
