@@ -99,6 +99,7 @@ type Organization = {
   suburb: string | null
   state: string | null
   postcode: string | null
+  logo_url: string | null
 }
 
 const STATUS_CONFIG = {
@@ -183,7 +184,7 @@ export default function QuoteDetailPage() {
       if (userData?.org_id) {
         const { data: orgData } = await supabase
           .from('organizations')
-          .select('id, name, abn, email, phone, address_line1, address_line2, suburb, state, postcode')
+          .select('id, name, abn, email, phone, address_line1, address_line2, suburb, state, postcode, logo_url')
           .eq('id', userData.org_id)
           .single()
 
@@ -434,13 +435,15 @@ export default function QuoteDetailPage() {
         abn: organization.abn ? `ABN: ${organization.abn}` : 'ABN: XX XXX XXX XXX',
         email: organization.email || 'contact@yourbusiness.com.au',
         phone: organization.phone || '0400 000 000',
-        address: getBusinessAddress(organization)
+        address: getBusinessAddress(organization),
+        logo_url: organization.logo_url
       } : {
         name: 'Your Business Name',
         abn: 'ABN: XX XXX XXX XXX',
         email: 'contact@yourbusiness.com.au',
         phone: '0400 000 000',
-        address: 'Sydney, NSW'
+        address: 'Sydney, NSW',
+        logo_url: null
       }
       
       await downloadQuotePDF({
