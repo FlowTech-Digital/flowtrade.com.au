@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { pdf } from '@react-pdf/renderer'
 import { Download, Loader2 } from 'lucide-react'
-import { InvoicePDFTemplate } from './InvoicePDFTemplate'
 
 type InvoiceCustomer = {
   first_name: string | null
@@ -72,6 +70,13 @@ export function InvoicePDFDownload({
     setGenerating(true)
     
     try {
+      // Dynamically import @react-pdf/renderer to avoid SSR issues
+      // This is required for CloudFlare Pages edge runtime compatibility
+      const [{ pdf }, { InvoicePDFTemplate }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./InvoicePDFTemplate')
+      ])
+      
       // Generate PDF blob
       const blob = await pdf(
         <InvoicePDFTemplate invoice={invoice} business={business} />
