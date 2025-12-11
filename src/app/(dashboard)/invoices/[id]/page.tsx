@@ -100,6 +100,9 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [sendSuccess, setSendSuccess] = useState(false)
 
   useEffect(() => {
     async function fetchInvoice() {
@@ -193,6 +196,42 @@ export default function InvoiceDetailPage() {
     }
   }
 
+  const sendInvoiceEmail = async () => {
+    if (!invoice) return
+    
+    setSending(true)
+    setSendError(null)
+    setSendSuccess(false)
+    
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send invoice')
+      }
+
+      setSendSuccess(true)
+      
+      // Update local state if status changed
+      if (data.status && data.status !== invoice.status) {
+        setInvoice(prev => prev ? { ...prev, status: data.status } : null)
+      }
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSendSuccess(false), 5000)
+    } catch (error) {
+      console.error('Error sending invoice:', error)
+      setSendError(error instanceof Error ? error.message : 'Failed to send invoice')
+    } finally {
+      setSending(false)
+    }
+  }
+
   const formatCurrency = (amount: number | null) => {
     if (amount === null || amount === undefined) return '—'
     return new Intl.NumberFormat('en-AU', {
@@ -264,6 +303,7 @@ export default function InvoiceDetailPage() {
   const availableTransitions = VALID_TRANSITIONS[invoice.status] || []
   const customerAddress = getCustomerAddress(invoice.customer)
   const canEdit = invoice.status === 'draft' || invoice.status === 'sent'
+  const canSendEmail = invoice.customer?.email && (invoice.status === 'draft' || invoice.status === 'sent' || invoice.status === 'overdue')
 
   // Prepare invoice data for PDF
   const pdfInvoiceData = {
@@ -323,6 +363,20 @@ export default function InvoiceDetailPage() {
           <StatusBadge status={invoice.status} />
         </div>
       </div>
+
+      {/* Send Success/Error Messages */}
+      {sendSuccess && (
+        <div className="mb-6 p-4 bg-green-900/30 border border-green-700 rounded-lg flex items-center gap-3">
+          <CheckCircle className="h-5 w-5 text-green-400" />
+          <span className="text-green-400">Invoice sent successfully to {invoice.customer?.email}</span>
+        </div>
+      )}
+      {sendError && (
+        <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-400" />
+          <span className="text-red-400">{sendError}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
@@ -397,10 +451,21 @@ export default function InvoiceDetailPage() {
           )}
 
           {/* Status Actions */}
-          {availableTransitions.length > 0 && (
+          {(availableTransitions.length > 0 || canSendEmail) && (
             <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Actions</h2>
               <div className="flex flex-wrap gap-3">
+                {/* Send Email Button */}
+                {canSendEmail && (
+                  <button
+                    onClick={sendInvoiceEmail}
+                    disabled={sending}
+                    className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50"
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                    {sending ? 'Sending...' : 'Send Email'}
+                  </button>
+                )}
                 {availableTransitions.includes('sent') && (
                   <button
                     onClick={() => updateStatus('sent')}
@@ -442,6 +507,11 @@ export default function InvoiceDetailPage() {
                   </button>
                 )}
               </div>
+              {!invoice.customer?.email && (
+                <p className="mt-3 text-sm text-amber-400">
+                  💡 Add an email address to this customer to enable email sending
+                </p>
+              )}
             </div>
           )}
         </div>
