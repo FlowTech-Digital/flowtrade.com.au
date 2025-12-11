@@ -63,11 +63,14 @@ export function rateLimit(
 }
 
 function cleanupExpiredEntries(now: number): void {
-  for (const [key, entry] of rateLimitStore.entries()) {
+  // Use forEach instead of for...of to avoid MapIterator downlevelIteration issue
+  const keysToDelete: string[] = [];
+  rateLimitStore.forEach((entry, key) => {
     if (now > entry.resetTime) {
-      rateLimitStore.delete(key);
+      keysToDelete.push(key);
     }
-  }
+  });
+  keysToDelete.forEach(key => rateLimitStore.delete(key));
 }
 
 // Helper to get client IP from request
