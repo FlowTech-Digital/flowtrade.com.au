@@ -11,7 +11,6 @@ import {
   Link,
   Hr,
   Preview,
-  Img,
 } from '@react-email/components'
 
 export interface QuoteEmailProps {
