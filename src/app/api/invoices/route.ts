@@ -78,6 +78,7 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
+      console.error('Failed to fetch invoices:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -116,11 +117,10 @@ export async function POST(request: NextRequest) {
     
     const invoiceNumber = await generateInvoiceNumber(supabase, userData.org_id)
     
-    // Calculate tax and total
+    // Calculate GST (fixed 10% in Australia) and total
     const subtotal = parseFloat(body.subtotal) || 0
-    const taxRate = parseFloat(body.tax_rate) || 10.00
-    const taxAmount = subtotal * (taxRate / 100)
-    const total = subtotal + taxAmount
+    const gstAmount = subtotal * 0.10  // 10% GST
+    const total = subtotal + gstAmount
 
     const { data: invoice, error } = await supabase
       .from('invoices')
@@ -129,19 +129,23 @@ export async function POST(request: NextRequest) {
         invoice_number: invoiceNumber,
         job_id: body.job_id || null,
         customer_id: body.customer_id,
-        invoice_date: body.invoice_date || new Date().toISOString().split('T')[0],
+        issue_date: body.issue_date || new Date().toISOString().split('T')[0],
         due_date: body.due_date || null,
         subtotal: subtotal,
-        tax_rate: taxRate,
-        tax_amount: taxAmount,
+        gst_amount: gstAmount,
+        discount_amount: parseFloat(body.discount_amount) || 0,
         total: total,
+        amount_paid: 0,
+        amount_due: total,
         status: body.status || 'draft',
         notes: body.notes || null,
+        payment_terms: body.payment_terms || 'Due on receipt',
       })
       .select()
       .single()
 
     if (error) {
+      console.error('Failed to create invoice:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
