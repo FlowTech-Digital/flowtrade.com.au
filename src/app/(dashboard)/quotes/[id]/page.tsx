@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
+import { downloadQuotePDF } from '@/lib/pdf'
 import {
   ArrowLeft,
   Edit,
@@ -245,6 +246,45 @@ export default function QuoteDetailPage() {
     setQuote({ ...quote, status: newStatus, ...updateData })
     setActionLoading(null)
     setShowActionsMenu(false)
+  }
+
+  // Download PDF
+  const handleDownloadPDF = async () => {
+    if (!quote) return
+    setActionLoading('pdf')
+    setShowActionsMenu(false)
+
+    try {
+      await downloadQuotePDF({
+        quote: {
+          ...quote,
+          customer: quote.customer
+        },
+        lineItems: lineItems.map(item => ({
+          id: item.id,
+          item_order: item.item_order,
+          item_type: item.item_type,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          unit_price: item.unit_price,
+          line_total: item.line_total,
+          is_optional: item.is_optional
+        })),
+        // TODO: Load business info from org settings
+        businessInfo: {
+          name: 'Your Business Name',
+          abn: 'ABN: XX XXX XXX XXX',
+          email: 'contact@yourbusiness.com.au',
+          phone: '0400 000 000',
+          address: 'Sydney, NSW'
+        }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate PDF')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Duplicate quote
@@ -511,10 +551,15 @@ export default function QuoteDetailPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => {/* TODO: Generate PDF */}}
+                    onClick={handleDownloadPDF}
+                    disabled={!!actionLoading}
                     className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
                   >
-                    <Download className="h-4 w-4" />
+                    {actionLoading === 'pdf' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
                     Download PDF
                   </button>
                   {quote.version > 1 && (
