@@ -1,7 +1,7 @@
 // FlowTrade Invoice Send API
 // Sends invoice emails via Resend
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { InvoiceEmail } from '@/lib/email/templates/InvoiceEmail'
@@ -11,7 +11,7 @@ export const runtime = 'edge'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(
-  request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -141,7 +141,7 @@ export async function POST(
         .eq('id', id)
     }
 
-    // Log the email send (optional: create email_logs table later)
+    // Log the email send
     console.log(`Invoice ${invoice.invoice_number} sent to ${invoice.customer.email}`, emailData)
 
     return NextResponse.json({
