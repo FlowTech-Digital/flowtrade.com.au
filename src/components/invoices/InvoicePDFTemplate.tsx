@@ -12,7 +12,7 @@ type InvoiceCustomer = {
   phone: string | null
   address_line1: string | null
   address_line2: string | null
-  city: string | null
+  suburb: string | null
   state: string | null
   postcode: string | null
 }
@@ -276,7 +276,7 @@ const getCustomerAddress = (customer: InvoiceCustomer | null): string[] => {
   const lines: string[] = []
   if (customer.address_line1) lines.push(customer.address_line1)
   if (customer.address_line2) lines.push(customer.address_line2)
-  const cityLine = [customer.city, customer.state, customer.postcode].filter(Boolean).join(' ')
+  const cityLine = [customer.suburb, customer.state, customer.postcode].filter(Boolean).join(' ')
   if (cityLine) lines.push(cityLine)
   return lines
 }
