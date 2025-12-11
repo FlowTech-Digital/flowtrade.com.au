@@ -6,6 +6,9 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { QuoteEmail } from '@/lib/email/templates/QuoteEmail'
 
+// CloudFlare Pages requires Edge Runtime
+export const runtime = 'edge'
+
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY)
 
