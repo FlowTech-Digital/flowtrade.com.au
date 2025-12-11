@@ -1,5 +1,5 @@
 // FlowTrade Quote Email Send API Route
-// POST /api/quotes/[id]/send - Sends quote to customer via email
+// POST /api/quotes/[id]/send - Sends quote to customer via email with portal link
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -17,6 +17,48 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+// Generate portal token for quote
+async function generateQuotePortalToken(
+  quoteId: string,
+  customerId: string,
+  orgId: string
+): Promise<string | null> {
+  // Check for existing valid token
+  const { data: existingToken } = await supabase
+    .from('portal_tokens')
+    .select('token')
+    .eq('resource_id', quoteId)
+    .eq('token_type', 'quote')
+    .eq('is_revoked', false)
+    .gt('expires_at', new Date().toISOString())
+    .single()
+
+  if (existingToken?.token) {
+    return existingToken.token
+  }
+
+  // Generate new token (UUID v4 format)
+  const token = crypto.randomUUID()
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + 7) // 7 days expiration
+
+  const { error } = await supabase.from('portal_tokens').insert({
+    customer_id: customerId,
+    org_id: orgId,
+    token,
+    token_type: 'quote',
+    resource_id: quoteId,
+    expires_at: expiresAt.toISOString()
+  })
+
+  if (error) {
+    console.error('Failed to create portal token:', error)
+    return null
+  }
+
+  return token
+}
 
 export async function POST(
   _request: NextRequest,
@@ -59,6 +101,17 @@ export async function POST(
       )
     }
 
+    // Generate portal token for quote
+    const portalToken = await generateQuotePortalToken(
+      quoteId,
+      quote.customer.id,
+      quote.org_id
+    )
+
+    // Build portal URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au'
+    const viewQuoteUrl = portalToken ? `${baseUrl}/portal/quote/${portalToken}` : undefined
+
     // Build customer name
     const customerName = quote.customer.company_name || 
       `${quote.customer.first_name || ''} ${quote.customer.last_name || ''}`.trim() || 
@@ -89,7 +142,7 @@ export async function POST(
     const fromAddress = process.env.RESEND_FROM_EMAIL || 
       `${businessName} <onboarding@resend.dev>`
 
-    // Send email via Resend
+    // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: quote.customer.email,
@@ -104,8 +157,7 @@ export async function POST(
         businessEmail: quote.organization?.email || undefined,
         businessPhone: quote.organization?.phone || undefined,
         jobDescription: quote.job_description || undefined,
-        // viewQuoteUrl can be added when customer portal is built
-        // viewQuoteUrl: `https://flowtrade.com.au/view/${quote.id}`
+        viewQuoteUrl, // Portal link included!
       }),
     })
 
@@ -133,7 +185,7 @@ export async function POST(
       // Email was sent, but status update failed - log but don't fail
     }
 
-    // Log the send event
+    // Log the send event with portal token info
     await supabase.from('quote_events').insert({
       quote_id: quoteId,
       event_type: 'email_sent',
@@ -141,6 +193,8 @@ export async function POST(
         to: quote.customer.email,
         message_id: emailResult?.id,
         sent_at: new Date().toISOString(),
+        portal_token_generated: !!portalToken,
+        portal_url: viewQuoteUrl,
       }
     })
 
@@ -148,6 +202,7 @@ export async function POST(
       success: true,
       messageId: emailResult?.id,
       sentTo: quote.customer.email,
+      portalUrl: viewQuoteUrl,
     })
 
   } catch (error) {
