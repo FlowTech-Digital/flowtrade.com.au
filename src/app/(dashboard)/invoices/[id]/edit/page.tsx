@@ -323,7 +323,7 @@ export default function EditInvoicePage() {
 
   const updateLineItem = (index: number, field: keyof LineItem, value: string | number) => {
     const updated = [...lineItems]
-    const item = { ...updated[index] }
+    const item: LineItem = { ...updated[index] }
     
     if (field === 'quantity' || field === 'unit_price') {
       const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value
