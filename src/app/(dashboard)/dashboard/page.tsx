@@ -42,6 +42,18 @@ type RecentActivity = {
   date: string
 }
 
+// Types for Supabase query results
+type QuoteRow = { id: string; status: string }
+type JobRow = { id: string; status: string }
+type InvoiceRow = { 
+  id: string
+  status: string
+  total: number | null
+  invoice_number: string
+  created_at: string
+  customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
@@ -103,27 +115,27 @@ export default function DashboardPage() {
       ])
 
       // Process quotes
-      const quotes = quotesResult.data || []
-      const pendingQuotes = quotes.filter(q => q.status === 'sent' || q.status === 'draft').length
-      const acceptedQuotes = quotes.filter(q => q.status === 'accepted').length
+      const quotes = (quotesResult.data || []) as QuoteRow[]
+      const pendingQuotes = quotes.filter((q: QuoteRow) => q.status === 'sent' || q.status === 'draft').length
+      const acceptedQuotes = quotes.filter((q: QuoteRow) => q.status === 'accepted').length
 
       // Process jobs
-      const jobs = jobsResult.data || []
-      const activeJobs = jobs.filter(j => ['scheduled', 'in_progress'].includes(j.status)).length
-      const completedJobs = jobs.filter(j => j.status === 'completed' || j.status === 'invoiced').length
+      const jobs = (jobsResult.data || []) as JobRow[]
+      const activeJobs = jobs.filter((j: JobRow) => ['scheduled', 'in_progress'].includes(j.status)).length
+      const completedJobs = jobs.filter((j: JobRow) => j.status === 'completed' || j.status === 'invoiced').length
 
       // Process invoices
-      const invoices = invoicesResult.data || []
+      const invoices = (invoicesResult.data || []) as InvoiceRow[]
       const outstandingAmount = invoices
-        .filter(inv => ['sent', 'overdue'].includes(inv.status))
-        .reduce((sum, inv) => sum + (inv.total || 0), 0)
+        .filter((inv: InvoiceRow) => ['sent', 'overdue'].includes(inv.status))
+        .reduce((sum: number, inv: InvoiceRow) => sum + (inv.total || 0), 0)
       const paidAmount = invoices
-        .filter(inv => inv.status === 'paid')
-        .reduce((sum, inv) => sum + (inv.total || 0), 0)
+        .filter((inv: InvoiceRow) => inv.status === 'paid')
+        .reduce((sum: number, inv: InvoiceRow) => sum + (inv.total || 0), 0)
 
       // Build recent activity from invoices
-      const recent: RecentActivity[] = invoices.slice(0, 5).map(inv => {
-        const customer = inv.customer as { first_name: string | null; last_name: string | null; company_name: string | null } | null
+      const recent: RecentActivity[] = invoices.slice(0, 5).map((inv: InvoiceRow) => {
+        const customer = inv.customer
         let customerName = 'No Customer'
         if (customer) {
           if (customer.company_name) {
