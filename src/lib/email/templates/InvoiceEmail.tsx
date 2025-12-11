@@ -24,6 +24,7 @@ export interface InvoiceEmailProps {
   businessPhone?: string
   jobDescription?: string
   viewInvoiceUrl?: string
+  payNowUrl?: string
 }
 
 export function InvoiceEmail({
@@ -37,6 +38,7 @@ export function InvoiceEmail({
   businessPhone,
   jobDescription,
   viewInvoiceUrl,
+  payNowUrl,
 }: InvoiceEmailProps) {
   return (
     <Html>
@@ -95,13 +97,19 @@ export function InvoiceEmail({
               If you have any questions about this invoice, please don&apos;t hesitate to get in touch.
             </Text>
 
-            {viewInvoiceUrl && (
-              <Section style={buttonSection}>
-                <Link href={viewInvoiceUrl} style={button}>
+            {/* Action Buttons */}
+            <Section style={buttonSection}>
+              {payNowUrl && (
+                <Link href={payNowUrl} style={payButton}>
+                  Pay Now
+                </Link>
+              )}
+              {viewInvoiceUrl && (
+                <Link href={viewInvoiceUrl} style={payNowUrl ? viewButton : button}>
                   View Invoice Online
                 </Link>
-              </Section>
-            )}
+              )}
+            </Section>
 
             <Text style={paragraph}>
               Thank you for your business. We appreciate your prompt payment.
@@ -262,6 +270,29 @@ const jobText = {
 const buttonSection = {
   textAlign: 'center' as const,
   marginBottom: '24px',
+}
+
+const payButton = {
+  backgroundColor: '#00d4aa',
+  color: '#0a1628',
+  fontSize: '15px',
+  fontWeight: '600',
+  textDecoration: 'none',
+  padding: '12px 32px',
+  borderRadius: '6px',
+  display: 'inline-block',
+  marginRight: '12px',
+}
+
+const viewButton = {
+  backgroundColor: '#1e293b',
+  color: '#ffffff',
+  fontSize: '15px',
+  fontWeight: '600',
+  textDecoration: 'none',
+  padding: '12px 32px',
+  borderRadius: '6px',
+  display: 'inline-block',
 }
 
 const button = {
