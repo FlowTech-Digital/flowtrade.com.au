@@ -43,3 +43,6 @@ export async function createServerSupabaseClient() {
     }
   )
 }
+
+// Export alias for backward compatibility with portal routes
+export { createServerSupabaseClient as createClient }

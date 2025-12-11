@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         
         const invoiceId = session.metadata?.invoice_id;
-        const _orgId = session.metadata?.org_id;
         const portalToken = session.metadata?.portal_token;
 
         if (!invoiceId) {
