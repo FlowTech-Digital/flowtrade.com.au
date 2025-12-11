@@ -77,29 +77,29 @@ export async function POST(request: NextRequest) {
 
     const jobNumber = jobNumberResult || `JOB-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Date.now().toString().slice(-4)}`
 
-    // Build job description from quote
-    const jobDescription = quote.job_description || 
+    // Build job notes from quote description and line items
+    const jobNotesContent = quote.job_description || 
       (quote.line_items && quote.line_items.length > 0
         ? quote.line_items.map((item: { description: string }) => item.description).join('\n')
-        : 'Job created from quote')
+        : `Job created from quote ${quote.quote_number}`)
 
-    // Create the job
+    // Create the job - ONLY use columns that exist in jobs table schema
+    // Schema verified columns: org_id, quote_id, customer_id, property_id, job_number,
+    // status, scheduled_date, scheduled_time_start, scheduled_time_end, assigned_to,
+    // quoted_total, job_notes, created_at, updated_at
     const jobData = {
       org_id: quote.org_id,
       quote_id: quote.id,
       customer_id: quote.customer_id,
-      property_id: quote.property_id,
+      property_id: quote.property_id || null,
       job_number: jobNumber,
-      title: quote.title || `Job from ${quote.quote_number}`,
-      description: jobDescription,
       status: 'scheduled',
-      priority: quote.priority || 'normal',
       scheduled_date: scheduled_date || null,
       scheduled_time_start: scheduled_time_start || null,
       scheduled_time_end: scheduled_time_end || null,
       quoted_total: quote.total,
       assigned_to: assigned_to || null,
-      notes: notes || quote.notes || null,
+      job_notes: notes || jobNotesContent || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
