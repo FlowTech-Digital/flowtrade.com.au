@@ -92,25 +92,20 @@ export async function POST(
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
       portalUrl = `${baseUrl}/portal/invoice/${existingToken.token}`;
     } else {
-      // Generate new token
-      const token = generatePortalToken();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30); // 30-day expiration for invoices
-
-      const { error: tokenError } = await supabase.from('portal_tokens').insert({
-        customer_id: invoice.customer.id,
-        org_id: invoice.org_id,
-        token,
-        token_type: 'invoice',
-        resource_id: id,
-        expires_at: expiresAt.toISOString()
+      // Generate new token using the portal tokens utility
+      const tokenResult = await generatePortalToken({
+        customerId: invoice.customer.id,
+        orgId: invoice.org_id,
+        tokenType: 'invoice',
+        resourceId: id,
+        expiresInDays: 30
       });
 
-      if (!tokenError) {
+      if (tokenResult) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
-        portalUrl = `${baseUrl}/portal/invoice/${token}`;
+        portalUrl = `${baseUrl}/portal/invoice/${tokenResult.token}`;
       } else {
-        console.error('Failed to create portal token:', tokenError);
+        console.error('Failed to create portal token');
       }
     }
 
