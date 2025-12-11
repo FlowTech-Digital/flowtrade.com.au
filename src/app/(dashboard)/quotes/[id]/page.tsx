@@ -251,6 +251,7 @@ export default function QuoteDetailPage() {
   }
 
   // Update quote status (for non-email actions)
+  // FIX: Use quoteId from params (URL source of truth) instead of quote.id from state
   const updateStatus = async (newStatus: Quote['status']) => {
     if (!quote) return
     setActionLoading(newStatus)
@@ -267,10 +268,11 @@ export default function QuoteDetailPage() {
       updateData.accepted_at = new Date().toISOString()
     }
 
+    // FIX: Use quoteId from params instead of quote.id
     const { error: updateError } = await supabase
       .from('quotes')
       .update(updateData)
-      .eq('id', quote.id)
+      .eq('id', quoteId)
 
     if (updateError) {
       setError(updateError.message)
@@ -278,9 +280,9 @@ export default function QuoteDetailPage() {
       return
     }
 
-    // Log event
+    // Log event - FIX: Use quoteId from params
     await supabase.from('quote_events').insert({
-      quote_id: quote.id,
+      quote_id: quoteId,
       event_type: `status_changed_to_${newStatus}`,
       event_data: { previous_status: quote.status }
     })
@@ -292,6 +294,7 @@ export default function QuoteDetailPage() {
   }
 
   // Send quote via email
+  // FIX: Use quoteId from params (URL source of truth) instead of quote.id from state
   const sendQuoteEmail = async () => {
     if (!quote) return
     
@@ -307,7 +310,9 @@ export default function QuoteDetailPage() {
     setShowActionsMenu(false)
 
     try {
-      const response = await fetch(`/api/quotes/${quote.id}/send`, {
+      // FIX: Use quoteId from params instead of quote.id
+      // This prevents stale state issues when navigating between quotes
+      const response = await fetch(`/api/quotes/${quoteId}/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -490,6 +495,7 @@ export default function QuoteDetailPage() {
   }
 
   // Delete quote
+  // FIX: Use quoteId from params for database operations
   const deleteQuote = async () => {
     if (!quote) return
     setActionLoading('delete')
@@ -501,17 +507,17 @@ export default function QuoteDetailPage() {
       return
     }
 
-    // Delete line items first
-    await supabase.from('quote_line_items').delete().eq('quote_id', quote.id)
+    // Delete line items first - FIX: Use quoteId
+    await supabase.from('quote_line_items').delete().eq('quote_id', quoteId)
     
-    // Delete events
-    await supabase.from('quote_events').delete().eq('quote_id', quote.id)
+    // Delete events - FIX: Use quoteId
+    await supabase.from('quote_events').delete().eq('quote_id', quoteId)
 
-    // Delete quote
+    // Delete quote - FIX: Use quoteId
     const { error: deleteError } = await supabase
       .from('quotes')
       .delete()
-      .eq('id', quote.id)
+      .eq('id', quoteId)
 
     if (deleteError) {
       setError(deleteError.message)
@@ -615,7 +621,7 @@ export default function QuoteDetailPage() {
         <div className="flex items-center gap-3">
           {quote.status === 'draft' && (
             <button
-              onClick={() => router.push(`/quotes/${quote.id}/edit`)}
+              onClick={() => router.push(`/quotes/${quoteId}/edit`)}
               className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy transition-colors"
             >
               <Edit className="h-4 w-4" />
