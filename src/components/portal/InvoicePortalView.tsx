@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Download, FileText, Calendar, Clock, AlertCircle, CheckCircle, CreditCard, DollarSign } from 'lucide-react';
+import { Download, FileText, Calendar, Clock, AlertCircle, CheckCircle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +75,7 @@ export function InvoicePortalView({
   token, 
   paymentResult 
 }: InvoicePortalViewProps) {
-  const [currentStatus, setCurrentStatus] = useState(invoice.status);
+  const [currentStatus] = useState(invoice.status);
 
   const status = statusConfig[currentStatus] || statusConfig.draft;
   const isOverdue = new Date(invoice.due_date) < new Date() && currentStatus !== 'paid';

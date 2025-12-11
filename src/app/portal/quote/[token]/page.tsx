@@ -73,7 +73,7 @@ export default function QuotePortalPage() {
         }
         
         setData(result);
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load quote');
       } finally {
         setLoading(false);

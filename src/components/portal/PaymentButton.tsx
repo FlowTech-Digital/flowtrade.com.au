@@ -10,7 +10,7 @@ interface PaymentButtonProps {
   invoiceNumber: string;
 }
 
-export function PaymentButton({ token, amount, invoiceNumber }: PaymentButtonProps) {
+export function PaymentButton({ token, amount, invoiceNumber: _invoiceNumber }: PaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
