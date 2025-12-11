@@ -520,6 +520,9 @@ export default function CreateInvoicePage() {
                     onChange={(e) => setJobSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                   />
+                  {searchingJobs && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 animate-spin" />
+                  )}
                   
                   {jobs.length > 0 && (
                     <div className="absolute z-10 w-full mt-2 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter shadow-lg overflow-hidden">
