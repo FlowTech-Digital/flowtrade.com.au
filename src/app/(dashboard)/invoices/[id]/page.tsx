@@ -28,10 +28,10 @@ const InvoicePDFDownload = dynamic(
   { 
     ssr: false,
     loading: () => (
-      &lt;button disabled className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan/50 text-flowtrade-navy rounded-lg"&gt;
-        &lt;Loader2 className="h-4 w-4 animate-spin" /&gt;
+      <button disabled className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan/50 text-flowtrade-navy rounded-lg">
+        <Loader2 className="h-4 w-4 animate-spin" />
         Loading...
-      &lt;/button&gt;
+      </button>
     )
   }
 )
@@ -73,7 +73,7 @@ type Invoice = {
   } | null
 }
 
-const STATUS_CONFIG: Record&lt;string, { label: string; color: string; bg: string; icon: React.ElementType }&gt; = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
   draft: { label: 'Draft', color: 'text-gray-400', bg: 'bg-gray-900/30', icon: FileText },
   sent: { label: 'Sent', color: 'text-blue-400', bg: 'bg-blue-900/30', icon: Send },
   paid: { label: 'Paid', color: 'text-green-400', bg: 'bg-green-900/30', icon: CheckCircle },
@@ -81,7 +81,7 @@ const STATUS_CONFIG: Record&lt;string, { label: string; color: string; bg: strin
   cancelled: { label: 'Cancelled', color: 'text-orange-400', bg: 'bg-orange-900/30', icon: XCircle },
 }
 
-const VALID_TRANSITIONS: Record&lt;string, string[]&gt; = {
+const VALID_TRANSITIONS: Record<string, string[]> = {
   draft: ['sent', 'cancelled'],
   sent: ['paid', 'overdue', 'cancelled'],
   overdue: ['paid', 'cancelled'],
@@ -89,15 +89,15 @@ const VALID_TRANSITIONS: Record&lt;string, string[]&gt; = {
   cancelled: [],
 }
 
-export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id: string }&gt; }) {
+export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const { user } = useAuth()
   const router = useRouter()
-  const [invoice, setInvoice] = useState&lt;Invoice | null&gt;(null)
+  const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
 
-  useEffect(() =&gt; {
+  useEffect(() => {
     async function fetchInvoice() {
       if (!user) return
 
@@ -161,7 +161,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
     fetchInvoice()
   }, [user, resolvedParams.id])
 
-  const updateStatus = async (newStatus: string) =&gt; {
+  const updateStatus = async (newStatus: string) => {
     if (!invoice) return
     
     setUpdating(true)
@@ -181,7 +181,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
       }
 
       const { invoice: updatedInvoice } = await response.json()
-      setInvoice(prev =&gt; prev ? { ...prev, ...updatedInvoice } : null)
+      setInvoice(prev => prev ? { ...prev, ...updatedInvoice } : null)
     } catch (error) {
       console.error('Error updating invoice:', error)
     } finally {
@@ -189,7 +189,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
     }
   }
 
-  const formatCurrency = (amount: number | null) =&gt; {
+  const formatCurrency = (amount: number | null) => {
     if (amount === null || amount === undefined) return '—'
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
@@ -197,7 +197,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
     }).format(amount)
   }
 
-  const formatDate = (dateString: string | null) =&gt; {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return '—'
     return new Date(dateString).toLocaleDateString('en-AU', {
       day: 'numeric',
@@ -206,54 +206,54 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
     })
   }
 
-  const getCustomerName = (customer: Invoice['customer']) =&gt; {
+  const getCustomerName = (customer: Invoice['customer']) => {
     if (!customer) return 'No Customer'
     if (customer.company_name) return customer.company_name
     return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
   }
 
-  const getCustomerAddress = (customer: Invoice['customer']) =&gt; {
+  const getCustomerAddress = (customer: Invoice['customer']) => {
     if (!customer) return null
     const parts = [
       customer.address_line1,
       customer.address_line2,
       [customer.city, customer.state, customer.postcode].filter(Boolean).join(' ')
     ].filter(Boolean)
-    return parts.length &gt; 0 ? parts : null
+    return parts.length > 0 ? parts : null
   }
 
-  const StatusBadge = ({ status }: { status: string }) =&gt; {
+  const StatusBadge = ({ status }: { status: string }) => {
     const config = STATUS_CONFIG[status] || STATUS_CONFIG['draft']
     if (!config) return null
     const Icon = config.icon
     
     return (
-      &lt;span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${config.bg} ${config.color}`}&gt;
-        &lt;Icon className="h-4 w-4" /&gt;
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${config.bg} ${config.color}`}>
+        <Icon className="h-4 w-4" />
         {config.label}
-      &lt;/span&gt;
+      </span>
     )
   }
 
   if (loading) {
     return (
-      &lt;div className="flex items-center justify-center min-h-[400px]"&gt;
-        &lt;Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" /&gt;
-      &lt;/div&gt;
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" />
+      </div>
     )
   }
 
   if (!invoice) {
     return (
-      &lt;div className="text-center py-12"&gt;
-        &lt;h2 className="text-xl font-medium text-white mb-2"&gt;Invoice not found&lt;/h2&gt;
-        &lt;button
-          onClick={() =&gt; router.push('/invoices')}
+      <div className="text-center py-12">
+        <h2 className="text-xl font-medium text-white mb-2">Invoice not found</h2>
+        <button
+          onClick={() => router.push('/invoices')}
           className="text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-        &gt;
+        >
           Back to Invoices
-        &lt;/button&gt;
-      &lt;/div&gt;
+        </button>
+      </div>
     )
   }
 
@@ -289,229 +289,229 @@ export default function InvoiceDetailPage({ params }: { params: Promise&lt;{ id:
   }
 
   return (
-    &lt;div&gt;
+    <div>
       {/* Header */}
-      &lt;div className="flex items-center justify-between mb-8"&gt;
-        &lt;div className="flex items-center gap-4"&gt;
-          &lt;button
-            onClick={() =&gt; router.push('/invoices')}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/invoices')}
             className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
-          &gt;
-            &lt;ArrowLeft className="h-5 w-5" /&gt;
-          &lt;/button&gt;
-          &lt;div&gt;
-            &lt;h1 className="text-2xl font-bold text-white"&gt;{invoice.invoice_number}&lt;/h1&gt;
-            &lt;p className="text-gray-400 mt-1"&gt;{getCustomerName(invoice.customer)}&lt;/p&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-        &lt;div className="flex items-center gap-3"&gt;
-          &lt;InvoicePDFDownload invoice={pdfInvoiceData} /&gt;
-          &lt;StatusBadge status={invoice.status} /&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{invoice.invoice_number}</h1>
+            <p className="text-gray-400 mt-1">{getCustomerName(invoice.customer)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <InvoicePDFDownload invoice={pdfInvoiceData} />
+          <StatusBadge status={invoice.status} />
+        </div>
+      </div>
 
-      &lt;div className="grid grid-cols-1 lg:grid-cols-3 gap-6"&gt;
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
-        &lt;div className="lg:col-span-2 space-y-6"&gt;
+        <div className="lg:col-span-2 space-y-6">
           {/* Invoice Details */}
-          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
-            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Invoice Details&lt;/h2&gt;
+          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Invoice Details</h2>
             
-            &lt;div className="grid grid-cols-2 gap-6"&gt;
-              &lt;div&gt;
-                &lt;p className="text-sm text-gray-400 mb-1"&gt;Invoice Date&lt;/p&gt;
-                &lt;div className="flex items-center gap-2 text-white"&gt;
-                  &lt;Calendar className="h-4 w-4 text-gray-500" /&gt;
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Invoice Date</p>
+                <div className="flex items-center gap-2 text-white">
+                  <Calendar className="h-4 w-4 text-gray-500" />
                   {formatDate(invoice.invoice_date)}
-                &lt;/div&gt;
-              &lt;/div&gt;
-              &lt;div&gt;
-                &lt;p className="text-sm text-gray-400 mb-1"&gt;Due Date&lt;/p&gt;
-                &lt;div className="flex items-center gap-2 text-white"&gt;
-                  &lt;Clock className="h-4 w-4 text-gray-500" /&gt;
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Due Date</p>
+                <div className="flex items-center gap-2 text-white">
+                  <Clock className="h-4 w-4 text-gray-500" />
                   {formatDate(invoice.due_date)}
-                &lt;/div&gt;
-              &lt;/div&gt;
-              {invoice.payment_date &amp;&amp; (
-                &lt;div&gt;
-                  &lt;p className="text-sm text-gray-400 mb-1"&gt;Payment Date&lt;/p&gt;
-                  &lt;div className="flex items-center gap-2 text-green-400"&gt;
-                    &lt;CheckCircle className="h-4 w-4" /&gt;
+                </div>
+              </div>
+              {invoice.payment_date && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Payment Date</p>
+                  <div className="flex items-center gap-2 text-green-400">
+                    <CheckCircle className="h-4 w-4" />
                     {formatDate(invoice.payment_date)}
-                  &lt;/div&gt;
-                &lt;/div&gt;
+                  </div>
+                </div>
               )}
-              {invoice.job &amp;&amp; (
-                &lt;div&gt;
-                  &lt;p className="text-sm text-gray-400 mb-1"&gt;Related Job&lt;/p&gt;
-                  &lt;button
-                    onClick={() =&gt; router.push(`/jobs/${invoice.job!.id}`)}
+              {invoice.job && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Related Job</p>
+                  <button
+                    onClick={() => router.push(`/jobs/${invoice.job!.id}`)}
                     className="flex items-center gap-2 text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-                  &gt;
-                    &lt;Briefcase className="h-4 w-4" /&gt;
+                  >
+                    <Briefcase className="h-4 w-4" />
                     {invoice.job.job_number}
-                  &lt;/button&gt;
-                &lt;/div&gt;
+                  </button>
+                </div>
               )}
-            &lt;/div&gt;
+            </div>
 
             {/* Amount Breakdown */}
-            &lt;div className="mt-6 pt-6 border-t border-flowtrade-navy-lighter"&gt;
-              &lt;div className="space-y-3"&gt;
-                &lt;div className="flex justify-between text-gray-400"&gt;
-                  &lt;span&gt;Subtotal&lt;/span&gt;
-                  &lt;span&gt;{formatCurrency(invoice.subtotal)}&lt;/span&gt;
-                &lt;/div&gt;
-                &lt;div className="flex justify-between text-gray-400"&gt;
-                  &lt;span&gt;GST ({invoice.tax_rate}%)&lt;/span&gt;
-                  &lt;span&gt;{formatCurrency(invoice.tax_amount)}&lt;/span&gt;
-                &lt;/div&gt;
-                &lt;div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-flowtrade-navy-lighter"&gt;
-                  &lt;span&gt;Total&lt;/span&gt;
-                  &lt;span&gt;{formatCurrency(invoice.total)}&lt;/span&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
+            <div className="mt-6 pt-6 border-t border-flowtrade-navy-lighter">
+              <div className="space-y-3">
+                <div className="flex justify-between text-gray-400">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(invoice.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>GST ({invoice.tax_rate}%)</span>
+                  <span>{formatCurrency(invoice.tax_amount)}</span>
+                </div>
+                <div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-flowtrade-navy-lighter">
+                  <span>Total</span>
+                  <span>{formatCurrency(invoice.total)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Notes */}
-          {invoice.notes &amp;&amp; (
-            &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
-              &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Notes&lt;/h2&gt;
-              &lt;p className="text-gray-300 whitespace-pre-wrap"&gt;{invoice.notes}&lt;/p&gt;
-            &lt;/div&gt;
+          {invoice.notes && (
+            <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">Notes</h2>
+              <p className="text-gray-300 whitespace-pre-wrap">{invoice.notes}</p>
+            </div>
           )}
 
           {/* Status Actions */}
-          {availableTransitions.length &gt; 0 &amp;&amp; (
-            &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
-              &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Actions&lt;/h2&gt;
-              &lt;div className="flex flex-wrap gap-3"&gt;
-                {availableTransitions.includes('sent') &amp;&amp; (
-                  &lt;button
-                    onClick={() =&gt; updateStatus('sent')}
+          {availableTransitions.length > 0 && (
+            <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">Actions</h2>
+              <div className="flex flex-wrap gap-3">
+                {availableTransitions.includes('sent') && (
+                  <button
+                    onClick={() => updateStatus('sent')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  &gt;
-                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;Send className="h-4 w-4" /&gt;}
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     Mark as Sent
-                  &lt;/button&gt;
+                  </button>
                 )}
-                {availableTransitions.includes('paid') &amp;&amp; (
-                  &lt;button
-                    onClick={() =&gt; updateStatus('paid')}
+                {availableTransitions.includes('paid') && (
+                  <button
+                    onClick={() => updateStatus('paid')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                  &gt;
-                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;CheckCircle className="h-4 w-4" /&gt;}
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
                     Mark as Paid
-                  &lt;/button&gt;
+                  </button>
                 )}
-                {availableTransitions.includes('overdue') &amp;&amp; (
-                  &lt;button
-                    onClick={() =&gt; updateStatus('overdue')}
+                {availableTransitions.includes('overdue') && (
+                  <button
+                    onClick={() => updateStatus('overdue')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                  &gt;
-                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;AlertCircle className="h-4 w-4" /&gt;}
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <AlertCircle className="h-4 w-4" />}
                     Mark as Overdue
-                  &lt;/button&gt;
+                  </button>
                 )}
-                {availableTransitions.includes('cancelled') &amp;&amp; (
-                  &lt;button
-                    onClick={() =&gt; updateStatus('cancelled')}
+                {availableTransitions.includes('cancelled') && (
+                  <button
+                    onClick={() => updateStatus('cancelled')}
                     disabled={updating}
                     className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-gray-300 rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors disabled:opacity-50"
-                  &gt;
-                    {updating ? &lt;Loader2 className="h-4 w-4 animate-spin" /&gt; : &lt;XCircle className="h-4 w-4" /&gt;}
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                     Cancel Invoice
-                  &lt;/button&gt;
+                  </button>
                 )}
-              &lt;/div&gt;
-            &lt;/div&gt;
+              </div>
+            </div>
           )}
-        &lt;/div&gt;
+        </div>
 
         {/* Sidebar */}
-        &lt;div className="space-y-6"&gt;
+        <div className="space-y-6">
           {/* Customer Info */}
-          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
-            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Customer&lt;/h2&gt;
+          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Customer</h2>
             
             {invoice.customer ? (
-              &lt;div className="space-y-4"&gt;
-                &lt;div className="flex items-start gap-3"&gt;
-                  &lt;Building2 className="h-5 w-5 text-gray-500 mt-0.5" /&gt;
-                  &lt;div&gt;
-                    &lt;p className="text-white font-medium"&gt;{getCustomerName(invoice.customer)}&lt;/p&gt;
-                    {invoice.customer.company_name &amp;&amp; invoice.customer.first_name &amp;&amp; (
-                      &lt;p className="text-sm text-gray-400"&gt;
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Building2 className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <p className="text-white font-medium">{getCustomerName(invoice.customer)}</p>
+                    {invoice.customer.company_name && invoice.customer.first_name && (
+                      <p className="text-sm text-gray-400">
                         {invoice.customer.first_name} {invoice.customer.last_name}
-                      &lt;/p&gt;
+                      </p>
                     )}
-                  &lt;/div&gt;
-                &lt;/div&gt;
+                  </div>
+                </div>
                 
-                {invoice.customer.email &amp;&amp; (
-                  &lt;div className="flex items-center gap-3"&gt;
-                    &lt;Mail className="h-5 w-5 text-gray-500" /&gt;
-                    &lt;a 
+                {invoice.customer.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-gray-500" />
+                    <a 
                       href={`mailto:${invoice.customer.email}`}
                       className="text-flowtrade-cyan hover:text-flowtrade-cyan/80"
-                    &gt;
+                    >
                       {invoice.customer.email}
-                    &lt;/a&gt;
-                  &lt;/div&gt;
+                    </a>
+                  </div>
                 )}
                 
-                {invoice.customer.phone &amp;&amp; (
-                  &lt;div className="flex items-center gap-3"&gt;
-                    &lt;Phone className="h-5 w-5 text-gray-500" /&gt;
-                    &lt;a 
+                {invoice.customer.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-gray-500" />
+                    <a 
                       href={`tel:${invoice.customer.phone}`}
                       className="text-gray-300 hover:text-white"
-                    &gt;
+                    >
                       {invoice.customer.phone}
-                    &lt;/a&gt;
-                  &lt;/div&gt;
+                    </a>
+                  </div>
                 )}
                 
-                {customerAddress &amp;&amp; (
-                  &lt;div className="flex items-start gap-3"&gt;
-                    &lt;MapPin className="h-5 w-5 text-gray-500 mt-0.5" /&gt;
-                    &lt;div className="text-gray-300"&gt;
-                      {customerAddress.map((line, i) =&gt; (
-                        &lt;p key={i}&gt;{line}&lt;/p&gt;
+                {customerAddress && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div className="text-gray-300">
+                      {customerAddress.map((line, i) => (
+                        <p key={i}>{line}</p>
                       ))}
-                    &lt;/div&gt;
-                  &lt;/div&gt;
+                    </div>
+                  </div>
                 )}
-              &lt;/div&gt;
+              </div>
             ) : (
-              &lt;p className="text-gray-500"&gt;No customer information&lt;/p&gt;
+              <p className="text-gray-500">No customer information</p>
             )}
-          &lt;/div&gt;
+          </div>
 
           {/* Quick Stats */}
-          &lt;div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6"&gt;
-            &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Summary&lt;/h2&gt;
-            &lt;div className="space-y-4"&gt;
-              &lt;div className="flex items-center justify-between"&gt;
-                &lt;span className="text-gray-400"&gt;Status&lt;/span&gt;
-                &lt;StatusBadge status={invoice.status} /&gt;
-              &lt;/div&gt;
-              &lt;div className="flex items-center justify-between"&gt;
-                &lt;span className="text-gray-400"&gt;Total&lt;/span&gt;
-                &lt;span className="text-xl font-bold text-white"&gt;{formatCurrency(invoice.total)}&lt;/span&gt;
-              &lt;/div&gt;
-              &lt;div className="flex items-center justify-between"&gt;
-                &lt;span className="text-gray-400"&gt;Created&lt;/span&gt;
-                &lt;span className="text-gray-300"&gt;{formatDate(invoice.created_at)}&lt;/span&gt;
-              &lt;/div&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Summary</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Status</span>
+                <StatusBadge status={invoice.status} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Total</span>
+                <span className="text-xl font-bold text-white">{formatCurrency(invoice.total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Created</span>
+                <span className="text-gray-300">{formatDate(invoice.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
