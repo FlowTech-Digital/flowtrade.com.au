@@ -9,18 +9,27 @@ import Image from 'next/image';
 
 interface PortalLayoutProps {
   children: React.ReactNode;
-  organization: {
+  organization?: {
     name: string;
     logo_url?: string | null;
     primary_color?: string | null;
     email?: string | null;
     phone?: string | null;
-  };
+  } | null;
   customerName?: string;
 }
 
+const defaultOrganization = {
+  name: 'FlowTrade',
+  logo_url: null,
+  primary_color: '#2563eb',
+  email: null,
+  phone: null,
+};
+
 export function PortalLayout({ children, organization, customerName }: PortalLayoutProps) {
-  const primaryColor = organization.primary_color || '#2563eb'; // Default blue
+  const org = organization || defaultOrganization;
+  const primaryColor = org.primary_color || '#2563eb';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -32,10 +41,10 @@ export function PortalLayout({ children, organization, customerName }: PortalLay
         <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {organization.logo_url ? (
+              {org.logo_url ? (
                 <Image
-                  src={organization.logo_url}
-                  alt={organization.name}
+                  src={org.logo_url}
+                  alt={org.name}
                   width={40}
                   height={40}
                   className="rounded"
@@ -45,11 +54,11 @@ export function PortalLayout({ children, organization, customerName }: PortalLay
                   className="w-10 h-10 rounded flex items-center justify-center text-white font-bold"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  {organization.name.charAt(0).toUpperCase()}
+                  {org.name.charAt(0).toUpperCase()}
                 </div>
               )}
               <div>
-                <h1 className="font-semibold text-gray-900">{organization.name}</h1>
+                <h1 className="font-semibold text-gray-900">{org.name}</h1>
                 <p className="text-xs text-gray-500">Customer Portal</p>
               </div>
             </div>
@@ -75,23 +84,23 @@ export function PortalLayout({ children, organization, customerName }: PortalLay
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-500">
-              {organization.email && (
+              {org.email && (
                 <a 
-                  href={`mailto:${organization.email}`}
+                  href={`mailto:${org.email}`}
                   className="hover:text-gray-700"
                 >
-                  {organization.email}
+                  {org.email}
                 </a>
               )}
-              {organization.email && organization.phone && (
+              {org.email && org.phone && (
                 <span className="mx-2">•</span>
               )}
-              {organization.phone && (
+              {org.phone && (
                 <a 
-                  href={`tel:${organization.phone}`}
+                  href={`tel:${org.phone}`}
                   className="hover:text-gray-700"
                 >
-                  {organization.phone}
+                  {org.phone}
                 </a>
               )}
             </div>
