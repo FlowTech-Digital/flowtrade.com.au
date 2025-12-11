@@ -7,6 +7,8 @@ import { TokenExpiredView } from '@/components/portal/TokenExpiredView';
 import { QuotePortalView } from '@/components/portal/QuotePortalView';
 import { Loader2 } from 'lucide-react';
 
+type ErrorType = 'expired' | 'revoked' | 'not_found' | 'invalid';
+
 interface QuoteData {
   quote: {
     id: string;
@@ -49,7 +51,7 @@ export default function QuotePortalPage() {
   const token = params.token as string;
   
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorType | null>(null);
   const [data, setData] = useState<QuoteData | null>(null);
   const [actionResult, setActionResult] = useState<'accepted' | 'declined' | null>(null);
 
@@ -68,13 +70,19 @@ export default function QuotePortalPage() {
         const result = await response.json();
         
         if (!response.ok) {
-          setError(result.error || 'Failed to load quote');
+          // Map API error to ErrorType
+          const errorType = result.error as ErrorType;
+          if (['expired', 'revoked', 'not_found', 'invalid'].includes(errorType)) {
+            setError(errorType);
+          } else {
+            setError('invalid');
+          }
           return;
         }
         
         setData(result);
       } catch {
-        setError('Failed to load quote');
+        setError('invalid');
       } finally {
         setLoading(false);
       }
@@ -92,11 +100,19 @@ export default function QuotePortalPage() {
   }
 
   if (error) {
-    return <TokenExpiredView error={error} type="quote" />;
+    return (
+      <PortalLayout>
+        <TokenExpiredView errorType={error} />
+      </PortalLayout>
+    );
   }
 
   if (!data) {
-    return <TokenExpiredView error="not_found" type="quote" />;
+    return (
+      <PortalLayout>
+        <TokenExpiredView errorType="not_found" />
+      </PortalLayout>
+    );
   }
 
   return (
