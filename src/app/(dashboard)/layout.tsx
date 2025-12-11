@@ -113,16 +113,19 @@ export default function DashboardLayout({
       {/* Mobile sidebar drawer */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-flowtrade-navy-light border-r border-flowtrade-navy-lighter transform transition-transform duration-300 ease-in-out lg:hidden ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          {/* FlowTrade Logo (always visible) */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-flowtrade-navy-lighter">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+          {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
+            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
               <img
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
-                width={140}
-                height={32}
                 className="h-8 w-auto"
+                onError={(e) => {
+                  // Fallback if SVG fails to load
+                  e.currentTarget.style.display = 'none'
+                }}
               />
+              <span className="text-xl font-bold text-white">FlowTrade</span>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -132,7 +135,7 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* Organization branding (secondary - when logo exists) */}
+          {/* User Organization - SECONDARY BRANDING (below FlowTrade logo) */}
           {orgInfo && (
             <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
               <div className="flex items-center gap-3">
@@ -194,20 +197,23 @@ export default function DashboardLayout({
       {/* Desktop Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-flowtrade-navy-light border-r border-flowtrade-navy-lighter hidden lg:block">
         <div className="flex flex-col h-full">
-          {/* FlowTrade Logo (always visible) */}
-          <div className="flex items-center h-16 px-6 border-b border-flowtrade-navy-lighter">
-            <Link href="/dashboard">
+          {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
+          <div className="flex items-center h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <img
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
-                width={140}
-                height={32}
                 className="h-8 w-auto"
+                onError={(e) => {
+                  // Fallback if SVG fails to load
+                  e.currentTarget.style.display = 'none'
+                }}
               />
+              <span className="text-xl font-bold text-white">FlowTrade</span>
             </Link>
           </div>
 
-          {/* Organization branding (secondary - when logo exists) */}
+          {/* User Organization - SECONDARY BRANDING (below FlowTrade logo) */}
           {orgInfo && (
             <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
               <div className="flex items-center gap-3">
@@ -279,14 +285,16 @@ export default function DashboardLayout({
           </button>
 
           {/* Logo */}
-          <Link href="/dashboard">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <img
               src="/flowtrade-logo.svg"
               alt="FlowTrade"
-              width={120}
-              height={28}
               className="h-7 w-auto"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
             />
+            <span className="text-lg font-bold text-white">FlowTrade</span>
           </Link>
 
           {/* Sign out */}
