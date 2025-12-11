@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { generatePortalToken } from './tokens';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Generate a portal token for a quote
@@ -30,8 +30,8 @@ export async function generateQuotePortalToken(
     };
   }
 
-  // Generate new token
-  const token = generatePortalToken();
+  // Generate new token using uuid directly (this function handles its own DB insert)
+  const token = uuidv4();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expirationDays);
 
