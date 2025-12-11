@@ -142,6 +142,11 @@ const styles = StyleSheet.create({
     color: '#0A1628',
     fontSize: 10,
   },
+  customerName: {
+    color: '#0A1628',
+    fontSize: 10,
+    marginBottom: 4,
+  },
   twoColumn: {
     flexDirection: 'row',
     gap: 30,
@@ -399,7 +404,7 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
           <View style={styles.column}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Bill To</Text>
-              <Text style={styles.value}>{getCustomerName(quote.customer)}</Text>
+              <Text style={styles.customerName}>{getCustomerName(quote.customer)}</Text>
               {quote.customer.email && (
                 <Text style={styles.businessInfo}>{quote.customer.email}</Text>
               )}
