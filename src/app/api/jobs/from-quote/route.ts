@@ -131,12 +131,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Update quote status to 'converted' if that status exists, or add conversion metadata
+    // Update quote status to 'converted'
     await supabase
       .from('quotes')
       .update({
+        status: 'converted',
         updated_at: new Date().toISOString(),
-        // Some systems track conversion in metadata
       })
       .eq('id', quote_id)
 
