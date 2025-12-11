@@ -119,6 +119,10 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  quoteItemsSection: {
+    marginTop: 15,
+    marginBottom: 20,
+  },
   sectionTitle: {
     fontSize: 12,
     fontFamily: 'Helvetica-Bold',
@@ -445,7 +449,7 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
         )}
 
         {/* Line Items Table */}
-        <View style={styles.section}>
+        <View style={styles.quoteItemsSection}>
           <Text style={styles.sectionTitle}>Quote Items</Text>
           <View style={styles.table}>
             {/* Table Header */}
