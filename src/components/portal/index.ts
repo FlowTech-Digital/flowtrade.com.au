@@ -1,6 +1,4 @@
 export { PortalLayout } from './PortalLayout';
-export { PortalHeader } from './PortalHeader';
-export { PortalFooter } from './PortalFooter';
 export { TokenExpiredView } from './TokenExpiredView';
 export { QuotePortalView } from './QuotePortalView';
 export { QuoteAcceptModal } from './QuoteAcceptModal';
