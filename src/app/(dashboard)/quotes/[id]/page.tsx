@@ -138,6 +138,7 @@ export default function QuoteDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showConvertModal, setShowConvertModal] = useState(false)
 
   // Fetch quote data
   useEffect(() => {
@@ -351,6 +352,67 @@ export default function QuoteDetailPage() {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send quote')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Convert quote to job
+  const convertToJob = async () => {
+    if (!quote) return
+    
+    setActionLoading('convert')
+    setError(null)
+    setSuccessMessage(null)
+    setShowActionsMenu(false)
+    setShowConvertModal(false)
+
+    try {
+      const response = await fetch('/api/jobs/from-quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quote_id: quoteId,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        // Handle case where job already exists
+        if (response.status === 409 && result.existing_job_id) {
+          setError(`Job already exists for this quote. Redirecting...`)
+          setTimeout(() => {
+            router.push(`/jobs/${result.existing_job_id}`)
+          }, 1500)
+          return
+        }
+        throw new Error(result.error || 'Failed to convert quote to job')
+      }
+
+      // Show success message and redirect
+      setSuccessMessage(result.message || 'Job created successfully!')
+      
+      // Add event to local state
+      setEvents([
+        {
+          id: crypto.randomUUID(),
+          event_type: 'converted_to_job',
+          event_data: { job_id: result.job.id, job_number: result.job.job_number },
+          created_at: new Date().toISOString()
+        },
+        ...events
+      ])
+
+      // Redirect to new job after short delay
+      setTimeout(() => {
+        router.push(`/jobs/${result.job.id}`)
+      }, 1500)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to convert quote to job')
     } finally {
       setActionLoading(null)
     }
@@ -645,6 +707,22 @@ export default function QuoteDetailPage() {
             </button>
           )}
 
+          {/* Convert to Job Button - Prominent when accepted */}
+          {quote.status === 'accepted' && (
+            <button
+              onClick={() => setShowConvertModal(true)}
+              disabled={!!actionLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {actionLoading === 'convert' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Briefcase className="h-4 w-4" />
+              )}
+              Convert to Job
+            </button>
+          )}
+
           {/* More Actions Dropdown */}
           <div className="relative">
             <button
@@ -692,10 +770,18 @@ export default function QuoteDetailPage() {
                   </button>
                   {quote.status === 'accepted' && (
                     <button
-                      onClick={() => {/* TODO: Convert to job */}}
-                      className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                      onClick={() => {
+                        setShowActionsMenu(false)
+                        setShowConvertModal(true)
+                      }}
+                      disabled={!!actionLoading}
+                      className="w-full px-4 py-2 text-left text-green-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
                     >
-                      <Briefcase className="h-4 w-4" />
+                      {actionLoading === 'convert' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Briefcase className="h-4 w-4" />
+                      )}
                       Convert to Job
                     </button>
                   )}
@@ -997,6 +1083,67 @@ export default function QuoteDetailPage() {
                   <Trash2 className="h-4 w-4" />
                 )}
                 Delete Quote
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Convert to Job Confirmation Modal */}
+      {showConvertModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-green-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Convert to Job</h3>
+                <p className="text-gray-400 text-sm">Create a scheduled job from this quote</p>
+              </div>
+            </div>
+            <p className="text-gray-300 mb-4">
+              This will create a new job from quote <strong>{quote.quote_number}</strong> with the following details:
+            </p>
+            <div className="bg-flowtrade-navy rounded-lg p-4 mb-6 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Customer:</span>
+                <span className="text-white">{getCustomerName()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Job Site:</span>
+                <span className="text-white truncate max-w-[200px]">{quote.job_site_address}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Quoted Total:</span>
+                <span className="text-flowtrade-cyan font-medium">{formatCurrency(quote.total)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Status:</span>
+                <span className="text-blue-400">Scheduled</span>
+              </div>
+            </div>
+            <p className="text-gray-400 text-sm mb-6">
+              You can set the scheduled date and assign team members after creation.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConvertModal(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={convertToJob}
+                disabled={actionLoading === 'convert'}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+              >
+                {actionLoading === 'convert' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Briefcase className="h-4 w-4" />
+                )}
+                Create Job
               </button>
             </div>
           </div>
