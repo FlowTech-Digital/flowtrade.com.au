@@ -1,7 +1,8 @@
 'use client'
 
-import { Building2, User, Mail, Phone, MapPin, MoreVertical, Edit, Trash2 } from 'lucide-react'
+import { Building2, User, Mail, Phone, MapPin, MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Customer } from '@/types/customer'
 
 interface CustomerCardProps {
@@ -11,6 +12,7 @@ interface CustomerCardProps {
 }
 
 export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) {
+  const router = useRouter()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -35,8 +37,20 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
     return parts.join(', ') || null
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) {
+      return
+    }
+    router.push(`/customers/${customer.id}`)
+  }
+
   return (
-    <div className="bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-xl p-5 hover:border-flowtrade-cyan/30 transition-colors">
+    <div 
+      onClick={handleCardClick}
+      className="bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-xl p-5 hover:border-flowtrade-cyan/30 transition-colors cursor-pointer"
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -55,16 +69,31 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
         {/* Actions Menu */}
         <div className="relative" ref={menuRef}>
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
             className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-10 bg-flowtrade-navy-lighter border border-flowtrade-navy rounded-lg shadow-xl py-1 min-w-[120px] z-10">
+            <div className="absolute right-0 top-10 bg-flowtrade-navy-lighter border border-flowtrade-navy rounded-lg shadow-xl py-1 min-w-[140px] z-10">
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
+                  router.push(`/customers/${customer.id}`)
+                  setShowMenu(false)
+                }}
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-flowtrade-navy transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                View Details
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
                   onEdit(customer)
                   setShowMenu(false)
                 }}
@@ -74,7 +103,8 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
                 Edit
               </button>
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   onDelete(customer)
                   setShowMenu(false)
                 }}
@@ -95,6 +125,7 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
             <Mail className="w-4 h-4 text-gray-500" />
             <a
               href={`mailto:${customer.email}`}
+              onClick={(e) => e.stopPropagation()}
               className="text-gray-300 hover:text-flowtrade-cyan transition-colors"
             >
               {customer.email}
@@ -107,6 +138,7 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
             <Phone className="w-4 h-4 text-gray-500" />
             <a
               href={`tel:${customer.phone}`}
+              onClick={(e) => e.stopPropagation()}
               className="text-gray-300 hover:text-flowtrade-cyan transition-colors"
             >
               {customer.phone}
