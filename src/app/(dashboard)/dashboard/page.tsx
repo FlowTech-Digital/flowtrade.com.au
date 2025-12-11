@@ -170,13 +170,6 @@ export default function DashboardPage() {
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-AU', {
-      day: 'numeric',
-      month: 'short'
-    })
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'text-green-400'
