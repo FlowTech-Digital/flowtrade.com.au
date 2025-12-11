@@ -27,7 +27,8 @@ import {
   AlertCircle,
   Play,
   CircleCheck,
-  Receipt
+  Receipt,
+  FilePlus
 } from 'lucide-react'
 
 // Types
@@ -116,6 +117,7 @@ export default function JobDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [generatingInvoice, setGeneratingInvoice] = useState(false)
 
   // Fetch job data
   useEffect(() => {
@@ -252,6 +254,42 @@ export default function JobDetailPage() {
       if (parts.length > 0) return parts.join(', ')
     }
     return 'No address specified'
+  }
+
+  // Generate invoice from job
+  const generateInvoice = async () => {
+    if (!job) return
+    setGeneratingInvoice(true)
+    setShowActionsMenu(false)
+
+    try {
+      const response = await fetch('/api/invoices/from-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409 && data.existing_invoice_id) {
+          // Invoice already exists, navigate to it
+          router.push(`/invoices/${data.existing_invoice_id}`)
+          return
+        }
+        throw new Error(data.error || 'Failed to generate invoice')
+      }
+
+      setSuccessMessage(`Invoice ${data.invoice.invoice_number} generated successfully!`)
+      setTimeout(() => {
+        router.push(`/invoices/${data.invoice.id}`)
+      }, 1500)
+    } catch (error) {
+      console.error('Error generating invoice:', error)
+      setError(error instanceof Error ? error.message : 'Failed to generate invoice')
+    } finally {
+      setGeneratingInvoice(false)
+    }
   }
 
   // Update job status
@@ -432,7 +470,7 @@ export default function JobDetailPage() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          {job.status !== 'completed' && job.status !== 'cancelled' && (
+          {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'invoiced' && (
             <button
               onClick={() => router.push(`/jobs/${jobId}/edit`)}
               className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy transition-colors"
@@ -473,6 +511,22 @@ export default function JobDetailPage() {
             </button>
           )}
 
+          {/* Generate Invoice Button - for completed jobs */}
+          {job.status === 'completed' && (
+            <button
+              onClick={generateInvoice}
+              disabled={generatingInvoice}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+            >
+              {generatingInvoice ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FilePlus className="h-4 w-4" />
+              )}
+              Generate Invoice
+            </button>
+          )}
+
           {/* More Actions Dropdown */}
           <div className="relative">
             <button
@@ -506,15 +560,25 @@ export default function JobDetailPage() {
                       Resume Job
                     </button>
                   )}
-                  {job.status === 'completed' && !job.invoiced_at && (
-                    <button
-                      onClick={() => updateStatus('invoiced')}
-                      disabled={!!actionLoading}
-                      className="w-full px-4 py-2 text-left text-purple-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                    >
-                      <Receipt className="h-4 w-4" />
-                      Mark as Invoiced
-                    </button>
+                  {job.status === 'completed' && (
+                    <>
+                      <button
+                        onClick={generateInvoice}
+                        disabled={generatingInvoice}
+                        className="w-full px-4 py-2 text-left text-purple-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                      >
+                        <FilePlus className="h-4 w-4" />
+                        Generate Invoice
+                      </button>
+                      <button
+                        onClick={() => updateStatus('invoiced')}
+                        disabled={!!actionLoading}
+                        className="w-full px-4 py-2 text-left text-purple-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                      >
+                        <Receipt className="h-4 w-4" />
+                        Mark as Invoiced
+                      </button>
+                    </>
                   )}
                   {job.quote && (
                     <button
@@ -525,7 +589,14 @@ export default function JobDetailPage() {
                       View Quote
                     </button>
                   )}
-                  {job.status !== 'cancelled' && job.status !== 'completed' && (
+                  <button
+                    onClick={() => router.push('/invoices')}
+                    className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    View Invoices
+                  </button>
+                  {job.status !== 'cancelled' && job.status !== 'completed' && job.status !== 'invoiced' && (
                     <>
                       <div className="border-t border-flowtrade-navy-lighter my-1" />
                       <button
