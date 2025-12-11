@@ -44,11 +44,11 @@ type Invoice = {
   status: string
   subtotal: number
   tax_rate: number
-  tax_amount: number
+  gst_amount: number
   total: number
-  invoice_date: string
+  issue_date: string
   due_date: string | null
-  payment_date: string | null
+  paid_at: string | null
   created_at: string
   updated_at: string
   notes: string | null
@@ -174,7 +174,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: newStatus,
-          payment_date: newStatus === 'paid' ? new Date().toISOString().split('T')[0] : null
+          paid_at: newStatus === 'paid' ? new Date().toISOString().split('T')[0] : null
         }),
       })
 
@@ -265,11 +265,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   // Prepare invoice data for PDF
   const pdfInvoiceData = {
     invoice_number: invoice.invoice_number,
-    invoice_date: invoice.invoice_date,
+    invoice_date: invoice.issue_date,
     due_date: invoice.due_date,
     subtotal: invoice.subtotal,
     tax_rate: invoice.tax_rate,
-    tax_amount: invoice.tax_amount,
+    tax_amount: invoice.gst_amount,
     total: invoice.total,
     notes: invoice.notes,
     customer: invoice.customer ? {
@@ -324,7 +324,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-gray-400 mb-1">Invoice Date</p>
                 <div className="flex items-center gap-2 text-white">
                   <Calendar className="h-4 w-4 text-gray-500" />
-                  {formatDate(invoice.invoice_date)}
+                  {formatDate(invoice.issue_date)}
                 </div>
               </div>
               <div>
@@ -334,12 +334,12 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   {formatDate(invoice.due_date)}
                 </div>
               </div>
-              {invoice.payment_date && (
+              {invoice.paid_at && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Payment Date</p>
                   <div className="flex items-center gap-2 text-green-400">
                     <CheckCircle className="h-4 w-4" />
-                    {formatDate(invoice.payment_date)}
+                    {formatDate(invoice.paid_at)}
                   </div>
                 </div>
               )}
@@ -366,7 +366,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 </div>
                 <div className="flex justify-between text-gray-400">
                   <span>GST ({invoice.tax_rate}%)</span>
-                  <span>{formatCurrency(invoice.tax_amount)}</span>
+                  <span>{formatCurrency(invoice.gst_amount)}</span>
                 </div>
                 <div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-flowtrade-navy-lighter">
                   <span>Total</span>
