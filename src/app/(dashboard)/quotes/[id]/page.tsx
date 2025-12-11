@@ -88,6 +88,19 @@ type QuoteEvent = {
   created_at: string
 }
 
+type Organization = {
+  id: string
+  name: string
+  abn: string | null
+  email: string | null
+  phone: string | null
+  address_line1: string | null
+  address_line2: string | null
+  suburb: string | null
+  state: string | null
+  postcode: string | null
+}
+
 const STATUS_CONFIG = {
   draft: { label: 'Draft', icon: Clock, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
   sent: { label: 'Sent', icon: Send, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -95,6 +108,18 @@ const STATUS_CONFIG = {
   accepted: { label: 'Accepted', icon: CheckCircle, color: 'bg-green-500/20 text-green-400 border-green-500/30' },
   declined: { label: 'Declined', icon: XCircle, color: 'bg-red-500/20 text-red-400 border-red-500/30' },
   expired: { label: 'Expired', icon: AlertCircle, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+}
+
+// Helper to build business address string
+const getBusinessAddress = (org: Organization): string => {
+  const parts = [
+    org.address_line1,
+    org.address_line2,
+    org.suburb,
+    org.state,
+    org.postcode,
+  ].filter(Boolean)
+  return parts.join(', ') || 'Sydney, NSW'
 }
 
 export default function QuoteDetailPage() {
@@ -106,6 +131,7 @@ export default function QuoteDetailPage() {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [lineItems, setLineItems] = useState<LineItem[]>([])
   const [events, setEvents] = useState<QuoteEvent[]>([])
+  const [organization, setOrganization] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -144,6 +170,25 @@ export default function QuoteDetailPage() {
       }
 
       setQuote(quoteData)
+
+      // Fetch organization data for PDF business info
+      const { data: userData } = await supabase
+        .from('users')
+        .select('org_id')
+        .eq('auth_user_id', user?.id)
+        .single()
+
+      if (userData?.org_id) {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id, name, abn, email, phone, address_line1, address_line2, suburb, state, postcode')
+          .eq('id', userData.org_id)
+          .single()
+
+        if (orgData) {
+          setOrganization(orgData)
+        }
+      }
 
       // Fetch line items
       const { data: itemsData } = await supabase
@@ -258,6 +303,21 @@ export default function QuoteDetailPage() {
       // Dynamic import to avoid bundling @react-pdf/renderer for Edge runtime
       const { downloadQuotePDF } = await import('@/lib/pdf')
       
+      // Build business info from organization data
+      const businessInfo = organization ? {
+        name: organization.name || 'Your Business Name',
+        abn: organization.abn ? `ABN: ${organization.abn}` : 'ABN: XX XXX XXX XXX',
+        email: organization.email || 'contact@yourbusiness.com.au',
+        phone: organization.phone || '0400 000 000',
+        address: getBusinessAddress(organization)
+      } : {
+        name: 'Your Business Name',
+        abn: 'ABN: XX XXX XXX XXX',
+        email: 'contact@yourbusiness.com.au',
+        phone: '0400 000 000',
+        address: 'Sydney, NSW'
+      }
+      
       await downloadQuotePDF({
         quote: {
           ...quote,
@@ -274,14 +334,7 @@ export default function QuoteDetailPage() {
           line_total: item.line_total,
           is_optional: item.is_optional
         })),
-        // TODO: Load business info from org settings
-        businessInfo: {
-          name: 'Your Business Name',
-          abn: 'ABN: XX XXX XXX XXX',
-          email: 'contact@yourbusiness.com.au',
-          phone: '0400 000 000',
-          address: 'Sydney, NSW'
-        }
+        businessInfo
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate PDF')
