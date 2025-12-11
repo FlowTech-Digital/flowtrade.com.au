@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { rateLimit } from '@/lib/rate-limit';
-
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500,
-});
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET(
   request: NextRequest,
@@ -15,10 +10,13 @@ export async function GET(
     const { token } = await params;
     
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
-    try {
-      await limiter.check(10, ip.split(',')[0].trim());
-    } catch {
+    const ip = getClientIp(request);
+    const rateLimitResult = rateLimit(ip, {
+      interval: 60 * 1000, // 1 minute
+      limit: 10,           // 10 requests per minute
+    });
+
+    if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
