@@ -12,8 +12,6 @@ import {
   FileText,
   Users,
   CheckCircle,
-  XCircle,
-  Clock,
   Loader2,
   Calendar,
   BarChart3,
@@ -128,7 +126,6 @@ export default function ReportsPage() {
 
       // Previous period for comparison
       const prevStart = new Date(start)
-      const prevEnd = new Date(start)
       prevStart.setTime(prevStart.getTime() - (end.getTime() - start.getTime()))
 
       // Fetch all data in parallel
@@ -353,7 +350,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Reports & Analytics</h1>
+          <h1 className="text-3xl font-bold text-white">Reports &amp; Analytics</h1>
           <p className="text-gray-400">Business insights and performance metrics</p>
         </div>
         
