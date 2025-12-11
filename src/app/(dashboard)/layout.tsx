@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X } from 'lucide-react'
+import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Quotes', href: '/quotes', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Briefcase },
+  { name: 'Invoices', href: '/invoices', icon: Receipt },
   { name: 'Customers', href: '/customers', icon: Users },
+  { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
