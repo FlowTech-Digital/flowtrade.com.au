@@ -53,6 +53,16 @@ type LineItem = {
   amount: number
 }
 
+// Database line item type (from Supabase query)
+type DbLineItem = {
+  id: string
+  description: string | null
+  quantity: number | null
+  unit_price: number | null
+  amount: number | null
+  sort_order: number | null
+}
+
 type FormData = {
   customer_id: string | null
   customer: Customer | null
@@ -169,7 +179,7 @@ export default function EditInvoicePage() {
         .order('sort_order', { ascending: true })
 
       // Convert database line items to form format
-      const lineItems: LineItem[] = (lineItemsData || []).map((item) => ({
+      const lineItems: LineItem[] = (lineItemsData || []).map((item: DbLineItem) => ({
         id: item.id,
         description: item.description || '',
         quantity: item.quantity || 1,
