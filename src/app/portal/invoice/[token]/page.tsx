@@ -115,10 +115,12 @@ export default async function InvoicePortalPage({ params, searchParams }: PagePr
   const { payment } = await searchParams;
   const result = await getInvoiceByToken(token);
 
-  if ('error' in result) {
+  // Handle error cases
+  if ('error' in result && result.error) {
     if (result.error === 'invalid' || result.error === 'not_found') {
       notFound();
     }
+    // At this point, error is 'expired' or 'revoked'
     return (
       <PortalLayout>
         <TokenExpiredView errorType={result.error} />
