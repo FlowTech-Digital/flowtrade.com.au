@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Loader2,
   Receipt,
-  AlertTriangle
+  AlertTriangle,
+  Calendar
 } from 'lucide-react'
 
 type DashboardStats = {
@@ -27,6 +28,7 @@ type DashboardStats = {
   totalJobs: number
   activeJobs: number
   completedJobs: number
+  scheduledJobs: number
   totalInvoices: number
   outstandingAmount: number
   paidAmount: number
@@ -142,6 +144,7 @@ export default function DashboardPage() {
       const jobs = (jobsResult.data || []) as JobRow[]
       const activeJobs = jobs.filter((j) => ['scheduled', 'in_progress'].includes(j.status)).length
       const completedJobs = jobs.filter((j) => j.status === 'completed' || j.status === 'invoiced').length
+      const scheduledJobs = jobs.filter((j) => j.status === 'scheduled').length
 
       // Process invoices
       const invoices = (invoicesResult.data || []) as InvoiceRow[]
@@ -207,6 +210,7 @@ export default function DashboardPage() {
         totalJobs: jobs.length,
         activeJobs,
         completedJobs,
+        scheduledJobs,
         totalInvoices: invoices.length,
         outstandingAmount,
         paidAmount,
@@ -405,7 +409,7 @@ export default function DashboardPage() {
       )}
 
       {/* Secondary Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Customers</CardTitle>
@@ -438,6 +442,20 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats?.completedJobs || 0}</div>
             <p className="text-xs text-gray-500">All time</p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-flowtrade-navy-light border-flowtrade-navy-lighter cursor-pointer hover:bg-flowtrade-navy-lighter/80 transition-colors"
+          onClick={() => router.push('/jobs?status=scheduled')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-400">Scheduled Jobs</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{stats?.scheduledJobs || 0}</div>
+            <p className="text-xs text-gray-500">Upcoming work</p>
           </CardContent>
         </Card>
       </div>
