@@ -7,6 +7,12 @@ import CustomerCard from '@/components/customers/CustomerCard'
 import CustomerModal from '@/components/customers/CustomerModal'
 import type { Customer, CustomerFormData } from '@/types/customer'
 
+// Helper function to get full contact name
+const getContactName = (customer: Customer) => {
+  const parts = [customer.first_name, customer.last_name].filter(Boolean)
+  return parts.join(' ')
+}
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
@@ -37,8 +43,8 @@ export default function CustomersPage() {
       setFilteredCustomers(
         customers.filter(
           (c) =>
-            c.business_name.toLowerCase().includes(query) ||
-            c.contact_name.toLowerCase().includes(query) ||
+            c.company_name.toLowerCase().includes(query) ||
+            getContactName(c).toLowerCase().includes(query) ||
             c.email?.toLowerCase().includes(query)
         )
       )
@@ -75,10 +81,12 @@ export default function CustomersPage() {
       
       // Convert empty strings to null for optional fields
       const cleanData = {
-        business_name: formData.business_name,
-        contact_name: formData.contact_name,
+        company_name: formData.company_name,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         email: formData.email || null,
         phone: formData.phone || null,
+        mobile: formData.mobile || null,
         address_line1: formData.address_line1 || null,
         address_line2: formData.address_line2 || null,
         suburb: formData.suburb || null,
@@ -228,7 +236,7 @@ export default function CustomersPage() {
             <h3 className="text-lg font-semibold text-white mb-2">Delete Customer</h3>
             <p className="text-gray-400 mb-6">
               Are you sure you want to delete{' '}
-              <span className="text-white font-medium">{deleteConfirm.business_name}</span>?
+              <span className="text-white font-medium">{deleteConfirm.company_name}</span>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
