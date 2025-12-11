@@ -37,6 +37,17 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
     return parts.join(', ') || null
   }
 
+  // Helper to get display name (company_name or full name)
+  const getDisplayName = () => {
+    if (customer.company_name) return customer.company_name
+    return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed Customer'
+  }
+
+  // Helper to get contact name
+  const getContactName = () => {
+    return `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+  }
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on interactive elements
     const target = e.target as HTMLElement
@@ -58,11 +69,13 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
             <Building2 className="w-5 h-5 text-flowtrade-cyan" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">{customer.business_name}</h3>
-            <div className="flex items-center gap-1 text-sm text-gray-400">
-              <User className="w-3 h-3" />
-              <span>{customer.contact_name}</span>
-            </div>
+            <h3 className="font-semibold text-white">{getDisplayName()}</h3>
+            {getContactName() && (
+              <div className="flex items-center gap-1 text-sm text-gray-400">
+                <User className="w-3 h-3" />
+                <span>{getContactName()}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -165,7 +178,7 @@ export default function CustomerCard({ customer, onEdit, onDelete }: CustomerCar
               : 'bg-gray-500/10 text-gray-400'
           }`}
         >
-          {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+          {customer.status ? customer.status.charAt(0).toUpperCase() + customer.status.slice(1) : 'Active'}
         </span>
         {customer.abn && (
           <span className="text-xs text-gray-500">ABN: {customer.abn}</span>

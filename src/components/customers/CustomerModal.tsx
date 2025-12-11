@@ -14,10 +14,12 @@ interface CustomerModalProps {
 }
 
 const initialFormData: CustomerFormData = {
-  business_name: '',
-  contact_name: '',
+  company_name: '',
+  first_name: '',
+  last_name: '',
   email: '',
   phone: '',
+  mobile: '',
   address_line1: '',
   address_line2: '',
   suburb: '',
@@ -43,10 +45,12 @@ export default function CustomerModal({
   useEffect(() => {
     if (customer) {
       setFormData({
-        business_name: customer.business_name,
-        contact_name: customer.contact_name,
+        company_name: customer.company_name || '',
+        first_name: customer.first_name || '',
+        last_name: customer.last_name || '',
         email: customer.email || '',
         phone: customer.phone || '',
+        mobile: customer.mobile || '',
         address_line1: customer.address_line1 || '',
         address_line2: customer.address_line2 || '',
         suburb: customer.suburb || '',
@@ -74,11 +78,9 @@ export default function CustomerModal({
   const validate = (): boolean => {
     const newErrors: Partial<CustomerFormData> = {}
 
-    if (!formData.business_name.trim()) {
-      newErrors.business_name = 'Business name is required'
-    }
-    if (!formData.contact_name.trim()) {
-      newErrors.contact_name = 'Contact name is required'
+    // Require either company name OR first+last name
+    if (!formData.company_name.trim() && !formData.first_name.trim() && !formData.last_name.trim()) {
+      newErrors.company_name = 'Company name or contact name is required'
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email address'
@@ -129,42 +131,51 @@ export default function CustomerModal({
             <div>
               <h3 className="text-sm font-medium text-flowtrade-cyan mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Business Name <span className="text-red-400">*</span>
+                    Company Name
                   </label>
                   <input
                     type="text"
-                    name="business_name"
-                    value={formData.business_name}
+                    name="company_name"
+                    value={formData.company_name}
                     onChange={handleChange}
                     className={`w-full px-4 py-2 bg-flowtrade-navy border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent ${
-                      errors.business_name ? 'border-red-500' : 'border-flowtrade-navy-lighter'
+                      errors.company_name ? 'border-red-500' : 'border-flowtrade-navy-lighter'
                     }`}
-                    placeholder="e.g., Smith Plumbing"
+                    placeholder="e.g., Smith Plumbing Pty Ltd"
                   />
-                  {errors.business_name && (
-                    <p className="text-red-400 text-xs mt-1">{errors.business_name}</p>
+                  {errors.company_name && (
+                    <p className="text-red-400 text-xs mt-1">{errors.company_name}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Contact Name <span className="text-red-400">*</span>
+                    First Name
                   </label>
                   <input
                     type="text"
-                    name="contact_name"
-                    value={formData.contact_name}
+                    name="first_name"
+                    value={formData.first_name}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 bg-flowtrade-navy border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent ${
-                      errors.contact_name ? 'border-red-500' : 'border-flowtrade-navy-lighter'
-                    }`}
-                    placeholder="e.g., John Smith"
+                    className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                    placeholder="e.g., John"
                   />
-                  {errors.contact_name && (
-                    <p className="text-red-400 text-xs mt-1">{errors.contact_name}</p>
-                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                    placeholder="e.g., Smith"
+                  />
                 </div>
 
                 <div>
@@ -190,6 +201,18 @@ export default function CustomerModal({
                     type="tel"
                     name="phone"
                     value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+                    placeholder="02 1234 5678"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Mobile</label>
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={formData.mobile}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
                     placeholder="0412 345 678"

@@ -1,15 +1,18 @@
 // FlowTrade Customer Types
-// Sprint 3 Phase 3A - Customer Management
+// Updated: 2025-12-11 - Aligned with actual database schema
 
 export interface Customer {
   id: string
-  user_id: string
+  org_id: string
   
   // Basic Info
-  business_name: string
-  contact_name: string
+  customer_type: string
+  company_name: string
+  first_name: string
+  last_name: string
   email: string | null
   phone: string | null
+  mobile: string | null
   
   // Address
   address_line1: string | null
@@ -17,11 +20,14 @@ export interface Customer {
   suburb: string | null
   state: string | null
   postcode: string | null
-  country: string
+  street_address: string | null
   
   // Business Details
+  source: string | null
   abn: string | null
   notes: string | null
+  tags: string[] | null
+  country: string | null
   
   // Metadata
   status: 'active' | 'inactive' | 'archived'
@@ -30,10 +36,12 @@ export interface Customer {
 }
 
 export interface CustomerFormData {
-  business_name: string
-  contact_name: string
+  company_name: string
+  first_name: string
+  last_name: string
   email: string
   phone: string
+  mobile: string
   address_line1: string
   address_line2: string
   suburb: string
@@ -45,10 +53,12 @@ export interface CustomerFormData {
 }
 
 export interface CreateCustomerData {
-  business_name: string
-  contact_name: string
+  company_name: string
+  first_name: string
+  last_name: string
   email?: string | null
   phone?: string | null
+  mobile?: string | null
   address_line1?: string | null
   address_line2?: string | null
   suburb?: string | null
