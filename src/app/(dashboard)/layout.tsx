@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, FileText, Users, Settings, LogOut, Loader2, Menu, X } from 'lucide-react'
+import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Quotes', href: '/quotes', icon: FileText },
+  { name: 'Jobs', href: '/jobs', icon: Briefcase },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
@@ -93,7 +94,7 @@ export default function DashboardLayout({
           {/* Mobile Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
                   key={item.name}
@@ -146,7 +147,7 @@ export default function DashboardLayout({
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
                   key={item.name}
