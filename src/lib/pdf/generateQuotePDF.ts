@@ -2,7 +2,7 @@
 
 import { pdf } from '@react-pdf/renderer'
 import QuotePDF from './QuotePDF'
-import { createElement } from 'react'
+import { createElement, type ReactElement } from 'react'
 
 // Types matching QuotePDF
 type Customer = {
@@ -73,7 +73,9 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
 
   try {
     // Create the PDF document using createElement to avoid JSX in .ts file
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo })
+    // Type assertion needed because pdf() expects ReactElement<DocumentProps>
+    // but createElement returns FunctionComponentElement<QuotePDFProps>
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
     
     // Generate the PDF blob
     const blob = await pdf(doc).toBlob()
@@ -104,7 +106,7 @@ export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise
   const { quote, lineItems, businessInfo } = options
 
   try {
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo })
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
     const blob = await pdf(doc).toBlob()
     return blob
   } catch (error) {
@@ -120,7 +122,7 @@ export async function generateQuotePDFDataURL(options: GeneratePDFOptions): Prom
   const { quote, lineItems, businessInfo } = options
 
   try {
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo })
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
     const blob = await pdf(doc).toBlob()
     
     return new Promise((resolve, reject) => {
