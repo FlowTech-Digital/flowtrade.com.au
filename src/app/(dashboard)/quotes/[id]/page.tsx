@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
-import { downloadQuotePDF } from '@/lib/pdf'
+// REMOVED: import { downloadQuotePDF } from '@/lib/pdf' - causes Edge runtime build failure
 import {
   ArrowLeft,
   Edit,
@@ -248,13 +248,16 @@ export default function QuoteDetailPage() {
     setShowActionsMenu(false)
   }
 
-  // Download PDF
+  // Download PDF - Uses DYNAMIC IMPORT to avoid Edge runtime build failure
   const handleDownloadPDF = async () => {
     if (!quote) return
     setActionLoading('pdf')
     setShowActionsMenu(false)
 
     try {
+      // Dynamic import to avoid bundling @react-pdf/renderer for Edge runtime
+      const { downloadQuotePDF } = await import('@/lib/pdf')
+      
       await downloadQuotePDF({
         quote: {
           ...quote,
