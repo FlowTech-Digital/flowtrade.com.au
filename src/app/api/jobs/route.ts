@@ -29,7 +29,7 @@ async function generateJobNumber(supabase: ReturnType<typeof createClient>, orgI
 }
 
 // GET /api/jobs - List all jobs for the org
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient()
     
