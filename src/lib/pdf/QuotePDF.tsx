@@ -142,10 +142,18 @@ const styles = StyleSheet.create({
     color: '#0A1628',
     fontSize: 10,
   },
+  customerInfoBlock: {
+    marginBottom: 0,
+  },
   customerName: {
     color: '#0A1628',
     fontSize: 10,
-    marginBottom: 4,
+    marginBottom: 2,
+  },
+  customerDetail: {
+    fontSize: 9,
+    color: '#666666',
+    marginBottom: 2,
   },
   twoColumn: {
     flexDirection: 'row',
@@ -377,6 +385,8 @@ const defaultBusinessInfo = {
 }
 
 export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusinessInfo }: QuotePDFProps) {
+  const customerAddress = getCustomerAddress(quote.customer)
+  
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -404,16 +414,18 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
           <View style={styles.column}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Bill To</Text>
-              <Text style={styles.customerName}>{getCustomerName(quote.customer)}</Text>
-              {quote.customer.email && (
-                <Text style={styles.businessInfo}>{quote.customer.email}</Text>
-              )}
-              {quote.customer.phone && (
-                <Text style={styles.businessInfo}>{quote.customer.phone}</Text>
-              )}
-              {getCustomerAddress(quote.customer) && (
-                <Text style={styles.businessInfo}>{getCustomerAddress(quote.customer)}</Text>
-              )}
+              <View style={styles.customerInfoBlock}>
+                <View><Text style={styles.customerName}>{getCustomerName(quote.customer)}</Text></View>
+                {quote.customer.email && (
+                  <View><Text style={styles.customerDetail}>{quote.customer.email}</Text></View>
+                )}
+                {quote.customer.phone && (
+                  <View><Text style={styles.customerDetail}>{quote.customer.phone}</Text></View>
+                )}
+                {customerAddress && (
+                  <View><Text style={styles.customerDetail}>{customerAddress}</Text></View>
+                )}
+              </View>
             </View>
           </View>
           <View style={styles.column}>
