@@ -325,10 +325,10 @@ export default function EditInvoicePage() {
     const updated = [...lineItems]
     const currentItem = updated[index]
     
-    // Guard against undefined (should never happen but TypeScript requires it)
-    if (!currentItem) return
+    // Guard against undefined - return early if index is invalid
+    if (currentItem === undefined) return
     
-    // Create a new item with explicit required fields
+    // Create a new item with explicit required fields using non-null values
     const item: LineItem = {
       id: currentItem.id,
       description: currentItem.description,
@@ -362,8 +362,8 @@ export default function EditInvoicePage() {
     const updated = [...lineItems]
     const item = updated[index]
     
-    // Guard against undefined
-    if (!item) return
+    // Guard against undefined - return early if index is invalid
+    if (item === undefined) return
     
     if (item.id && !item.isNew) {
       // Mark existing item for deletion
@@ -440,7 +440,7 @@ export default function EditInvoicePage() {
         const { error: deleteError } = await supabase
           .from('invoice_line_items')
           .delete()
-          .in('id', itemsToDelete.map(i => i.id!))
+          .in('id', itemsToDelete.map(i => i.id as string))
 
         if (deleteError) console.error('Delete error:', deleteError)
       }
@@ -456,7 +456,7 @@ export default function EditInvoicePage() {
             amount: item.amount,
             sort_order: item.sort_order
           })
-          .eq('id', item.id!)
+          .eq('id', item.id as string)
 
         if (itemUpdateError) console.error('Update error:', itemUpdateError)
       }
