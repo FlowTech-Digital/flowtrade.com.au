@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { 
   ArrowLeft,
@@ -21,8 +21,6 @@ import {
   Calendar,
   Briefcase
 } from 'lucide-react'
-
-export const runtime = 'edge'
 
 // Dynamic import for PDF download (client-side only)
 const InvoicePDFDownload = dynamic(
@@ -91,8 +89,9 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   cancelled: [],
 }
 
-export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function InvoiceDetailPage() {
+  const params = useParams()
+  const id = params.id as string
   const { user } = useAuth()
   const router = useRouter()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
@@ -147,7 +146,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             job_notes
           )
         `)
-        .eq('id', resolvedParams.id)
+        .eq('id', id)
         .eq('org_id', userData.org_id)
         .single()
 
@@ -161,7 +160,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
 
     fetchInvoice()
-  }, [user, resolvedParams.id])
+  }, [user, id])
 
   const updateStatus = async (newStatus: string) => {
     if (!invoice) return
