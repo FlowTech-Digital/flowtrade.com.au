@@ -21,9 +21,11 @@ export interface Customer {
   postcode: string | null
   street_address: string | null
   source: string | null
+  abn: string | null
   notes: string | null
   tags: string[] | null
-  status: string
+  country: string | null
+  status: 'active' | 'inactive' | 'archived'
   created_at: string
   updated_at: string
 }
@@ -40,11 +42,13 @@ export interface CreateCustomerData {
   suburb?: string | null
   state?: string | null
   postcode?: string | null
+  country?: string | null
+  abn?: string | null
   notes?: string | null
 }
 
 export interface UpdateCustomerData extends Partial<CreateCustomerData> {
-  status?: string
+  status?: 'active' | 'inactive' | 'archived'
 }
 
 export const customerService = {
