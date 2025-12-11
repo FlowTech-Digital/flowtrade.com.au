@@ -16,7 +16,8 @@ import {
   Plus,
   ArrowRight,
   Loader2,
-  Receipt
+  Receipt,
+  AlertTriangle
 } from 'lucide-react'
 
 type DashboardStats = {
@@ -30,6 +31,8 @@ type DashboardStats = {
   outstandingAmount: number
   paidAmount: number
   totalCustomers: number
+  overdueCount: number
+  overdueAmount: number
 }
 
 type RecentActivity = {
@@ -148,6 +151,11 @@ export default function DashboardPage() {
       const paidAmount = invoices
         .filter((inv) => inv.status === 'paid')
         .reduce((sum, inv) => sum + (inv.total || 0), 0)
+      
+      // Process overdue invoices
+      const overdueInvoices = invoices.filter((inv) => inv.status === 'overdue')
+      const overdueCount = overdueInvoices.length
+      const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
 
       // Helper function to get customer name
       const getCustomerName = (customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null): string => {
@@ -202,7 +210,9 @@ export default function DashboardPage() {
         totalInvoices: invoices.length,
         outstandingAmount,
         paidAmount,
-        totalCustomers: customersResult.data?.length || 0
+        totalCustomers: customersResult.data?.length || 0,
+        overdueCount,
+        overdueAmount
       })
 
       setRecentActivity(allActivities)
@@ -364,6 +374,35 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Overdue Alert Card - Only show if there are overdue invoices */}
+      {stats && stats.overdueCount > 0 && (
+        <Card 
+          className="bg-red-950/30 border-red-900/50 cursor-pointer hover:bg-red-950/40 transition-colors"
+          onClick={() => router.push('/invoices?status=overdue')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-red-400">Overdue Invoices</CardTitle>
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-red-400">{stats.overdueCount}</div>
+                <p className="text-xs text-red-400/70">
+                  {stats.overdueCount === 1 ? 'invoice overdue' : 'invoices overdue'}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-red-400">
+                  {formatCurrency(stats.overdueAmount)}
+                </div>
+                <p className="text-xs text-red-400/70">total overdue</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Secondary Stats */}
       <div className="grid gap-4 md:grid-cols-3">
