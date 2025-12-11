@@ -67,6 +67,8 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   void: { label: 'Void', color: 'bg-gray-100 text-gray-800' },
 };
 
+const defaultStatus = { label: 'Draft', color: 'bg-gray-100 text-gray-800' };
+
 export function InvoicePortalView({ 
   invoice, 
   customer, 
@@ -77,9 +79,10 @@ export function InvoicePortalView({
 }: InvoicePortalViewProps) {
   const [currentStatus] = useState(invoice.status);
 
-  const status = statusConfig[currentStatus] || statusConfig.draft;
+  const status = statusConfig[currentStatus] ?? defaultStatus;
   const isOverdue = new Date(invoice.due_date) < new Date() && currentStatus !== 'paid';
   const displayStatus = isOverdue && currentStatus !== 'paid' ? 'overdue' : currentStatus;
+  const displayConfig = statusConfig[displayStatus] ?? status;
   const canPay = ['sent', 'viewed', 'overdue'].includes(currentStatus) || (isOverdue && currentStatus !== 'paid');
 
   const formatCurrency = (amount: number) => {
@@ -133,8 +136,8 @@ export function InvoicePortalView({
               </CardTitle>
               <p className="text-gray-500 mt-1">From {organization.name}</p>
             </div>
-            <Badge className={statusConfig[displayStatus]?.color || status.color}>
-              {statusConfig[displayStatus]?.label || status.label}
+            <Badge className={displayConfig.color}>
+              {displayConfig.label}
             </Badge>
           </div>
         </CardHeader>
