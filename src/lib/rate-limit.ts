@@ -77,7 +77,8 @@ function cleanupExpiredEntries(now: number): void {
 export function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    // Use optional chaining - split()[0] returns string | undefined in strict mode
+    return forwardedFor.split(',')[0]?.trim() ?? 'unknown';
   }
   const realIp = request.headers.get('x-real-ip');
   if (realIp) {
