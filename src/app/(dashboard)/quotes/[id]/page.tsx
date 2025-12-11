@@ -137,6 +137,7 @@ export default function QuoteDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Fetch quote data
   useEffect(() => {
@@ -249,7 +250,7 @@ export default function QuoteDetailPage() {
     return `${quote.customer.first_name || ''} ${quote.customer.last_name || ''}`.trim() || 'Unnamed'
   }
 
-  // Update quote status
+  // Update quote status (for non-email actions)
   const updateStatus = async (newStatus: Quote['status']) => {
     if (!quote) return
     setActionLoading(newStatus)
@@ -262,9 +263,6 @@ export default function QuoteDetailPage() {
     }
 
     const updateData: Record<string, unknown> = { status: newStatus }
-    if (newStatus === 'sent' && !quote.sent_at) {
-      updateData.sent_at = new Date().toISOString()
-    }
     if (newStatus === 'accepted') {
       updateData.accepted_at = new Date().toISOString()
     }
@@ -291,6 +289,66 @@ export default function QuoteDetailPage() {
     setQuote({ ...quote, status: newStatus, ...updateData })
     setActionLoading(null)
     setShowActionsMenu(false)
+  }
+
+  // Send quote via email
+  const sendQuoteEmail = async () => {
+    if (!quote) return
+    
+    // Check if customer has email
+    if (!quote.customer?.email) {
+      setError('Customer email address not found. Please add an email to the customer record before sending.')
+      return
+    }
+    
+    setActionLoading('send')
+    setError(null)
+    setSuccessMessage(null)
+    setShowActionsMenu(false)
+
+    try {
+      const response = await fetch(`/api/quotes/${quote.id}/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send quote')
+      }
+
+      // Update local state
+      setQuote({ 
+        ...quote, 
+        status: 'sent', 
+        sent_at: new Date().toISOString() 
+      })
+      
+      // Add event to local state
+      setEvents([
+        {
+          id: crypto.randomUUID(),
+          event_type: 'email_sent',
+          event_data: { to: result.sentTo },
+          created_at: new Date().toISOString()
+        },
+        ...events
+      ])
+
+      // Show success message
+      setSuccessMessage(`Quote sent successfully to ${result.sentTo}`)
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send quote')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Download PDF - Uses DYNAMIC IMPORT to avoid Edge runtime build failure
@@ -495,6 +553,34 @@ export default function QuoteDetailPage() {
 
   return (
     <div>
+      {/* Success Message Toast */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
+          <CheckCircle className="h-5 w-5" />
+          <span>{successMessage}</span>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="ml-2 text-green-400 hover:text-green-300"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Error Message Toast */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
+          <AlertCircle className="h-5 w-5" />
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-2 text-red-400 hover:text-red-300"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -539,11 +625,12 @@ export default function QuoteDetailPage() {
 
           {(quote.status === 'draft' || quote.status === 'sent') && (
             <button
-              onClick={() => updateStatus('sent')}
-              disabled={actionLoading === 'sent'}
-              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50"
+              onClick={sendQuoteEmail}
+              disabled={actionLoading === 'send' || !quote.customer?.email}
+              title={!quote.customer?.email ? 'Customer email required' : undefined}
+              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {actionLoading === 'sent' ? (
+              {actionLoading === 'send' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
@@ -677,6 +764,12 @@ export default function QuoteDetailPage() {
                       <a href={`tel:${quote.customer.phone}`} className="hover:text-white">
                         {quote.customer.phone}
                       </a>
+                    </div>
+                  )}
+                  {!quote.customer.email && (
+                    <div className="flex items-center gap-2 text-amber-400 text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>No email - add email to send quote</span>
                     </div>
                   )}
                 </div>
