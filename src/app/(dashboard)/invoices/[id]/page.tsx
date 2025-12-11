@@ -61,7 +61,7 @@ type Invoice = {
     phone: string | null
     address_line1: string | null
     address_line2: string | null
-    city: string | null
+    suburb: string | null
     state: string | null
     postcode: string | null
   } | null
@@ -135,7 +135,7 @@ export default function InvoiceDetailPage() {
             phone,
             address_line1,
             address_line2,
-            city,
+            suburb,
             state,
             postcode
           ),
@@ -220,7 +220,7 @@ export default function InvoiceDetailPage() {
     const parts = [
       customer.address_line1,
       customer.address_line2,
-      [customer.city, customer.state, customer.postcode].filter(Boolean).join(' ')
+      [customer.suburb, customer.state, customer.postcode].filter(Boolean).join(' ')
     ].filter(Boolean)
     return parts.length > 0 ? parts : null
   }
@@ -281,7 +281,7 @@ export default function InvoiceDetailPage() {
       phone: invoice.customer.phone,
       address_line1: invoice.customer.address_line1,
       address_line2: invoice.customer.address_line2,
-      city: invoice.customer.city,
+      suburb: invoice.customer.suburb,
       state: invoice.customer.state,
       postcode: invoice.customer.postcode,
     } : null,
