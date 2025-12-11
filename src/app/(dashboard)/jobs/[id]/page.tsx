@@ -29,7 +29,6 @@ import {
   CircleCheck,
   Receipt,
   FilePlus,
-  ChevronRight,
   Ban
 } from 'lucide-react'
 
@@ -211,7 +210,6 @@ function StatusWorkflow({ currentStatus, onStatusChange, isLoading }: {
             const isCurrentStep = step === currentStatus || 
               (currentStatus === 'on_hold' && step === 'in_progress')
             const isCompletedStep = stepConfig.order < currentOrder && currentStatus !== 'cancelled'
-            const isFutureStep = stepConfig.order > currentOrder
             const isCancelled = currentStatus === 'cancelled'
 
             return (
