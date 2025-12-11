@@ -328,7 +328,7 @@ export default function EditInvoicePage() {
     if (field === 'quantity' || field === 'unit_price') {
       const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value
       item[field] = numValue
-      item.amount = item.quantity * item.unit_price
+      item.amount = (item.quantity ?? 0) * (item.unit_price ?? 0)
     } else if (field === 'description') {
       item.description = value as string
     }
