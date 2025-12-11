@@ -109,7 +109,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     // Only include fields that are provided
     if (body.status !== undefined) updateData.status = body.status
     if (body.due_date !== undefined) updateData.due_date = body.due_date
-    if (body.payment_date !== undefined) updateData.payment_date = body.payment_date
+    if (body.paid_at !== undefined) updateData.paid_at = body.paid_at
     if (body.notes !== undefined) updateData.notes = body.notes
     
     // If subtotal is being updated, recalculate tax and total
