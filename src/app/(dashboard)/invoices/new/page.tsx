@@ -63,6 +63,15 @@ type FormData = {
   line_items: LineItem[]
 }
 
+// Helper to get today's date in YYYY-MM-DD format
+function getTodayDate(): string {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Generate sequential invoice number
 async function generateInvoiceNumber(supabase: ReturnType<typeof createClient>, orgId: string): Promise<string> {
   const { data } = await supabase
@@ -113,7 +122,7 @@ export default function CreateInvoicePage() {
     customer: null,
     job_id: null,
     job: null,
-    issue_date: new Date().toISOString().split('T')[0],
+    issue_date: getTodayDate(),
     due_date: '',
     payment_terms: 14,
     notes: '',
@@ -148,9 +157,12 @@ export default function CreateInvoicePage() {
       const issueDate = new Date(formData.issue_date)
       const dueDate = new Date(issueDate)
       dueDate.setDate(dueDate.getDate() + formData.payment_terms)
+      const year = dueDate.getFullYear()
+      const month = String(dueDate.getMonth() + 1).padStart(2, '0')
+      const day = String(dueDate.getDate()).padStart(2, '0')
       setFormData(prev => ({
         ...prev,
-        due_date: dueDate.toISOString().split('T')[0]
+        due_date: `${year}-${month}-${day}`
       }))
     }
   }, [formData.issue_date, formData.payment_terms])
