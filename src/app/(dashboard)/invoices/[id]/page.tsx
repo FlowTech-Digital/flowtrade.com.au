@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -20,10 +22,10 @@ import {
   MapPin,
   Calendar,
   Briefcase,
-  Pencil
+  Pencil,
+  Link2
 } from 'lucide-react'
-
-export const runtime = 'edge'
+import { PortalLinkButton } from '@/components/portal/PortalLinkButton'
 
 // Dynamic import for PDF download (client-side only)
 const InvoicePDFDownload = dynamic(
@@ -359,6 +361,7 @@ export default function InvoiceDetailPage() {
               Edit
             </button>
           )}
+          <PortalLinkButton resourceType="invoice" resourceId={invoice.id} />
           <InvoicePDFDownload invoice={pdfInvoiceData} />
           <StatusBadge status={invoice.status} />
         </div>
