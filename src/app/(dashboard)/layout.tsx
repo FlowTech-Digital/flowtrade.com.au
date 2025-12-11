@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3 } from 'lucide-react'
+import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3, Building2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -16,6 +17,11 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
+type OrgInfo = {
+  name: string
+  logo_url: string | null
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -25,6 +31,39 @@ export default function DashboardLayout({
   const pathname = usePathname()
   const { user, loading, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null)
+
+  // Fetch organization info
+  useEffect(() => {
+    async function fetchOrgInfo() {
+      if (!user) return
+      
+      const supabase = createClient()
+      if (!supabase) return
+
+      // Get user's org_id
+      const { data: userData } = await supabase
+        .from('users')
+        .select('org_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (!userData?.org_id) return
+
+      // Get organization details
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name, logo_url')
+        .eq('id', userData.org_id)
+        .single()
+
+      if (orgData) {
+        setOrgInfo(orgData)
+      }
+    }
+
+    fetchOrgInfo()
+  }, [user])
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -61,6 +100,30 @@ export default function DashboardLayout({
     )
   }
 
+  // Logo component - shows org logo if available, otherwise FlowTrade logo
+  const LogoDisplay = ({ className = "h-8 w-auto" }: { className?: string }) => {
+    if (orgInfo?.logo_url) {
+      return (
+        <div className="flex items-center gap-3">
+          <img
+            src={orgInfo.logo_url}
+            alt={orgInfo.name}
+            className={`${className} object-contain bg-white rounded p-1`}
+          />
+        </div>
+      )
+    }
+    return (
+      <img
+        src="/flowtrade-logo.svg"
+        alt="FlowTrade"
+        width={140}
+        height={32}
+        className={className}
+      />
+    )
+  }
+
   return (
     <div className="flex min-h-screen bg-flowtrade-navy">
       {/* Mobile menu backdrop */}
@@ -77,13 +140,7 @@ export default function DashboardLayout({
           {/* Logo with close button */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <img
-                src="/flowtrade-logo.svg"
-                alt="FlowTrade"
-                width={140}
-                height={32}
-                className="h-8 w-auto"
-              />
+              <LogoDisplay />
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -92,6 +149,13 @@ export default function DashboardLayout({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Organization name if logo present */}
+          {orgInfo?.logo_url && orgInfo?.name && (
+            <div className="px-6 py-2 border-b border-flowtrade-navy-lighter">
+              <p className="text-sm text-gray-400 truncate">{orgInfo.name}</p>
+            </div>
+          )}
 
           {/* Mobile Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
@@ -136,15 +200,16 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b border-flowtrade-navy-lighter">
             <Link href="/dashboard">
-              <img
-                src="/flowtrade-logo.svg"
-                alt="FlowTrade"
-                width={140}
-                height={32}
-                className="h-8 w-auto"
-              />
+              <LogoDisplay />
             </Link>
           </div>
+
+          {/* Organization name if logo present */}
+          {orgInfo?.logo_url && orgInfo?.name && (
+            <div className="px-6 py-2 border-b border-flowtrade-navy-lighter">
+              <p className="text-sm text-gray-400 truncate">{orgInfo.name}</p>
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
@@ -197,13 +262,7 @@ export default function DashboardLayout({
 
           {/* Logo */}
           <Link href="/dashboard">
-            <img
-              src="/flowtrade-logo.svg"
-              alt="FlowTrade"
-              width={120}
-              height={28}
-              className="h-7 w-auto"
-            />
+            <LogoDisplay className="h-7 w-auto" />
           </Link>
 
           {/* Sign out */}

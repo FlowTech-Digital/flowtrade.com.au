@@ -5,6 +5,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from '@react-pdf/renderer'
 
@@ -64,6 +65,7 @@ interface QuotePDFProps {
     email: string
     phone: string
     address: string
+    logo_url?: string | null
   }
 }
 
@@ -90,8 +92,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-end',
   },
+  logo: {
+    width: 120,
+    height: 60,
+    objectFit: 'contain',
+    marginBottom: 10,
+  },
   businessName: {
     fontSize: 24,
+    fontFamily: 'Helvetica-Bold',
+    color: '#0A1628',
+    marginBottom: 5,
+  },
+  businessNameWithLogo: {
+    fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: '#0A1628',
     marginBottom: 5,
@@ -386,10 +400,12 @@ const defaultBusinessInfo = {
   email: 'contact@yourbusiness.com.au',
   phone: '0400 000 000',
   address: 'Sydney, NSW',
+  logo_url: null,
 }
 
 export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusinessInfo }: QuotePDFProps) {
   const customerAddress = getCustomerAddress(quote.customer)
+  const hasLogo = businessInfo.logo_url && businessInfo.logo_url.length > 0
   
   return (
     <Document>
@@ -397,7 +413,12 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.businessName}>{businessInfo.name}</Text>
+            {hasLogo && (
+              <Image src={businessInfo.logo_url!} style={styles.logo} />
+            )}
+            <Text style={hasLogo ? styles.businessNameWithLogo : styles.businessName}>
+              {businessInfo.name}
+            </Text>
             <Text style={styles.businessInfo}>{businessInfo.abn}</Text>
             <Text style={styles.businessInfo}>{businessInfo.email}</Text>
             <Text style={styles.businessInfo}>{businessInfo.phone}</Text>
