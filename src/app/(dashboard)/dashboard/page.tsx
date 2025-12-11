@@ -43,8 +43,22 @@ type RecentActivity = {
 }
 
 // Types for Supabase query results
-type QuoteRow = { id: string; status: string }
-type JobRow = { id: string; status: string }
+type QuoteRow = { 
+  id: string
+  status: string
+  quote_number: string
+  total: number | null
+  created_at: string
+  customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null
+}
+type JobRow = { 
+  id: string
+  status: string
+  job_number: string
+  total_amount: number | null
+  created_at: string
+  customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null
+}
 type InvoiceRow = { 
   id: string
   status: string
@@ -88,17 +102,19 @@ export default function DashboardPage() {
 
       // Fetch all stats in parallel
       const [quotesResult, jobsResult, invoicesResult, customersResult] = await Promise.all([
-        // Quotes stats
+        // Quotes stats (with details for activity feed)
         supabase
           .from('quotes')
-          .select('id, status')
-          .eq('org_id', orgId),
+          .select('id, status, quote_number, total, created_at, customer:customers(first_name, last_name, company_name)')
+          .eq('org_id', orgId)
+          .order('created_at', { ascending: false }),
         
-        // Jobs stats
+        // Jobs stats (with details for activity feed)
         supabase
           .from('jobs')
-          .select('id, status')
-          .eq('org_id', orgId),
+          .select('id, status, job_number, total_amount, created_at, customer:customers(first_name, last_name, company_name)')
+          .eq('org_id', orgId)
+          .order('created_at', { ascending: false }),
         
         // Invoices stats (with amounts)
         supabase
@@ -116,44 +132,65 @@ export default function DashboardPage() {
 
       // Process quotes
       const quotes = (quotesResult.data || []) as QuoteRow[]
-      const pendingQuotes = quotes.filter((q: QuoteRow) => q.status === 'sent' || q.status === 'draft').length
-      const acceptedQuotes = quotes.filter((q: QuoteRow) => q.status === 'accepted').length
+      const pendingQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length
+      const acceptedQuotes = quotes.filter((q) => q.status === 'accepted').length
 
       // Process jobs
       const jobs = (jobsResult.data || []) as JobRow[]
-      const activeJobs = jobs.filter((j: JobRow) => ['scheduled', 'in_progress'].includes(j.status)).length
-      const completedJobs = jobs.filter((j: JobRow) => j.status === 'completed' || j.status === 'invoiced').length
+      const activeJobs = jobs.filter((j) => ['scheduled', 'in_progress'].includes(j.status)).length
+      const completedJobs = jobs.filter((j) => j.status === 'completed' || j.status === 'invoiced').length
 
       // Process invoices
       const invoices = (invoicesResult.data || []) as InvoiceRow[]
       const outstandingAmount = invoices
-        .filter((inv: InvoiceRow) => ['sent', 'overdue'].includes(inv.status))
-        .reduce((sum: number, inv: InvoiceRow) => sum + (inv.total || 0), 0)
+        .filter((inv) => ['sent', 'overdue'].includes(inv.status))
+        .reduce((sum, inv) => sum + (inv.total || 0), 0)
       const paidAmount = invoices
-        .filter((inv: InvoiceRow) => inv.status === 'paid')
-        .reduce((sum: number, inv: InvoiceRow) => sum + (inv.total || 0), 0)
+        .filter((inv) => inv.status === 'paid')
+        .reduce((sum, inv) => sum + (inv.total || 0), 0)
 
-      // Build recent activity from invoices
-      const recent: RecentActivity[] = invoices.slice(0, 5).map((inv: InvoiceRow) => {
-        const customer = inv.customer
-        let customerName = 'No Customer'
-        if (customer) {
-          if (customer.company_name) {
-            customerName = customer.company_name
-          } else {
-            customerName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
-          }
-        }
-        return {
-          id: inv.id,
-          type: 'invoice' as const,
-          number: inv.invoice_number,
-          status: inv.status,
-          amount: inv.total,
-          customerName,
-          date: inv.created_at
-        }
-      })
+      // Helper function to get customer name
+      const getCustomerName = (customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null): string => {
+        if (!customer) return 'No Customer'
+        if (customer.company_name) return customer.company_name
+        return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
+      }
+
+      // Build unified recent activity from all entity types
+      const quoteActivities: RecentActivity[] = quotes.slice(0, 10).map((q) => ({
+        id: q.id,
+        type: 'quote' as const,
+        number: q.quote_number,
+        status: q.status,
+        amount: q.total,
+        customerName: getCustomerName(q.customer),
+        date: q.created_at
+      }))
+
+      const jobActivities: RecentActivity[] = jobs.slice(0, 10).map((j) => ({
+        id: j.id,
+        type: 'job' as const,
+        number: j.job_number,
+        status: j.status,
+        amount: j.total_amount,
+        customerName: getCustomerName(j.customer),
+        date: j.created_at
+      }))
+
+      const invoiceActivities: RecentActivity[] = invoices.slice(0, 10).map((inv) => ({
+        id: inv.id,
+        type: 'invoice' as const,
+        number: inv.invoice_number,
+        status: inv.status,
+        amount: inv.total,
+        customerName: getCustomerName(inv.customer),
+        date: inv.created_at
+      }))
+
+      // Combine and sort by date (most recent first), take top 8
+      const allActivities = [...quoteActivities, ...jobActivities, ...invoiceActivities]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 8)
 
       setStats({
         totalQuotes: quotes.length,
@@ -168,7 +205,7 @@ export default function DashboardPage() {
         totalCustomers: customersResult.data?.length || 0
       })
 
-      setRecentActivity(recent)
+      setRecentActivity(allActivities)
       setLoading(false)
     }
 
@@ -182,14 +219,72 @@ export default function DashboardPage() {
     }).format(amount)
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (type: string, status: string) => {
+    // Quote statuses
+    if (type === 'quote') {
+      switch (status) {
+        case 'accepted': return 'text-green-400'
+        case 'sent': return 'text-blue-400'
+        case 'viewed': return 'text-purple-400'
+        case 'draft': return 'text-gray-400'
+        case 'declined': return 'text-red-400'
+        case 'expired': return 'text-orange-400'
+        default: return 'text-gray-400'
+      }
+    }
+    // Job statuses
+    if (type === 'job') {
+      switch (status) {
+        case 'completed': return 'text-green-400'
+        case 'invoiced': return 'text-emerald-400'
+        case 'in_progress': return 'text-blue-400'
+        case 'scheduled': return 'text-purple-400'
+        case 'pending': return 'text-amber-400'
+        case 'cancelled': return 'text-red-400'
+        default: return 'text-gray-400'
+      }
+    }
+    // Invoice statuses
     switch (status) {
       case 'paid': return 'text-green-400'
       case 'sent': return 'text-blue-400'
+      case 'viewed': return 'text-purple-400'
       case 'draft': return 'text-gray-400'
       case 'overdue': return 'text-red-400'
+      case 'cancelled': return 'text-orange-400'
       default: return 'text-gray-400'
     }
+  }
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'quote': return <FileText className="h-4 w-4 text-flowtrade-cyan" />
+      case 'job': return <Briefcase className="h-4 w-4 text-amber-400" />
+      case 'invoice': return <Receipt className="h-4 w-4 text-green-400" />
+      default: return <FileText className="h-4 w-4 text-gray-400" />
+    }
+  }
+
+  const getActivityIconBg = (type: string) => {
+    switch (type) {
+      case 'quote': return 'bg-flowtrade-cyan/10'
+      case 'job': return 'bg-amber-400/10'
+      case 'invoice': return 'bg-green-400/10'
+      default: return 'bg-gray-400/10'
+    }
+  }
+
+  const getActivityRoute = (type: string, id: string) => {
+    switch (type) {
+      case 'quote': return `/quotes/${id}`
+      case 'job': return `/jobs/${id}`
+      case 'invoice': return `/invoices/${id}`
+      default: return '/'
+    }
+  }
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, ' ')
   }
 
   if (loading) {
@@ -373,22 +468,22 @@ export default function DashboardPage() {
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
             <CardTitle className="text-white">Recent Activity</CardTitle>
-            <CardDescription className="text-gray-400">Your latest invoices</CardDescription>
+            <CardDescription className="text-gray-400">Your latest quotes, jobs &amp; invoices</CardDescription>
           </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
-              <p className="text-sm text-gray-500">No activity yet. Create your first invoice to get started.</p>
+              <p className="text-sm text-gray-500">No activity yet. Create your first quote to get started.</p>
             ) : (
               <div className="space-y-3">
                 {recentActivity.map((activity) => (
                   <button
-                    key={activity.id}
-                    onClick={() => router.push(`/invoices/${activity.id}`)}
+                    key={`${activity.type}-${activity.id}`}
+                    onClick={() => router.push(getActivityRoute(activity.type, activity.id))}
                     className="w-full flex items-center justify-between p-3 bg-flowtrade-navy rounded-lg hover:bg-flowtrade-navy-lighter transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-flowtrade-navy-lighter rounded-lg">
-                        <Receipt className="h-4 w-4 text-flowtrade-cyan" />
+                      <div className={`p-2 rounded-lg ${getActivityIconBg(activity.type)}`}>
+                        {getActivityIcon(activity.type)}
                       </div>
                       <div>
                         <p className="text-sm text-white font-medium">{activity.number}</p>
@@ -399,8 +494,8 @@ export default function DashboardPage() {
                       <p className="text-sm text-white font-medium">
                         {activity.amount ? formatCurrency(activity.amount) : '—'}
                       </p>
-                      <p className={`text-xs capitalize ${getStatusColor(activity.status)}`}>
-                        {activity.status}
+                      <p className={`text-xs capitalize ${getStatusColor(activity.type, activity.status)}`}>
+                        {formatStatus(activity.status)}
                       </p>
                     </div>
                   </button>
