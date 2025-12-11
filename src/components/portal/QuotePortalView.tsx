@@ -56,12 +56,16 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
   converted: { label: 'Converted to Job', variant: 'default', color: 'bg-purple-100 text-purple-800' },
 };
 
+// Explicit default that TypeScript recognizes as guaranteed non-undefined
+const defaultStatus = { label: 'Draft', variant: 'secondary' as const, color: 'bg-gray-100 text-gray-800' };
+
 export function QuotePortalView({ quote, customer, organization, token, actionResult }: QuotePortalViewProps) {
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(quote.status);
 
-  const status = statusConfig[currentStatus] || statusConfig.draft;
+  // Using ?? with explicit const guarantees defined value to TypeScript
+  const status = statusConfig[currentStatus] ?? defaultStatus;
   const isExpired = new Date(quote.valid_until) < new Date();
   const canRespond = (currentStatus === 'sent' || currentStatus === 'draft') && !isExpired;
 
