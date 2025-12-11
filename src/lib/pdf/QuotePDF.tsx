@@ -446,8 +446,8 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
                 key={item.id}
                 style={[
                   styles.tableRow,
-                  index % 2 === 1 && styles.tableRowAlt,
-                  item.is_optional && styles.tableRowOptional,
+                  index % 2 === 1 ? styles.tableRowAlt : {},
+                  item.is_optional ? styles.tableRowOptional : {},
                 ]}
               >
                 <View style={styles.colDescription}>
