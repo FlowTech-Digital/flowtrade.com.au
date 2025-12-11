@@ -28,14 +28,18 @@ import {
   Play,
   CircleCheck,
   Receipt,
-  FilePlus
+  FilePlus,
+  ChevronRight,
+  Ban
 } from 'lucide-react'
 
 // Types
+type JobStatus = 'pending' | 'scheduled' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled' | 'invoiced'
+
 type Job = {
   id: string
   job_number: string
-  status: 'scheduled' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled' | 'invoiced'
+  status: JobStatus
   quote_id: string | null
   customer_id: string
   property_id: string | null
@@ -94,13 +98,285 @@ type JobActivity = {
   } | null
 }
 
-const STATUS_CONFIG = {
-  scheduled: { label: 'Scheduled', icon: Calendar, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  in_progress: { label: 'In Progress', icon: Wrench, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-  on_hold: { label: 'On Hold', icon: Pause, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-  completed: { label: 'Completed', icon: CheckCircle, color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-  cancelled: { label: 'Cancelled', icon: XCircle, color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  invoiced: { label: 'Invoiced', icon: FileText, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+// Status configuration with workflow order
+const STATUS_CONFIG: Record<JobStatus, { 
+  label: string
+  icon: typeof Clock
+  color: string
+  bgColor: string
+  order: number
+}> = {
+  pending: { 
+    label: 'Pending', 
+    icon: Clock, 
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20 border-gray-500/30',
+    order: 0
+  },
+  scheduled: { 
+    label: 'Scheduled', 
+    icon: Calendar, 
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/20 border-blue-500/30',
+    order: 1
+  },
+  in_progress: { 
+    label: 'In Progress', 
+    icon: Wrench, 
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20 border-amber-500/30',
+    order: 2
+  },
+  on_hold: { 
+    label: 'On Hold', 
+    icon: Pause, 
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20 border-orange-500/30',
+    order: 2.5  // Same level as in_progress
+  },
+  completed: { 
+    label: 'Completed', 
+    icon: CheckCircle, 
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20 border-green-500/30',
+    order: 3
+  },
+  invoiced: { 
+    label: 'Invoiced', 
+    icon: FileText, 
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-500/20 border-purple-500/30',
+    order: 4
+  },
+  cancelled: { 
+    label: 'Cancelled', 
+    icon: XCircle, 
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/20 border-red-500/30',
+    order: -1  // Terminal state
+  },
+}
+
+// Valid status transitions
+const VALID_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
+  pending: ['scheduled', 'cancelled'],
+  scheduled: ['in_progress', 'cancelled'],
+  in_progress: ['on_hold', 'completed', 'cancelled'],
+  on_hold: ['in_progress', 'cancelled'],
+  completed: ['invoiced'],
+  invoiced: [],  // Terminal state
+  cancelled: [],  // Terminal state
+}
+
+// Main workflow steps (excluding on_hold and cancelled which are side branches)
+const WORKFLOW_STEPS: JobStatus[] = ['pending', 'scheduled', 'in_progress', 'completed', 'invoiced']
+
+// Status Workflow Stepper Component
+function StatusWorkflow({ currentStatus, onStatusChange, isLoading }: {
+  currentStatus: JobStatus
+  onStatusChange: (status: JobStatus) => void
+  isLoading: string | null
+}) {
+  const validNextSteps = VALID_TRANSITIONS[currentStatus] || []
+  const isTerminal = validNextSteps.length === 0
+  const currentOrder = STATUS_CONFIG[currentStatus]?.order ?? 0
+
+  // Get the primary next action (first valid transition that's in the main workflow)
+  const primaryNextAction = validNextSteps.find(s => WORKFLOW_STEPS.includes(s))
+
+  return (
+    <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
+      <h3 className="text-lg font-medium text-white mb-4">Job Status</h3>
+      
+      {/* Current Status Badge */}
+      <div className="flex items-center gap-3 mb-6">
+        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-base font-medium border ${STATUS_CONFIG[currentStatus]?.bgColor || ''} ${STATUS_CONFIG[currentStatus]?.color || ''}`}>
+          {(() => {
+            const StatusIcon = STATUS_CONFIG[currentStatus]?.icon || Clock
+            return <StatusIcon className="h-5 w-5" />
+          })()}
+          {STATUS_CONFIG[currentStatus]?.label || currentStatus}
+        </span>
+        {isTerminal && (
+          <span className="text-gray-500 text-sm">(Final Status)</span>
+        )}
+      </div>
+
+      {/* Workflow Stepper */}
+      <div className="relative mb-6">
+        <div className="flex items-center justify-between">
+          {WORKFLOW_STEPS.map((step, index) => {
+            const stepConfig = STATUS_CONFIG[step]
+            const StepIcon = stepConfig.icon
+            const isCurrentStep = step === currentStatus || 
+              (currentStatus === 'on_hold' && step === 'in_progress')
+            const isCompletedStep = stepConfig.order < currentOrder && currentStatus !== 'cancelled'
+            const isFutureStep = stepConfig.order > currentOrder
+            const isCancelled = currentStatus === 'cancelled'
+
+            return (
+              <div key={step} className="flex items-center flex-1 last:flex-none">
+                {/* Step Circle */}
+                <div className={`
+                  relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
+                  ${isCancelled ? 'border-red-500/50 bg-red-500/10' :
+                    isCurrentStep ? `border-current ${stepConfig.color} ${stepConfig.bgColor}` :
+                    isCompletedStep ? 'border-green-500 bg-green-500/20' :
+                    'border-gray-600 bg-flowtrade-navy'}
+                `}>
+                  {isCancelled ? (
+                    <Ban className="h-5 w-5 text-red-400" />
+                  ) : isCompletedStep ? (
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                  ) : (
+                    <StepIcon className={`h-5 w-5 ${isCurrentStep ? stepConfig.color : 'text-gray-500'}`} />
+                  )}
+                </div>
+
+                {/* Connector Line */}
+                {index < WORKFLOW_STEPS.length - 1 && (
+                  <div className={`
+                    flex-1 h-0.5 mx-2
+                    ${isCancelled ? 'bg-red-500/30' :
+                      isCompletedStep ? 'bg-green-500/50' : 'bg-gray-700'}
+                  `} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Step Labels */}
+        <div className="flex items-center justify-between mt-2">
+          {WORKFLOW_STEPS.map((step, index) => {
+            const stepConfig = STATUS_CONFIG[step]
+            const isCurrentStep = step === currentStatus || 
+              (currentStatus === 'on_hold' && step === 'in_progress')
+            const isCompletedStep = stepConfig.order < currentOrder && currentStatus !== 'cancelled'
+
+            return (
+              <div key={step} className={`
+                text-xs text-center flex-1 last:flex-none
+                ${isCurrentStep ? stepConfig.color : isCompletedStep ? 'text-green-400' : 'text-gray-500'}
+              `} style={{ minWidth: index === WORKFLOW_STEPS.length - 1 ? '60px' : undefined }}>
+                {stepConfig.label}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* On Hold Indicator */}
+      {currentStatus === 'on_hold' && (
+        <div className="mb-6 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
+          <div className="flex items-center gap-2 text-orange-400">
+            <Pause className="h-4 w-4" />
+            <span className="text-sm font-medium">Job is currently on hold</span>
+          </div>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      {!isTerminal && (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-400 mb-2">Available Actions:</p>
+          
+          {/* Primary Action - Prominent */}
+          {primaryNextAction && (
+            <button
+              onClick={() => onStatusChange(primaryNextAction)}
+              disabled={!!isLoading}
+              className={`
+                w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all
+                ${primaryNextAction === 'in_progress' ? 'bg-amber-500 hover:bg-amber-600 text-white' :
+                  primaryNextAction === 'scheduled' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                  primaryNextAction === 'completed' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                  primaryNextAction === 'invoiced' ? 'bg-purple-500 hover:bg-purple-600 text-white' :
+                  'bg-flowtrade-cyan hover:bg-flowtrade-cyan/90 text-flowtrade-navy'}
+                disabled:opacity-50 disabled:cursor-not-allowed
+              `}
+            >
+              {isLoading === primaryNextAction ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  {primaryNextAction === 'scheduled' && <Calendar className="h-5 w-5" />}
+                  {primaryNextAction === 'in_progress' && <Play className="h-5 w-5" />}
+                  {primaryNextAction === 'completed' && <CircleCheck className="h-5 w-5" />}
+                  {primaryNextAction === 'invoiced' && <Receipt className="h-5 w-5" />}
+                </>
+              )}
+              {primaryNextAction === 'scheduled' && 'Schedule Job'}
+              {primaryNextAction === 'in_progress' && 'Start Job'}
+              {primaryNextAction === 'completed' && 'Complete Job'}
+              {primaryNextAction === 'invoiced' && 'Mark as Invoiced'}
+            </button>
+          )}
+
+          {/* Secondary Actions */}
+          <div className="flex gap-2">
+            {/* On Hold / Resume */}
+            {currentStatus === 'in_progress' && (
+              <button
+                onClick={() => onStatusChange('on_hold')}
+                disabled={!!isLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-orange-500/50 text-orange-400 hover:bg-orange-500/10 transition-all disabled:opacity-50"
+              >
+                {isLoading === 'on_hold' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Pause className="h-4 w-4" />
+                )}
+                Put On Hold
+              </button>
+            )}
+            
+            {currentStatus === 'on_hold' && (
+              <button
+                onClick={() => onStatusChange('in_progress')}
+                disabled={!!isLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 transition-all disabled:opacity-50"
+              >
+                {isLoading === 'in_progress' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                Resume Job
+              </button>
+            )}
+
+            {/* Cancel - Always available except for terminal states */}
+            {validNextSteps.includes('cancelled') && (
+              <button
+                onClick={() => onStatusChange('cancelled')}
+                disabled={!!isLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
+              >
+                {isLoading === 'cancelled' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+                Cancel Job
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Terminal State Message */}
+      {isTerminal && (
+        <div className={`p-3 rounded-lg ${currentStatus === 'cancelled' ? 'bg-red-500/10 border border-red-500/30' : 'bg-purple-500/10 border border-purple-500/30'}`}>
+          <p className={`text-sm ${currentStatus === 'cancelled' ? 'text-red-400' : 'text-purple-400'}`}>
+            {currentStatus === 'cancelled' 
+              ? 'This job has been cancelled. No further status changes are available.'
+              : 'This job has been invoiced. The workflow is complete.'}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function JobDetailPage() {
@@ -292,9 +568,17 @@ export default function JobDetailPage() {
     }
   }
 
-  // Update job status
-  const updateStatus = async (newStatus: Job['status']) => {
+  // Update job status with validation
+  const updateStatus = async (newStatus: JobStatus) => {
     if (!job) return
+    
+    // Validate transition
+    const validTransitions = VALID_TRANSITIONS[job.status] || []
+    if (!validTransitions.includes(newStatus)) {
+      setError(`Cannot transition from ${STATUS_CONFIG[job.status]?.label} to ${STATUS_CONFIG[newStatus]?.label}`)
+      return
+    }
+
     setActionLoading(newStatus)
     setShowActionsMenu(false)
 
@@ -340,14 +624,27 @@ export default function JobDetailPage() {
       await supabase.from('job_activity_log').insert({
         job_id: jobId,
         user_id: userData.id,
-        action: `Status changed to ${newStatus}`,
-        details: `Previous status: ${job.status}`,
+        action: `Status changed to ${STATUS_CONFIG[newStatus]?.label || newStatus}`,
+        details: `Previous status: ${STATUS_CONFIG[job.status]?.label || job.status}`,
         metadata: { previous_status: job.status, new_status: newStatus }
       })
     }
 
+    // Refresh activities
+    const { data: activityData } = await supabase
+      .from('job_activity_log')
+      .select(`
+        id, action, details, metadata, created_at,
+        user:users(first_name, last_name)
+      `)
+      .eq('job_id', jobId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    setActivities(activityData || [])
+
     // Update local state
-    setJob({ ...job, status: newStatus, ...updateData })
+    setJob({ ...job, status: newStatus, ...updateData } as Job)
     setSuccessMessage(`Job status updated to ${STATUS_CONFIG[newStatus]?.label || newStatus}`)
     setTimeout(() => setSuccessMessage(null), 3000)
     setActionLoading(null)
@@ -413,7 +710,7 @@ export default function JobDetailPage() {
   }
 
   const StatusIcon = STATUS_CONFIG[job.status]?.icon || Clock
-  const statusConfig = STATUS_CONFIG[job.status] || STATUS_CONFIG.scheduled
+  const statusConfig = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending
 
   return (
     <div>
@@ -457,7 +754,7 @@ export default function JobDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-white">{job.job_number}</h1>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.bgColor} ${statusConfig.color}`}>
                 <StatusIcon className="h-4 w-4" />
                 {statusConfig.label}
               </span>
@@ -477,37 +774,6 @@ export default function JobDetailPage() {
             >
               <Pencil className="h-4 w-4" />
               Edit
-            </button>
-          )}
-
-          {/* Status Actions */}
-          {job.status === 'scheduled' && (
-            <button
-              onClick={() => updateStatus('in_progress')}
-              disabled={!!actionLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50"
-            >
-              {actionLoading === 'in_progress' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-              Start Job
-            </button>
-          )}
-
-          {job.status === 'in_progress' && (
-            <button
-              onClick={() => updateStatus('completed')}
-              disabled={!!actionLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {actionLoading === 'completed' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CircleCheck className="h-4 w-4" />
-              )}
-              Complete Job
             </button>
           )}
 
@@ -540,46 +806,6 @@ export default function JobDetailPage() {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
-                  {job.status === 'in_progress' && (
-                    <button
-                      onClick={() => updateStatus('on_hold')}
-                      disabled={!!actionLoading}
-                      className="w-full px-4 py-2 text-left text-orange-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                    >
-                      <Pause className="h-4 w-4" />
-                      Put On Hold
-                    </button>
-                  )}
-                  {job.status === 'on_hold' && (
-                    <button
-                      onClick={() => updateStatus('in_progress')}
-                      disabled={!!actionLoading}
-                      className="w-full px-4 py-2 text-left text-amber-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                    >
-                      <Play className="h-4 w-4" />
-                      Resume Job
-                    </button>
-                  )}
-                  {job.status === 'completed' && (
-                    <>
-                      <button
-                        onClick={generateInvoice}
-                        disabled={generatingInvoice}
-                        className="w-full px-4 py-2 text-left text-purple-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                      >
-                        <FilePlus className="h-4 w-4" />
-                        Generate Invoice
-                      </button>
-                      <button
-                        onClick={() => updateStatus('invoiced')}
-                        disabled={!!actionLoading}
-                        className="w-full px-4 py-2 text-left text-purple-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                      >
-                        <Receipt className="h-4 w-4" />
-                        Mark as Invoiced
-                      </button>
-                    </>
-                  )}
                   {job.quote && (
                     <button
                       onClick={() => router.push(`/quotes/${job.quote!.id}`)}
@@ -596,19 +822,6 @@ export default function JobDetailPage() {
                     <Receipt className="h-4 w-4" />
                     View Invoices
                   </button>
-                  {job.status !== 'cancelled' && job.status !== 'completed' && job.status !== 'invoiced' && (
-                    <>
-                      <div className="border-t border-flowtrade-navy-lighter my-1" />
-                      <button
-                        onClick={() => updateStatus('cancelled')}
-                        disabled={!!actionLoading}
-                        className="w-full px-4 py-2 text-left text-red-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                      >
-                        <XCircle className="h-4 w-4" />
-                        Cancel Job
-                      </button>
-                    </>
-                  )}
                   <div className="border-t border-flowtrade-navy-lighter my-1" />
                   <button
                     onClick={() => {
@@ -630,6 +843,13 @@ export default function JobDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Status Workflow - NEW COMPONENT */}
+          <StatusWorkflow
+            currentStatus={job.status}
+            onStatusChange={updateStatus}
+            isLoading={actionLoading}
+          />
+
           {/* Customer & Job Site */}
           <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
