@@ -29,6 +29,7 @@ import {
   RefreshCw,
   Briefcase
 } from 'lucide-react'
+import { PortalLinkButton } from '@/components/portal/PortalLinkButton'
 
 // Types
 type Quote = {
@@ -709,6 +710,9 @@ export default function QuoteDetailPage() {
               {quote.status === 'draft' ? 'Send Quote' : 'Resend'}
             </button>
           )}
+
+          {/* Portal Link Button */}
+          <PortalLinkButton resourceType="quote" resourceId={quoteId} />
 
           {/* Convert to Job Button - Prominent when accepted */}
           {quote.status === 'accepted' && (
