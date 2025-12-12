@@ -5,8 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validatePortalToken, logPortalAccess } from '@/lib/portal/tokens';
 import { createClient } from '@supabase/supabase-js';
 
-export const runtime = 'edge';
-
 // Rate limiting: Simple in-memory store (use Redis in production for scale)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 10; // requests per minute
