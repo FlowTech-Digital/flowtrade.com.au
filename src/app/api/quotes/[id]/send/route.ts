@@ -9,21 +9,26 @@ import { QuoteEmail } from '@/lib/email/templates/QuoteEmail'
 // CloudFlare Pages requires Edge Runtime
 export const runtime = 'edge'
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Create Supabase client inside handler (edge runtime requires this)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
-// Create Supabase client with service role for API routes
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Create Resend client inside handler (edge runtime requires this)
+function getResendClient() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 // Generate portal token for quote
 async function generateQuotePortalToken(
+  supabase: ReturnType&lt;typeof createClient&gt;,
   quoteId: string,
   customerId: string,
   orgId: string
-): Promise<string | null> {
+): Promise&lt;string | null&gt; {
   // Check for existing valid token
   const { data: existingToken } = await supabase
     .from('portal_tokens')
@@ -62,10 +67,14 @@ async function generateQuotePortalToken(
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise&lt;{ id: string }&gt; }
 ) {
   try {
     const { id: quoteId } = await params
+    
+    // Initialize clients inside handler
+    const supabase = getSupabaseClient()
+    const resend = getResendClient()
 
     // Validate Resend API key exists
     if (!process.env.RESEND_API_KEY) {
@@ -103,6 +112,7 @@ export async function POST(
 
     // Generate portal token for quote
     const portalToken = await generateQuotePortalToken(
+      supabase,
       quoteId,
       quote.customer.id,
       quote.org_id
@@ -140,7 +150,7 @@ export async function POST(
     // Determine from address
     // Using Resend test domain initially - switch to flowtrade.com.au after verification
     const fromAddress = process.env.RESEND_FROM_EMAIL || 
-      `${businessName} <onboarding@resend.dev>`
+      `${businessName} &lt;onboarding@resend.dev&gt;`
 
     // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
@@ -170,7 +180,7 @@ export async function POST(
     }
 
     // Update quote status to 'sent'
-    const updateData: Record<string, unknown> = {
+    const updateData: Record&lt;string, unknown&gt; = {
       status: 'sent',
       sent_at: new Date().toISOString(),
     }
