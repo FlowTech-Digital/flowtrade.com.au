@@ -1,7 +1,5 @@
 'use client'
 
-export const runtime = 'edge'
-
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -765,7 +763,7 @@ export default function CreateQuotePage() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold text-white mb-2">Pricing & Terms</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">Pricing &amp; Terms</h2>
               <p className="text-gray-400">Review pricing and set terms for this quote</p>
             </div>
 
@@ -844,7 +842,7 @@ export default function CreateQuotePage() {
             {/* Terms & Notes */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Terms & Conditions</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Terms &amp; Conditions</label>
                 <textarea
                   value={formData.terms_and_conditions}
                   onChange={(e) => setFormData(prev => ({ ...prev, terms_and_conditions: e.target.value }))}
