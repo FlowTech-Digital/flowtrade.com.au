@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/_next/static/*",
+    "/favicon.ico",
+    "/favicon.svg",
+    "/flowtrade-logo.svg",
+    "/logo-header.svg",
+    "/site.webmanifest"
+  ]
+}
