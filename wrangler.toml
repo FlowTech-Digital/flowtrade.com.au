@@ -6,3 +6,5 @@ pages_build_output_dir = ".open-next"
 [vars]
 NEXT_PUBLIC_APP_NAME = "FlowTrade"
 NEXT_PUBLIC_APP_URL = "https://flowtrade.com.au"
+NEXT_PUBLIC_SUPABASE_URL = "https://cxrjdasltwlpevgnoemz.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cmpkYXNsdHdscGV2Z25vZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxODUxNjIsImV4cCI6MjA4MDc2MTE2Mn0.0NtYbpdrpEOryJiiYwjfZmUEDQoBOt1Q0rRcOxFxdao"
