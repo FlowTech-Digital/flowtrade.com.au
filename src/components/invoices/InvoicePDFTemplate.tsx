@@ -312,7 +312,8 @@ export function InvoicePDFTemplate({ invoice, business }: InvoicePDFTemplateProp
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {hasLogo && (
-              <Image src={business.logo_url!} style={styles.logo} alt="Business logo" />
+              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image doesn't support alt prop
+              <Image src={business.logo_url!} style={styles.logo} />
             )}
             <Text style={hasLogo ? styles.businessNameWithLogo : styles.businessName}>
               {business.name}
