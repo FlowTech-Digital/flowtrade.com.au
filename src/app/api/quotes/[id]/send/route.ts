@@ -39,8 +39,9 @@ async function generateQuotePortalToken(
     .gt('expires_at', new Date().toISOString())
     .single()
 
-  if (existingToken?.token) {
-    return existingToken.token
+  const tokenRecord = existingToken as { token?: string } | null
+  if (tokenRecord?.token) {
+    return tokenRecord.token
   }
 
   // Generate new token (UUID v4 format)
@@ -102,8 +103,30 @@ export async function POST(
       )
     }
 
+    // Type assertion for quote data
+    const quoteData = quote as {
+      id: string
+      quote_number: string
+      total: number
+      valid_until: string
+      org_id: string
+      job_description?: string
+      customer?: {
+        id: string
+        email?: string
+        company_name?: string
+        first_name?: string
+        last_name?: string
+      }
+      organization?: {
+        name?: string
+        email?: string
+        phone?: string
+      }
+    }
+
     // Validate customer email exists
-    if (!quote.customer?.email) {
+    if (!quoteData.customer?.email) {
       return NextResponse.json(
         { error: 'Customer email address not found. Please add an email to the customer record.' },
         { status: 400 }
@@ -114,8 +137,8 @@ export async function POST(
     const portalToken = await generateQuotePortalToken(
       supabase,
       quoteId,
-      quote.customer.id,
-      quote.org_id
+      quoteData.customer.id,
+      quoteData.org_id
     )
 
     // Build portal URL
@@ -123,12 +146,12 @@ export async function POST(
     const viewQuoteUrl = portalToken ? `${baseUrl}/portal/quote/${portalToken}` : undefined
 
     // Build customer name
-    const customerName = quote.customer.company_name || 
-      `${quote.customer.first_name || ''} ${quote.customer.last_name || ''}`.trim() || 
+    const customerName = quoteData.customer.company_name || 
+      `${quoteData.customer.first_name || ''} ${quoteData.customer.last_name || ''}`.trim() || 
       'Valued Customer'
 
     // Build organization name
-    const businessName = quote.organization?.name || 'Your Business'
+    const businessName = quoteData.organization?.name || 'Your Business'
 
     // Format currency
     const formatCurrency = (amount: number) => {
@@ -155,18 +178,18 @@ export async function POST(
     // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: fromAddress,
-      to: quote.customer.email,
-      replyTo: quote.organization?.email || 'hello@flowtechdigital.com.au',
-      subject: `Quote ${quote.quote_number} from ${businessName}`,
+      to: quoteData.customer.email,
+      replyTo: quoteData.organization?.email || 'hello@flowtechdigital.com.au',
+      subject: `Quote ${quoteData.quote_number} from ${businessName}`,
       react: QuoteEmail({
         customerName,
-        quoteNumber: quote.quote_number,
-        total: formatCurrency(quote.total),
-        validUntil: formatDate(quote.valid_until),
+        quoteNumber: quoteData.quote_number,
+        total: formatCurrency(quoteData.total),
+        validUntil: formatDate(quoteData.valid_until),
         businessName,
-        businessEmail: quote.organization?.email || undefined,
-        businessPhone: quote.organization?.phone || undefined,
-        jobDescription: quote.job_description || undefined,
+        businessEmail: quoteData.organization?.email || undefined,
+        businessPhone: quoteData.organization?.phone || undefined,
+        jobDescription: quoteData.job_description || undefined,
         viewQuoteUrl, // Portal link included!
       }),
     })
@@ -180,14 +203,12 @@ export async function POST(
     }
 
     // Update quote status to 'sent'
-    const updateData: Record<string, unknown> = {
-      status: 'sent',
-      sent_at: new Date().toISOString(),
-    }
-
     const { error: updateError } = await supabase
       .from('quotes')
-      .update(updateData)
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      })
       .eq('id', quoteId)
 
     if (updateError) {
@@ -200,7 +221,7 @@ export async function POST(
       quote_id: quoteId,
       event_type: 'email_sent',
       event_data: {
-        to: quote.customer.email,
+        to: quoteData.customer.email,
         message_id: emailResult?.id,
         sent_at: new Date().toISOString(),
         portal_token_generated: !!portalToken,
@@ -211,7 +232,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       messageId: emailResult?.id,
-      sentTo: quote.customer.email,
+      sentTo: quoteData.customer.email,
       portalUrl: viewQuoteUrl,
     })
 
