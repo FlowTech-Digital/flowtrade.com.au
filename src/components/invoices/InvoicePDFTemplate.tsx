@@ -312,7 +312,7 @@ export function InvoicePDFTemplate({ invoice, business }: InvoicePDFTemplateProp
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {hasLogo && (
-              <Image src={business.logo_url!} style={styles.logo} />
+              <Image src={business.logo_url!} style={styles.logo} alt="Business logo" />
             )}
             <Text style={hasLogo ? styles.businessNameWithLogo : styles.businessName}>
               {business.name}
