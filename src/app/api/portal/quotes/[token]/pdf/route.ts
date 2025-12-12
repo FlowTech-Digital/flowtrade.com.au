@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 // Create Supabase client inside handler (edge runtime requires this)
 function getSupabaseClient() {
   return createClient(
