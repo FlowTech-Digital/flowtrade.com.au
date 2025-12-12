@@ -1,8 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge'
-
 type SupabaseClient = NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>
 
 // Generate next invoice number for org (INV-YYYYMM-XXXX format)
