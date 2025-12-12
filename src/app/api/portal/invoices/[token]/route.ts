@@ -118,7 +118,7 @@ export async function GET(
           description,
           quantity,
           unit_price,
-          total
+          line_total
         )
       `)
       .eq('id', tokenData.resource_id)
@@ -213,12 +213,12 @@ export async function GET(
         notes: invoice.notes,
         terms: invoice.payment_terms,  // Map payment_terms to terms for frontend
         paid_at: invoice.paid_at,
-        items: (invoice.invoice_line_items || []).map((item: { id: string; description: string; quantity: number; unit_price: number; total: number }) => ({
+        items: (invoice.invoice_line_items || []).map((item: { id: string; description: string; quantity: number; unit_price: number; line_total: number }) => ({
           id: item.id,
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total: item.total
+          total: item.line_total  // Map line_total to total for frontend
         }))
       },
       customer: customerWithName,
