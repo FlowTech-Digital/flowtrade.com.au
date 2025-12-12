@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -116,14 +117,13 @@ export default function DashboardLayout({
           {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
             <Link href="/dashboard" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-              <img
+              <Image
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
+                width={120}
+                height={32}
                 className="h-8 w-auto"
-                onError={(e) => {
-                  // Fallback if SVG fails to load
-                  e.currentTarget.style.display = 'none'
-                }}
+                priority
               />
             </Link>
             <button
@@ -139,10 +139,13 @@ export default function DashboardLayout({
             <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
               <div className="flex items-center gap-3">
                 {orgInfo.logo_url ? (
-                  <img
+                  <Image
                     src={orgInfo.logo_url}
                     alt={orgInfo.name}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 object-contain bg-white rounded p-1 flex-shrink-0"
+                    unoptimized
                   />
                 ) : (
                   <div className="h-10 w-10 bg-flowtrade-navy-lighter rounded flex items-center justify-center flex-shrink-0">
@@ -199,14 +202,13 @@ export default function DashboardLayout({
           {/* FlowTrade Logo - PRIMARY BRANDING (always visible at top) */}
           <div className="flex items-center h-16 px-4 border-b border-flowtrade-navy-lighter bg-flowtrade-navy">
             <Link href="/dashboard" className="flex items-center">
-              <img
+              <Image
                 src="/flowtrade-logo.svg"
                 alt="FlowTrade"
+                width={120}
+                height={32}
                 className="h-8 w-auto"
-                onError={(e) => {
-                  // Fallback if SVG fails to load
-                  e.currentTarget.style.display = 'none'
-                }}
+                priority
               />
             </Link>
           </div>
@@ -216,10 +218,13 @@ export default function DashboardLayout({
             <div className="px-4 py-3 border-b border-flowtrade-navy-lighter">
               <div className="flex items-center gap-3">
                 {orgInfo.logo_url ? (
-                  <img
+                  <Image
                     src={orgInfo.logo_url}
                     alt={orgInfo.name}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 object-contain bg-white rounded p-1 flex-shrink-0"
+                    unoptimized
                   />
                 ) : (
                   <div className="h-10 w-10 bg-flowtrade-navy-lighter rounded flex items-center justify-center flex-shrink-0">
@@ -284,13 +289,13 @@ export default function DashboardLayout({
 
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center">
-            <img
+            <Image
               src="/flowtrade-logo.svg"
               alt="FlowTrade"
+              width={105}
+              height={28}
               className="h-7 w-auto"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              priority
             />
           </Link>
 

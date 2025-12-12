@@ -1,13 +1,17 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center space-y-8">
-        <img 
+        <Image 
           src="/flowtrade-logo.svg" 
           alt="FlowTrade" 
+          width={240}
+          height={64}
           className="h-16 w-auto mx-auto"
+          priority
         />
         <p className="text-xl text-muted-foreground max-w-2xl">
           Smart Estimating for Australian Trades.
