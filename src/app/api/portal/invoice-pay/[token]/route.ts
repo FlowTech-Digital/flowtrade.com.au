@@ -7,9 +7,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Edge runtime (matches working /api/invoices/[id]/route.ts)
-export const runtime = 'edge'
-
 // Next.js 15 async params type (route.ts directly in dynamic segment)
 type Params = { params: Promise<{ token: string }> }
 
