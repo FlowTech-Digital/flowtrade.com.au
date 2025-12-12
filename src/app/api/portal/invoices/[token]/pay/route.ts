@@ -7,14 +7,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Next.js 15 route handler - use untyped context to avoid type inference conflicts
+// Next.js 15 route handler with async params
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(
   request: NextRequest,
-  context: unknown
+  context: any
 ): Promise<NextResponse> {
   try {
-    // Cast and await params (Next.js 15 async params requirement)
-    const { token } = await (context as { params: Promise<{ token: string }> }).params;
+    // Await params (Next.js 15 async params requirement)
+    const { token } = await context.params;
     
     if (!token) {
       return NextResponse.json(
