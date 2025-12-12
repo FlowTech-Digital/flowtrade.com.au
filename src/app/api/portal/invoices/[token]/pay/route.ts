@@ -7,14 +7,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Next.js 15 route handler - params is now a Promise
+// Next.js 15 route handler - use untyped context to avoid type inference conflicts
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ token: string }> }
+  context: unknown
 ): Promise<NextResponse> {
   try {
-    // Await context.params before accessing properties (Next.js 15 requirement)
-    const { token } = await context.params;
+    // Cast and await params (Next.js 15 async params requirement)
+    const { token } = await (context as { params: Promise<{ token: string }> }).params;
     
     if (!token) {
       return NextResponse.json(
