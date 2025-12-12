@@ -7,20 +7,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Next.js 15 route handler - extract token from URL to bypass route validation
-export async function POST(request: NextRequest): Promise<NextResponse> {
+// Next.js 15 async params type (matches working pattern from /api/invoices/[id]/route.ts)
+type Params = { params: Promise<{ token: string }> }
+
+export async function POST(request: NextRequest, { params }: Params): Promise<NextResponse> {
   try {
-    // Extract token from URL path (bypasses Next.js route validation layer)
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split('/');
-    // URL: /api/portal/invoices/[token]/pay
-    // pathSegments: ['', 'api', 'portal', 'invoices', 'TOKEN_VALUE', 'pay']
-    const tokenIndex = pathSegments.indexOf('invoices') + 1;
-    const token = pathSegments[tokenIndex];
+    const { token } = await params;
     
-    if (!token || token === 'pay') {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Token not found in URL' },
+        { error: 'Token not found' },
         { status: 400 }
       );
     }
