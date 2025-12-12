@@ -5,11 +5,14 @@ import { createBrowserClient } from '@supabase/ssr'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-export function createClient() {
+// Return type explicitly includes null for SSG/build time
+type SupabaseClientReturn = ReturnType<typeof createBrowserClient> | null
+
+export function createClient(): SupabaseClientReturn {
   // Skip client creation during build if no real env vars
   if (typeof window === 'undefined' && supabaseUrl === 'https://placeholder.supabase.co') {
-    // Return a mock client for SSG/build time
-    return null as any
+    // Return null for SSG/build time - callers must handle this
+    return null
   }
   
   return createBrowserClient(

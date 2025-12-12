@@ -6,11 +6,14 @@ import { cookies } from 'next/headers'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-export async function createServerSupabaseClient() {
+// Return type explicitly includes null for SSG/build time
+type SupabaseServerReturn = ReturnType<typeof createServerClient> | null
+
+export async function createServerSupabaseClient(): Promise<SupabaseServerReturn> {
   // Skip client creation during build if no real env vars
   if (supabaseUrl === 'https://placeholder.supabase.co') {
     // Return null for SSG/build time - pages should handle this gracefully
-    return null as any
+    return null
   }
 
   const cookieStore = await cookies()
