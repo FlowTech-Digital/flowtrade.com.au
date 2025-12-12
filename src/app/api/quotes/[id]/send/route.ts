@@ -117,8 +117,9 @@ export async function POST(
     }
 
     // Generate portal token for quote
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const portalToken = await generateQuotePortalToken(
-      supabase,
+      supabase as any,
       quoteId,
       quoteData.customer.id,
       quoteData.org_id
