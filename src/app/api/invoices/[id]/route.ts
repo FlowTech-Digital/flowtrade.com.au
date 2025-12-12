@@ -1,8 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge'
-
 type Params = { params: Promise<{ id: string }> }
 
 // GET /api/invoices/[id] - Get single invoice

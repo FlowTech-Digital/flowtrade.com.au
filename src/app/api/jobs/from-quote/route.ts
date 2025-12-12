@@ -4,10 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// CloudFlare Pages requires Edge Runtime
-export const runtime = 'edge'
-
-// Create Supabase client inside handler (edge runtime requires this)
+// Create Supabase client inside handler
 function getSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

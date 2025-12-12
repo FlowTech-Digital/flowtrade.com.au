@@ -1,8 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'edge'
-
 // Type helper for Supabase client
 type SupabaseClient = NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>
 
