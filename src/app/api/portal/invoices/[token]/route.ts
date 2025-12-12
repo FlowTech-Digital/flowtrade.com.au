@@ -98,7 +98,7 @@ export async function GET(
       );
     }
 
-    // Fetch invoice with items
+    // Fetch invoice with items - using correct column names
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
@@ -108,10 +108,10 @@ export async function GET(
         issue_date,
         due_date,
         subtotal,
-        gst,
+        gst_amount,
         total,
         notes,
-        terms,
+        payment_terms,
         paid_at,
         invoice_line_items (
           id,
@@ -199,6 +199,7 @@ export async function GET(
       });
 
     // Transform response to match frontend expected format
+    // Map database column names to frontend expected names
     return NextResponse.json({
       invoice: {
         id: invoice.id,
@@ -207,10 +208,10 @@ export async function GET(
         issue_date: invoice.issue_date,
         due_date: invoice.due_date,
         subtotal: invoice.subtotal,
-        gst: invoice.gst,
+        gst: invoice.gst_amount,  // Map gst_amount to gst for frontend
         total: invoice.total,
         notes: invoice.notes,
-        terms: invoice.terms,
+        terms: invoice.payment_terms,  // Map payment_terms to terms for frontend
         paid_at: invoice.paid_at,
         items: (invoice.invoice_line_items || []).map((item: { id: string; description: string; quantity: number; unit_price: number; total: number }) => ({
           id: item.id,
