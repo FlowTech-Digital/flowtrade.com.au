@@ -1,6 +1,6 @@
 # FlowTrade CloudFlare Pages Configuration
-# FIX: worker.js is at .open-next/worker.js (not cloudflare subfolder)
-# Build command: rm -rf .next .open-next node_modules/.cache && npx @opennextjs/cloudflare build && mv .open-next/worker.js .open-next/cloudflare/_worker.js
+# Build command updated in CloudFlare Dashboard - worker.js at root
+# Trigger: 2025-12-13T01:35:00+11:00
 name = "flowtrade"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
