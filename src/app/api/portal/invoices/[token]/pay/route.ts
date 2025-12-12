@@ -9,12 +9,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
-) {
+type RouteContext = {
+  params: Promise<{ token: string }>;
+};
+
+export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { token } = await params;
+    const { token } = await context.params;
     
     // Rate limiting
     const ip = getClientIp(request);
