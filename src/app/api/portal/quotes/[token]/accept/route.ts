@@ -3,10 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Create Supabase client inside handler (edge runtime requires this)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(
   request: NextRequest,
@@ -14,6 +17,7 @@ export async function POST(
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   const { token } = await params;
+  const supabase = getSupabaseClient();
 
   try {
     // Validate token
