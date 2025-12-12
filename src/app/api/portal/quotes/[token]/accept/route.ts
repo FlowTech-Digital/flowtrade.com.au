@@ -10,10 +10,10 @@ const supabase = createClient(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  const { token } = params;
+  const { token } = await params;
 
   try {
     // Validate token
