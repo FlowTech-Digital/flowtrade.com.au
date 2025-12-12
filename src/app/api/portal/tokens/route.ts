@@ -20,6 +20,14 @@ import { v4 as uuidv4 } from 'uuid'
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
+
+    // Null check for supabase client (TypeScript strict mode)
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
     
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
