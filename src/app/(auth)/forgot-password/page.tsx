@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     
     // TODO: Implement Supabase password reset
-    console.log('Password reset for:', email)
+    // Password reset request for email will be logged server-side
     
     setTimeout(() => {
       setLoading(false)
