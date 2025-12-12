@@ -1,3 +1,7 @@
+const { initOpenNextCloudflareForDev } = require("@opennextjs/cloudflare");
+
+initOpenNextCloudflareForDev();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image optimization - use CloudFlare Images or disable
