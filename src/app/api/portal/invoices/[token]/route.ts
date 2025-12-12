@@ -63,7 +63,7 @@ export async function GET(
       );
     }
 
-    // Fetch invoice with items
+    // Fetch invoice with items - FIXED: invoice_line_items (not invoice_items)
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
@@ -92,7 +92,7 @@ export async function GET(
           logo_url,
           abn
         ),
-        invoice_items (
+        invoice_line_items (
           id,
           description,
           quantity,
@@ -121,7 +121,7 @@ export async function GET(
     return NextResponse.json({
       invoice: {
         ...invoice,
-        items: invoice.invoice_items || []
+        items: invoice.invoice_line_items || []
       },
       customer: invoice.customers,
       organization: invoice.organizations,

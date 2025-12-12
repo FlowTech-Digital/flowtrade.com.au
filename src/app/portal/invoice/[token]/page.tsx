@@ -62,7 +62,7 @@ async function getInvoiceByToken(token: string) {
     })
     .eq('id', tokenData.id);
 
-  // Fetch invoice with items
+  // Fetch invoice with items - FIXED: invoice_line_items (not invoice_items)
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
     .select(`
@@ -81,7 +81,7 @@ async function getInvoiceByToken(token: string) {
         logo_url,
         abn
       ),
-      invoice_items (
+      invoice_line_items (
         id,
         description,
         quantity,
@@ -106,7 +106,7 @@ async function getInvoiceByToken(token: string) {
   return {
     invoice: {
       ...invoice,
-      items: invoice.invoice_items || []
+      items: invoice.invoice_line_items || []
     },
     customer: invoice.customers,
     organization: invoice.organizations,
