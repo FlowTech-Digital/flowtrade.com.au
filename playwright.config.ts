@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/**
+ * FlowTrade E2E Testing Configuration
+ * @see https://playwright.dev/docs/test-configuration
+ */
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -18,6 +22,7 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
+    // Setup project for authentication state
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
@@ -28,5 +33,6 @@ export default defineConfig({
       dependencies: ['setup'],
     },
   ],
-  outputDir: 'test-results/',
+  // Output folder for test artifacts
+  outputDir: 'test-results',
 });

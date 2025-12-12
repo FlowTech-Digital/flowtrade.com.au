@@ -1,11 +1,15 @@
 # Dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
-.yarn/install-state.gz
 
 # Testing
 /coverage
+test-results/
+playwright-report/
+playwright/.cache/
+tests/.auth/
+*.test.js.map
 
 # Next.js
 /.next/
@@ -24,14 +28,19 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
-.env
 .env*.local
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
 # Vercel
 .vercel
+
+# Cloudflare
+.wrangler/
+.open-next/
+.worker-next/
 
 # TypeScript
 *.tsbuildinfo
@@ -44,7 +53,4 @@ next-env.d.ts
 *.swo
 
 # Supabase
-.supabase/
-
-# CloudFlare
-.wrangler/
+supabase/.temp/

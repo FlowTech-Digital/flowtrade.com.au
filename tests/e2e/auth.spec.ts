@@ -1,54 +1,54 @@
 import { test, expect } from '@playwright/test';
-import { TEST_CREDENTIALS, TEST_URLS } from '../fixtures/test-data';
+import { TEST_CREDENTIALS, URLS, SELECTORS } from '../fixtures/test-data';
 
 test.describe('Authentication', () => {
-  test('should display login page', async ({ page }) => {
-    await page.goto(TEST_URLS.login);
-    await expect(page).toHaveTitle(/FlowTrade|Login/i);
-    await expect(page.locator('input[type="email"], input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-  });
-
   test('should login with valid credentials', async ({ page }) => {
-    await page.goto(TEST_URLS.login);
+    await page.goto(URLS.login);
     
-    await page.fill('input[name="email"], input[type="email"]', TEST_CREDENTIALS.email);
-    await page.fill('input[name="password"], input[type="password"]', TEST_CREDENTIALS.password);
-    await page.click('button[type="submit"]');
+    await page.fill(SELECTORS.emailInput, TEST_CREDENTIALS.email);
+    await page.fill(SELECTORS.passwordInput, TEST_CREDENTIALS.password);
+    await page.click(SELECTORS.submitButton);
     
-    // Wait for redirect to dashboard
-    await expect(page).toHaveURL(/dashboard/, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
-    await page.goto(TEST_URLS.login);
+    await page.goto(URLS.login);
     
-    await page.fill('input[name="email"], input[type="email"]', 'wrong@email.com');
-    await page.fill('input[name="password"], input[type="password"]', 'wrongpassword');
-    await page.click('button[type="submit"]');
+    await page.fill(SELECTORS.emailInput, 'wrong@email.com');
+    await page.fill(SELECTORS.passwordInput, 'wrongpassword');
+    await page.click(SELECTORS.submitButton);
     
     // Should stay on login page or show error
-    await page.waitForTimeout(2000);
-    const url = page.url();
-    const hasError = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').count() > 0;
-    
-    expect(url.includes('login') || hasError).toBeTruthy();
+    await expect(page.locator(SELECTORS.errorMessage)).toBeVisible({ timeout: 5000 });
   });
 
   test('should redirect unauthenticated users to login', async ({ page }) => {
-    // Clear any existing auth state
-    await page.context().clearCookies();
-    
-    await page.goto(TEST_URLS.dashboard);
+    // Try to access protected route without auth
+    await page.goto(URLS.dashboard);
     
     // Should redirect to login
-    await expect(page).toHaveURL(/login/, { timeout: 10000 });
+    await expect(page).toHaveURL(/.*login.*/);
   });
 
-  test('should display signup page', async ({ page }) => {
-    await page.goto(TEST_URLS.signup);
-    await expect(page.locator('input[type="email"], input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+  test('should allow logout', async ({ page }) => {
+    // Login first
+    await page.goto(URLS.login);
+    await page.fill(SELECTORS.emailInput, TEST_CREDENTIALS.email);
+    await page.fill(SELECTORS.passwordInput, TEST_CREDENTIALS.password);
+    await page.click(SELECTORS.submitButton);
+    await page.waitForURL('**/dashboard**');
+    
+    // Find and click logout (adjust selector based on actual UI)
+    await page.click('[data-testid="user-menu"], [data-testid="logout-button"]');
+    
+    // If there's a dropdown menu
+    const logoutButton = page.locator('text=Logout, text=Sign out, [data-testid="logout"]');
+    if (await logoutButton.isVisible()) {
+      await logoutButton.click();
+    }
+    
+    // Should redirect to login
+    await expect(page).toHaveURL(/.*login.*/, { timeout: 5000 });
   });
 });

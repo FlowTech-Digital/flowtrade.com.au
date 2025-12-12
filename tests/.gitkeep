@@ -1,1 +1,5 @@
-# Test directory
+# Test directory structure
+# E2E tests: tests/e2e/
+# API tests: tests/api/
+# Fixtures: tests/fixtures/
+# Auth state: tests/.auth/ (gitignored)
