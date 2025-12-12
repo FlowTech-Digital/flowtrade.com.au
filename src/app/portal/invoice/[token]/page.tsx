@@ -1,157 +1,138 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { PortalLayout } from '@/components/portal/PortalLayout';
-import { InvoicePortalView } from '@/components/portal/InvoicePortalView';
 import { TokenExpiredView } from '@/components/portal/TokenExpiredView';
-import { headers } from 'next/headers';
+import { InvoicePortalView } from '@/components/portal/InvoicePortalView';
+import { Loader2 } from 'lucide-react';
 
-interface PageProps {
-  params: Promise<{ token: string }>;
-  searchParams: Promise<{ payment?: string }>;
-}
+type ErrorType = 'expired' | 'revoked' | 'not_found' | 'invalid';
 
-async function getInvoiceByToken(token: string) {
-  const supabase = await createClient();
-
-  // Null check for supabase client (TypeScript strict mode)
-  if (!supabase) {
-    return { error: 'database_error' as const };
-  }
-  
-  // Validate token
-  const { data: tokenData, error: tokenError } = await supabase
-    .from('portal_tokens')
-    .select('*')
-    .eq('token', token)
-    .eq('token_type', 'invoice')
-    .single();
-
-  if (tokenError || !tokenData) {
-    return { error: 'invalid' as const };
-  }
-
-  // Check if expired or revoked
-  if (tokenData.is_revoked) {
-    return { error: 'revoked' as const };
-  }
-
-  if (new Date(tokenData.expires_at) < new Date()) {
-    return { error: 'expired' as const };
-  }
-
-  // Log access
-  const headersList = await headers();
-  const ipHeader = headersList.get('x-forwarded-for') || headersList.get('x-real-ip');
-  const ip = ipHeader?.split(',')[0]?.trim() ?? 'unknown';
-  const userAgent = headersList.get('user-agent') || 'unknown';
-
-  await supabase.from('portal_access_logs').insert({
-    token_id: tokenData.id,
-    ip_address: ip,
-    user_agent: userAgent,
-    action: 'view_invoice'
-  });
-
-  // Update access count
-  await supabase
-    .from('portal_tokens')
-    .update({
-      access_count: (tokenData.access_count || 0) + 1,
-      last_accessed_at: new Date().toISOString()
-    })
-    .eq('id', tokenData.id);
-
-  // Fetch invoice with items - FIXED: invoice_line_items (not invoice_items)
-  const { data: invoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .select(`
-      *,
-      customers (
-        id,
-        name,
-        email
-      ),
-      organizations (
-        id,
-        name,
-        email,
-        phone,
-        address,
-        logo_url,
-        abn
-      ),
-      invoice_line_items (
-        id,
-        description,
-        quantity,
-        unit_price,
-        total
-      )
-    `)
-    .eq('id', tokenData.resource_id)
-    .single();
-
-  if (invoiceError || !invoice) {
-    return { error: 'not_found' as const };
-  }
-
-  // Fetch payment history
-  const { data: payments } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('invoice_id', invoice.id)
-    .order('created_at', { ascending: false });
-
-  return {
-    invoice: {
-      ...invoice,
-      items: invoice.invoice_line_items || []
-    },
-    customer: invoice.customers,
-    organization: invoice.organizations,
-    payments: payments || [],
-    token
+interface InvoiceData {
+  invoice: {
+    id: string;
+    invoice_number: string;
+    status: string;
+    issue_date: string;
+    due_date: string;
+    subtotal: number;
+    gst: number;
+    total: number;
+    notes: string | null;
+    terms: string | null;
+    paid_at: string | null;
+    items: Array<{
+      id: string;
+      description: string;
+      quantity: number;
+      unit_price: number;
+      total: number;
+    }>;
   };
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  organization: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    logo_url: string | null;
+    abn: string | null;
+  };
+  payments: Array<{
+    id: string;
+    amount: number;
+    payment_method: string;
+    status: string;
+    paid_at: string | null;
+    created_at: string;
+  }>;
 }
 
-export default async function InvoicePortalPage({ params, searchParams }: PageProps) {
-  const { token } = await params;
-  const { payment } = await searchParams;
-  const result = await getInvoiceByToken(token);
+export default function InvoicePortalPage() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const token = params.token as string;
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ErrorType | null>(null);
+  const [data, setData] = useState<InvoiceData | null>(null);
+  const [paymentResult, setPaymentResult] = useState<'success' | 'cancelled' | null>(null);
 
-  // Handle error cases
-  if ('error' in result && result.error) {
-    if (result.error === 'invalid' || result.error === 'not_found' || result.error === 'database_error') {
-      notFound();
+  // Check for payment result from URL
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    if (payment === 'success') setPaymentResult('success');
+    if (payment === 'cancelled') setPaymentResult('cancelled');
+  }, [searchParams]);
+
+  useEffect(() => {
+    async function fetchInvoice() {
+      try {
+        const response = await fetch(`/api/portal/invoices/${token}`);
+        const result = await response.json();
+        
+        if (!response.ok) {
+          // Map API error to ErrorType
+          const errorType = result.error as ErrorType;
+          if (['expired', 'revoked', 'not_found', 'invalid'].includes(errorType)) {
+            setError(errorType);
+          } else {
+            setError('invalid');
+          }
+          return;
+        }
+        
+        setData(result);
+      } catch {
+        setError('invalid');
+      } finally {
+        setLoading(false);
+      }
     }
-    // At this point, error is 'expired' or 'revoked'
+    
+    fetchInvoice();
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <PortalLayout>
-        <TokenExpiredView errorType={result.error} />
+        <TokenExpiredView errorType={error} />
       </PortalLayout>
     );
   }
 
-  const { invoice, customer, organization, payments } = result;
-
-  // Determine payment result from URL params
-  let paymentResult: 'success' | 'cancelled' | null = null;
-  if (payment === 'success') paymentResult = 'success';
-  if (payment === 'cancelled') paymentResult = 'cancelled';
+  if (!data) {
+    return (
+      <PortalLayout>
+        <TokenExpiredView errorType="not_found" />
+      </PortalLayout>
+    );
+  }
 
   return (
-    <PortalLayout organization={organization}>
-      <Suspense fallback={<div className="animate-pulse">Loading invoice...</div>}>
-        <InvoicePortalView
-          invoice={invoice}
-          customer={customer}
-          organization={organization}
-          payments={payments}
-          token={token}
-          paymentResult={paymentResult}
-        />
-      </Suspense>
+    <PortalLayout organization={data.organization}>
+      <InvoicePortalView 
+        invoice={data.invoice}
+        customer={data.customer}
+        organization={data.organization}
+        payments={data.payments}
+        token={token}
+        paymentResult={paymentResult}
+      />
     </PortalLayout>
   );
 }
