@@ -187,8 +187,6 @@ export async function POST(
       }
     })
 
-    console.log(`Invoice ${invoice.invoice_number} sent to ${invoice.customer.email}`, emailData)
-
     return NextResponse.json({
       success: true,
       message: `Invoice sent to ${invoice.customer.email}`,

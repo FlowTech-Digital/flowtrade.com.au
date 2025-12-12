@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log(`Payment completed for invoice ${invoiceId}`);
+        // eslint-disable-next-line no-console
+        console.info(`Payment completed for invoice ${invoiceId}`);
         break;
       }
 
@@ -115,7 +116,8 @@ export async function POST(request: NextRequest) {
           .update({ status: 'expired' })
           .eq('stripe_session_id', session.id);
 
-        console.log(`Checkout session expired: ${session.id}`);
+        // eslint-disable-next-line no-console
+        console.info(`Checkout session expired: ${session.id}`);
         break;
       }
 
@@ -135,7 +137,8 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // eslint-disable-next-line no-console
+        console.debug(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });

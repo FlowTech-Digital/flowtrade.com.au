@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { uploadLogo, updateOrgLogo, deleteLogo } from '@/lib/supabase/storage'
 import { Building2, Mail, Phone, FileText, Upload, X, Loader2, Check, AlertCircle, MapPin } from 'lucide-react'
+import Image from 'next/image'
 
 type Organization = {
   id: string
@@ -262,10 +263,13 @@ export default function SettingsPage() {
           <div className="flex-shrink-0">
             {org?.logo_url ? (
               <div className="relative group">
-                <img 
+                <Image 
                   src={org.logo_url} 
                   alt="Business logo" 
+                  width={96}
+                  height={96}
                   className="w-24 h-24 object-contain rounded-lg bg-white p-2"
+                  unoptimized
                 />
                 <button
                   onClick={handleRemoveLogo}
