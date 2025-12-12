@@ -1,4 +1,5 @@
-// OpenNext Cloudflare configuration
-// https://opennext.js.org/cloudflare
+const config = {
+  default: {},
+};
 
-export default {};
+export default config;
