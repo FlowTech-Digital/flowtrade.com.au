@@ -42,6 +42,14 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
 
     const supabase = await createClient();
 
+    // Null check for supabase client (TypeScript strict mode)
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      );
+    }
+
     // Validate token
     const { data: tokenData, error: tokenError } = await supabase
       .from('portal_tokens')
