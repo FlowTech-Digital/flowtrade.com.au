@@ -10,11 +10,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 // Next.js 15 route handler - params is now a Promise
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  context: { params: Promise<{ token: string }> }
 ): Promise<NextResponse> {
   try {
-    // Await params before accessing properties (Next.js 15 requirement)
-    const { token } = await params;
+    // Await context.params before accessing properties (Next.js 15 requirement)
+    const { token } = await context.params;
     
     if (!token) {
       return NextResponse.json(
