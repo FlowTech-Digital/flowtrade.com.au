@@ -49,6 +49,9 @@ type FormData = {
 
 // Generate sequential job number
 async function generateJobNumber(supabase: ReturnType<typeof createClient>, orgId: string): Promise<string> {
+  if (!supabase) {
+    throw new Error('Database client not initialized');
+  }
   // Get the highest existing job number for this org
   const { data } = await supabase
     .from('jobs')
