@@ -32,21 +32,47 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+// Extract first IP from x-forwarded-for header (handles proxy chains)
+function getClientIp(request: NextRequest): string | null {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    // Take first IP (original client), remove whitespace
+    const firstIp = forwardedFor.split(',')[0].trim();
+    // Validate it looks like an IP
+    if (/^[\d.:a-fA-F]+$/.test(firstIp)) {
+      return firstIp;
+    }
+  }
+  return null;
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  context: { params: { token: string } | Promise<{ token: string }> }
 ) {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const clientIp = getClientIp(request);
+  const rateLimitKey = clientIp || 'unknown';
   
   // Rate limiting
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(rateLimitKey)) {
     return NextResponse.json(
       { error: 'rate_limited', message: 'Too many requests. Please try again later.' },
       { status: 429 }
     );
   }
 
-  const { token } = await params;
+  // Handle both sync and async params (Next.js 14 vs 15 compatibility)
+  let token: string;
+  try {
+    const params = await Promise.resolve(context.params);
+    token = params.token;
+  } catch {
+    return NextResponse.json(
+      { error: 'invalid', message: 'Invalid request' },
+      { status: 400 }
+    );
+  }
+
   const supabase = getSupabaseClient();
 
   try {
@@ -151,30 +177,30 @@ export async function GET(
       ].filter(Boolean).join(', ') || null
     } : null;
 
-    // Log access (non-blocking, don't fail if this errors)
-    try {
-      await supabase.from('portal_access_logs').insert({
+    // Log access - fire and forget (don't await, don't block response)
+    // Only log if we have a valid IP
+    if (clientIp) {
+      supabase.from('portal_access_logs').insert({
         token_id: tokenData.id,
-        ip_address: ip,
+        ip_address: clientIp,
         user_agent: request.headers.get('user-agent'),
         action: 'view_quote'
+      }).then(({ error }) => {
+        if (error) console.error('Access log error (non-fatal):', error);
       });
-    } catch (logError) {
-      console.error('Access log error (non-fatal):', logError);
     }
 
-    // Update token access stats (non-blocking)
-    try {
-      await supabase
-        .from('portal_tokens')
-        .update({
-          last_accessed_at: new Date().toISOString(),
-          access_count: (tokenData.access_count || 0) + 1
-        })
-        .eq('id', tokenData.id);
-    } catch (updateError) {
-      console.error('Token update error (non-fatal):', updateError);
-    }
+    // Update token access stats - fire and forget
+    supabase
+      .from('portal_tokens')
+      .update({
+        last_accessed_at: new Date().toISOString(),
+        access_count: (tokenData.access_count || 0) + 1
+      })
+      .eq('id', tokenData.id)
+      .then(({ error }) => {
+        if (error) console.error('Token update error (non-fatal):', error);
+      });
 
     // Transform response to match frontend expected format
     // Frontend expects: issue_date, gst, notes, terms, items[].total
