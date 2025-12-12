@@ -1,6 +1,49 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
+// Create Supabase client with service role (bypasses RLS for portal access)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+// Rate limiting map (in production, use Redis)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60000; // 1 minute
+  const maxRequests = 10;
+  
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= maxRequests) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Extract first IP from x-forwarded-for header
+function getClientIp(request: NextRequest): string {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    const parts = forwardedFor.split(',');
+    const firstIp = parts[0]?.trim();
+    if (firstIp && /^[\d.:a-fA-F]+$/.test(firstIp)) {
+      return firstIp;
+    }
+  }
+  return 'unknown';
+}
 
 export async function GET(
   request: NextRequest,
@@ -8,27 +51,17 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+    const ip = getClientIp(request);
     
     // Rate limiting
-    const ip = getClientIp(request);
-    const rateLimitResult = rateLimit(`pdf:${ip}`, { interval: 60 * 1000, limit: 10 });
-    
-    if (!rateLimitResult.success) {
+    if (!checkRateLimit(`pdf:${ip}`)) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
       );
     }
 
-    const supabase = await createClient();
-
-    // Null check for supabase client (TypeScript strict mode)
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 503 }
-      );
-    }
+    const supabase = getSupabaseClient();
 
     // Validate token
     const { data: tokenData, error: tokenError } = await supabase
@@ -67,21 +100,24 @@ export async function GET(
       );
     }
 
-    // Log PDF download
-    await supabase.from('portal_access_logs').insert({
-      token_id: tokenData.id,
-      ip_address: ip,
-      user_agent: request.headers.get('user-agent') || 'unknown',
-      action: 'download_invoice_pdf'
-    });
+    // Log PDF download - fire and forget
+    if (ip !== 'unknown') {
+      supabase.from('portal_access_logs').insert({
+        token_id: tokenData.id,
+        ip_address: ip,
+        user_agent: request.headers.get('user-agent') || 'unknown',
+        action: 'download_invoice_pdf'
+      }).then(({ error }) => {
+        if (error) console.error('Access log error (non-fatal):', error);
+      });
+    }
 
     // If PDF URL exists, redirect to it
     if (invoice.pdf_url) {
       return NextResponse.redirect(invoice.pdf_url);
     }
 
-    // If no PDF URL, redirect to the main PDF generation endpoint
-    // This would need authentication, so we return an error for portal access
+    // If no PDF URL, return error (portal users can't generate PDFs)
     return NextResponse.json(
       { error: 'PDF not available. Please contact the business.' },
       { status: 404 }
