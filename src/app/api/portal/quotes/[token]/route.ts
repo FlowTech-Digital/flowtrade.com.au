@@ -82,27 +82,28 @@ export async function GET(
       );
     }
 
-    // Fetch quote with items
+    // Fetch quote with items - FIXED: Use correct column names from database schema
+    // issue_date → created_at, gst → gst_amount, notes → customer_notes, terms → terms_and_conditions
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select(`
         id,
         quote_number,
         status,
-        issue_date,
+        created_at,
         valid_until,
         subtotal,
-        gst,
+        gst_amount,
         total,
-        notes,
-        terms,
+        customer_notes,
+        terms_and_conditions,
         quote_line_items (
           id,
           description,
           quantity,
           unit,
           unit_price,
-          total
+          line_total
         )
       `)
       .eq('id', tokenData.resource_id)
@@ -134,9 +135,21 @@ export async function GET(
     // Fetch organization
     const { data: organization } = await supabase
       .from('organizations')
-      .select('id, name, email, phone, address, logo_url, abn')
+      .select('id, name, email, phone, address_line1, address_line2, suburb, state, postcode, logo_url, abn')
       .eq('id', tokenData.org_id)
       .single();
+
+    // Build organization address string
+    const orgWithAddress = organization ? {
+      ...organization,
+      address: [
+        organization.address_line1,
+        organization.address_line2,
+        organization.suburb,
+        organization.state,
+        organization.postcode
+      ].filter(Boolean).join(', ') || null
+    } : null;
 
     // Log access (non-blocking, don't fail if this errors)
     try {
@@ -163,13 +176,30 @@ export async function GET(
       console.error('Token update error (non-fatal):', updateError);
     }
 
+    // Transform response to match frontend expected format
+    // Frontend expects: issue_date, gst, notes, terms, items[].total
     return NextResponse.json({
       quote: {
-        ...quote,
-        items: quote.quote_line_items
+        id: quote.id,
+        quote_number: quote.quote_number,
+        status: quote.status,
+        issue_date: quote.created_at,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        gst: quote.gst_amount,
+        total: quote.total,
+        notes: quote.customer_notes,
+        terms: quote.terms_and_conditions,
+        items: quote.quote_line_items.map((item: { id: string; description: string; quantity: number; unit: string; unit_price: number; line_total: number }) => ({
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total: item.line_total
+        }))
       },
       customer: customerWithName,
-      organization
+      organization: orgWithAddress
     });
 
   } catch (error) {
