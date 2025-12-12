@@ -39,7 +39,8 @@ async function generateQuotePortalToken(
     .gt('expires_at', new Date().toISOString())
     .single()
 
-  const tokenRecord = existingToken as { token?: string } | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tokenRecord = existingToken as any
   if (tokenRecord?.token) {
     return tokenRecord.token
   }
@@ -49,7 +50,8 @@ async function generateQuotePortalToken(
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7) // 7 days expiration
 
-  const { error } = await supabase.from('portal_tokens').insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('portal_tokens') as any).insert({
     customer_id: customerId,
     org_id: orgId,
     token,
@@ -103,27 +105,8 @@ export async function POST(
       )
     }
 
-    // Type assertion for quote data
-    const quoteData = quote as {
-      id: string
-      quote_number: string
-      total: number
-      valid_until: string
-      org_id: string
-      job_description?: string
-      customer?: {
-        id: string
-        email?: string
-        company_name?: string
-        first_name?: string
-        last_name?: string
-      }
-      organization?: {
-        name?: string
-        email?: string
-        phone?: string
-      }
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const quoteData = quote as any
 
     // Validate customer email exists
     if (!quoteData.customer?.email) {
@@ -171,7 +154,6 @@ export async function POST(
     }
 
     // Determine from address
-    // Using Resend test domain initially - switch to flowtrade.com.au after verification
     const fromAddress = process.env.RESEND_FROM_EMAIL || 
       `${businessName} <onboarding@resend.dev>`
 
@@ -190,7 +172,7 @@ export async function POST(
         businessEmail: quoteData.organization?.email || undefined,
         businessPhone: quoteData.organization?.phone || undefined,
         jobDescription: quoteData.job_description || undefined,
-        viewQuoteUrl, // Portal link included!
+        viewQuoteUrl,
       }),
     })
 
@@ -203,8 +185,8 @@ export async function POST(
     }
 
     // Update quote status to 'sent'
-    const { error: updateError } = await supabase
-      .from('quotes')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase.from('quotes') as any)
       .update({
         status: 'sent',
         sent_at: new Date().toISOString(),
@@ -213,11 +195,11 @@ export async function POST(
 
     if (updateError) {
       console.error('Quote update error:', updateError)
-      // Email was sent, but status update failed - log but don't fail
     }
 
     // Log the send event with portal token info
-    await supabase.from('quote_events').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('quote_events') as any).insert({
       quote_id: quoteId,
       event_type: 'email_sent',
       event_data: {
