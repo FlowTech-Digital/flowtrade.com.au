@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { token: string } }
 ) {
   try {
@@ -52,7 +52,6 @@ export async function GET(
     })
 
     // For now, redirect to the internal PDF endpoint
-    // In production, this would generate/serve the PDF directly
     const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/quotes/${tokenData.entity_id}/pdf`
     
     return NextResponse.redirect(pdfUrl)
