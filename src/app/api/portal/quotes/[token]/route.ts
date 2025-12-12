@@ -33,7 +33,7 @@ function checkRateLimit(ip: string): boolean {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   
@@ -45,7 +45,7 @@ export async function GET(
     );
   }
 
-  const { token } = params;
+  const { token } = await params;
 
   try {
     // Validate token
@@ -57,6 +57,7 @@ export async function GET(
       .single();
 
     if (tokenError || !tokenData) {
+      console.error('Token lookup error:', tokenError);
       return NextResponse.json(
         { error: 'not_found', message: 'Quote not found' },
         { status: 404 }
@@ -93,10 +94,11 @@ export async function GET(
         total,
         notes,
         terms,
-        quote_items (
+        quote_line_items (
           id,
           description,
           quantity,
+          unit,
           unit_price,
           total
         )
@@ -105,18 +107,27 @@ export async function GET(
       .single();
 
     if (quoteError || !quote) {
+      console.error('Quote lookup error:', quoteError);
       return NextResponse.json(
         { error: 'not_found', message: 'Quote not found' },
         { status: 404 }
       );
     }
 
-    // Fetch customer
+    // Fetch customer - using correct field names (first_name, last_name)
     const { data: customer } = await supabase
       .from('customers')
-      .select('id, name, email')
+      .select('id, first_name, last_name, company_name, email')
       .eq('id', tokenData.customer_id)
       .single();
+
+    // Build customer name from available fields
+    const customerWithName = customer ? {
+      ...customer,
+      name: customer.company_name || 
+            [customer.first_name, customer.last_name].filter(Boolean).join(' ') ||
+            'Customer'
+    } : null;
 
     // Fetch organization
     const { data: organization } = await supabase
@@ -125,29 +136,37 @@ export async function GET(
       .eq('id', tokenData.org_id)
       .single();
 
-    // Log access
-    await supabase.from('portal_access_logs').insert({
-      token_id: tokenData.id,
-      ip_address: ip,
-      user_agent: request.headers.get('user-agent'),
-      action: 'view_quote'
-    });
+    // Log access (non-blocking, don't fail if this errors)
+    try {
+      await supabase.from('portal_access_logs').insert({
+        token_id: tokenData.id,
+        ip_address: ip,
+        user_agent: request.headers.get('user-agent'),
+        action: 'view_quote'
+      });
+    } catch (logError) {
+      console.error('Access log error (non-fatal):', logError);
+    }
 
-    // Update token access stats
-    await supabase
-      .from('portal_tokens')
-      .update({
-        last_accessed_at: new Date().toISOString(),
-        access_count: (tokenData.access_count || 0) + 1
-      })
-      .eq('id', tokenData.id);
+    // Update token access stats (non-blocking)
+    try {
+      await supabase
+        .from('portal_tokens')
+        .update({
+          last_accessed_at: new Date().toISOString(),
+          access_count: (tokenData.access_count || 0) + 1
+        })
+        .eq('id', tokenData.id);
+    } catch (updateError) {
+      console.error('Token update error (non-fatal):', updateError);
+    }
 
     return NextResponse.json({
       quote: {
         ...quote,
-        items: quote.quote_items
+        items: quote.quote_line_items
       },
-      customer,
+      customer: customerWithName,
       organization
     });
 
