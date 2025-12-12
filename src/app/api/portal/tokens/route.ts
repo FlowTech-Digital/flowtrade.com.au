@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     expires_at.setDate(expires_at.getDate() + 30) // 30 days expiration
 
     // Insert new token
-    const { data: newToken, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from('portal_tokens')
       .insert({
         token,
@@ -123,8 +123,6 @@ export async function POST(request: NextRequest) {
         access_count: 0,
         is_revoked: false
       })
-      .select()
-      .single()
 
     if (insertError) {
       console.error('Error creating portal token:', insertError)

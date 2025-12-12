@@ -22,8 +22,7 @@ import {
   MapPin,
   Calendar,
   Briefcase,
-  Pencil,
-  Link2
+  Pencil
 } from 'lucide-react'
 import { PortalLinkButton } from '@/components/portal/PortalLinkButton'
 
