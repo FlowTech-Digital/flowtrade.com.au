@@ -6,9 +6,6 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { QuoteEmail } from '@/lib/email/templates/QuoteEmail'
 
-// CloudFlare Pages requires Edge Runtime
-export const runtime = 'edge'
-
 // Create Supabase client inside handler (edge runtime requires this)
 function getSupabaseClient() {
   return createClient(
