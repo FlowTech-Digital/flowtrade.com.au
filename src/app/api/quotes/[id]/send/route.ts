@@ -24,11 +24,11 @@ function getResendClient() {
 
 // Generate portal token for quote
 async function generateQuotePortalToken(
-  supabase: ReturnType&lt;typeof createClient&gt;,
+  supabase: ReturnType<typeof createClient>,
   quoteId: string,
   customerId: string,
   orgId: string
-): Promise&lt;string | null&gt; {
+): Promise<string | null> {
   // Check for existing valid token
   const { data: existingToken } = await supabase
     .from('portal_tokens')
@@ -67,7 +67,7 @@ async function generateQuotePortalToken(
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise&lt;{ id: string }&gt; }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: quoteId } = await params
@@ -150,7 +150,7 @@ export async function POST(
     // Determine from address
     // Using Resend test domain initially - switch to flowtrade.com.au after verification
     const fromAddress = process.env.RESEND_FROM_EMAIL || 
-      `${businessName} &lt;onboarding@resend.dev&gt;`
+      `${businessName} <onboarding@resend.dev>`
 
     // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
@@ -180,7 +180,7 @@ export async function POST(
     }
 
     // Update quote status to 'sent'
-    const updateData: Record&lt;string, unknown&gt; = {
+    const updateData: Record<string, unknown> = {
       status: 'sent',
       sent_at: new Date().toISOString(),
     }
