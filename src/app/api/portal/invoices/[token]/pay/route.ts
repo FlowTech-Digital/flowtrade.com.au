@@ -9,13 +9,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-type RouteContext = {
-  params: Promise<{ token: string }>;
-};
-
-export async function POST(request: NextRequest, context: RouteContext) {
+// Next.js 15 route handler - using runtime params access
+export async function POST(
+  request: NextRequest,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context: any
+) {
   try {
-    const { token } = await context.params;
+    const params = await context.params;
+    const token = params.token as string;
     
     // Rate limiting
     const ip = getClientIp(request);
