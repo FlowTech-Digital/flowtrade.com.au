@@ -34,6 +34,15 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Null check for supabase client (TypeScript strict mode)
+    if (!supabase) {
+      console.error('Database connection failed in Stripe webhook');
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      );
+    }
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
