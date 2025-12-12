@@ -33,7 +33,7 @@ function checkRateLimit(ip: string): boolean {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: { token: string } }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   
@@ -45,7 +45,7 @@ export async function GET(
     );
   }
 
-  const { token } = await params;
+  const { token } = params;
 
   try {
     // Validate token
