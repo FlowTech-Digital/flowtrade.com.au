@@ -74,6 +74,10 @@ function getTodayDate(): string {
 
 // Generate sequential invoice number
 async function generateInvoiceNumber(supabase: ReturnType<typeof createClient>, orgId: string): Promise<string> {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized')
+  }
+  
   const { data } = await supabase
     .from('invoices')
     .select('invoice_number')
