@@ -7,13 +7,17 @@ import { createClient } from '@supabase/supabase-js'
 // CloudFlare Pages requires Edge Runtime
 export const runtime = 'edge'
 
-// Create Supabase client with service role for API routes
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Create Supabase client inside handler (edge runtime requires this)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient()
+  
   try {
     const body = await request.json()
     const { quote_id, scheduled_date, scheduled_time_start, scheduled_time_end, assigned_to, notes } = body
