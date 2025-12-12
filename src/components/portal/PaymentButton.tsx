@@ -26,7 +26,8 @@ export function PaymentButton({ token, amount, invoiceNumber: _invoiceNumber }: 
     setError(null);
 
     try {
-      const response = await fetch(`/api/portal/invoices/${token}/pay`, {
+      // NEW: Using restructured endpoint (route.ts directly in dynamic segment)
+      const response = await fetch(`/api/portal/invoice-pay/${token}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
