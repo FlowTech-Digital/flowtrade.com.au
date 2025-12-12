@@ -7,12 +7,17 @@ import { TokenExpiredView } from '@/components/portal/TokenExpiredView';
 import { headers } from 'next/headers';
 
 interface PageProps {
-  params: Promise<{ token: string }>;
-  searchParams: Promise<{ payment?: string }>;
+  params: Promise&lt;{ token: string }>;
+  searchParams: Promise&lt;{ payment?: string }>;
 }
 
 async function getInvoiceByToken(token: string) {
   const supabase = await createClient();
+
+  // Null check for supabase client (TypeScript strict mode)
+  if (!supabase) {
+    return { error: 'database_error' as const };
+  }
   
   // Validate token
   const { data: tokenData, error: tokenError } = await supabase
@@ -31,7 +36,7 @@ async function getInvoiceByToken(token: string) {
     return { error: 'revoked' as const };
   }
 
-  if (new Date(tokenData.expires_at) < new Date()) {
+  if (new Date(tokenData.expires_at) &lt; new Date()) {
     return { error: 'expired' as const };
   }
 
@@ -116,15 +121,15 @@ export default async function InvoicePortalPage({ params, searchParams }: PagePr
   const result = await getInvoiceByToken(token);
 
   // Handle error cases
-  if ('error' in result && result.error) {
-    if (result.error === 'invalid' || result.error === 'not_found') {
+  if ('error' in result &amp;&amp; result.error) {
+    if (result.error === 'invalid' || result.error === 'not_found' || result.error === 'database_error') {
       notFound();
     }
     // At this point, error is 'expired' or 'revoked'
     return (
-      <PortalLayout>
-        <TokenExpiredView errorType={result.error} />
-      </PortalLayout>
+      &lt;PortalLayout>
+        &lt;TokenExpiredView errorType={result.error} />
+      &lt;/PortalLayout>
     );
   }
 
@@ -136,9 +141,9 @@ export default async function InvoicePortalPage({ params, searchParams }: PagePr
   if (payment === 'cancelled') paymentResult = 'cancelled';
 
   return (
-    <PortalLayout organization={organization}>
-      <Suspense fallback={<div className="animate-pulse">Loading invoice...</div>}>
-        <InvoicePortalView
+    &lt;PortalLayout organization={organization}>
+      &lt;Suspense fallback={&lt;div className="animate-pulse">Loading invoice...&lt;/div>}>
+        &lt;InvoicePortalView
           invoice={invoice}
           customer={customer}
           organization={organization}
@@ -146,7 +151,7 @@ export default async function InvoicePortalPage({ params, searchParams }: PagePr
           token={token}
           paymentResult={paymentResult}
         />
-      </Suspense>
-    </PortalLayout>
+      &lt;/Suspense>
+    &lt;/PortalLayout>
   );
 }
