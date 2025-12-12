@@ -36,10 +36,9 @@ function checkRateLimit(ip: string): boolean {
 function getClientIp(request: NextRequest): string | null {
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    // Take first IP (original client), remove whitespace
-    const firstIp = forwardedFor.split(',')[0].trim();
-    // Validate it looks like an IP
-    if (/^[\d.:a-fA-F]+$/.test(firstIp)) {
+    const parts = forwardedFor.split(',');
+    const firstIp = parts[0]?.trim();
+    if (firstIp && /^[\d.:a-fA-F]+$/.test(firstIp)) {
       return firstIp;
     }
   }
@@ -98,8 +97,7 @@ export async function GET(
       );
     }
 
-    // Fetch quote with items - FIXED: Use correct column names from database schema
-    // issue_date → created_at, gst → gst_amount, notes → customer_notes, terms → terms_and_conditions
+    // Fetch quote with items - Use correct column names from database schema
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select(`
@@ -133,7 +131,7 @@ export async function GET(
       );
     }
 
-    // Fetch customer - using correct field names (first_name, last_name)
+    // Fetch customer
     const { data: customer } = await supabase
       .from('customers')
       .select('id, first_name, last_name, company_name, email')
@@ -167,8 +165,7 @@ export async function GET(
       ].filter(Boolean).join(', ') || null
     } : null;
 
-    // Log access - fire and forget (don't await, don't block response)
-    // Only log if we have a valid IP
+    // Log access - fire and forget (only if valid IP)
     if (clientIp) {
       supabase.from('portal_access_logs').insert({
         token_id: tokenData.id,
@@ -193,7 +190,6 @@ export async function GET(
       });
 
     // Transform response to match frontend expected format
-    // Frontend expects: issue_date, gst, notes, terms, items[].total
     return NextResponse.json({
       quote: {
         id: quote.id,
@@ -206,7 +202,7 @@ export async function GET(
         total: quote.total,
         notes: quote.customer_notes,
         terms: quote.terms_and_conditions,
-        items: quote.quote_line_items.map((item: { id: string; description: string; quantity: number; unit: string; unit_price: number; line_total: number }) => ({
+        items: (quote.quote_line_items || []).map((item: { id: string; description: string; quantity: number; unit: string; unit_price: number; line_total: number }) => ({
           id: item.id,
           description: item.description,
           quantity: item.quantity,
