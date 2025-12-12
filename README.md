@@ -48,4 +48,4 @@ FlowTrade is a division of [FlowTech AI](https://flowtechai.com.au) - Multi-Agen
 
 © 2025 FlowTech AI PTY LTD | ABN: 76689878420
 
-<!-- Last deployed: 2025-12-09 with Supabase environment variables -->
+<!-- Cache bust: 2025-12-12T17:08:00+11:00 - Force fresh build -->
