@@ -1,3 +1,4 @@
-import { defineConfig } from "@opennextjs/cloudflare";
+// OpenNext Cloudflare configuration
+// https://opennext.js.org/cloudflare
 
-export default defineConfig({});
+export default {};
