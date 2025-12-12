@@ -12,6 +12,11 @@ export async function generateInvoicePortalToken(
 ): Promise<{ token: string; url: string } | null> {
   const supabase = await createClient();
   
+  if (!supabase) {
+    console.error('Failed to create Supabase client');
+    return null;
+  }
+  
   // Check if a valid token already exists for this invoice
   const { data: existingToken } = await supabase
     .from('portal_tokens')
@@ -61,6 +66,11 @@ export async function generateInvoicePortalToken(
  */
 export async function revokeInvoicePortalToken(invoiceId: string): Promise<boolean> {
   const supabase = await createClient();
+  
+  if (!supabase) {
+    console.error('Failed to create Supabase client');
+    return false;
+  }
   
   const { error } = await supabase
     .from('portal_tokens')
