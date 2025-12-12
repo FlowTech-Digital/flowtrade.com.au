@@ -4,6 +4,11 @@ initOpenNextCloudflareForDev();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Force unique build ID to regenerate all chunks
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
+  
   // Image optimization - use CloudFlare Images or disable
   images: {
     unoptimized: true,
