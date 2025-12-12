@@ -414,7 +414,8 @@ export default function QuotePDF({ quote, lineItems, businessInfo = defaultBusin
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {hasLogo && (
-              <Image src={businessInfo.logo_url!} style={styles.logo} alt="Business logo" />
+              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image doesn't support alt prop
+              <Image src={businessInfo.logo_url!} style={styles.logo} />
             )}
             <Text style={hasLogo ? styles.businessNameWithLogo : styles.businessName}>
               {businessInfo.name}
