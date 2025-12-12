@@ -9,15 +9,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Next.js 15 route handler - using runtime params access
-export async function POST(
-  request: NextRequest,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  context: any
-) {
+// Next.js 15 route handler - extract token from URL to bypass params type issue
+export async function POST(request: NextRequest) {
   try {
-    const params = await context.params;
-    const token = params.token as string;
+    // Extract token from URL path: /api/portal/invoices/[token]/pay
+    const url = request.nextUrl;
+    const pathSegments = url.pathname.split('/');
+    const tokenIndex = pathSegments.indexOf('invoices') + 1;
+    const token = pathSegments[tokenIndex];
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token not found in URL' },
+        { status: 400 }
+      );
+    }
     
     // Rate limiting
     const ip = getClientIp(request);
