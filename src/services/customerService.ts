@@ -1,5 +1,5 @@
 // FlowTrade Customer Service
-// Updated: 2025-12-11 - Fixed column names to match database schema
+// Updated: 2025-12-12 - Added null checks for TypeScript strict mode
 
 import { createClient } from '@/lib/supabase/client'
 
@@ -55,6 +55,8 @@ export const customerService = {
   // Get all customers for current org
   async getCustomers(): Promise<Customer[]> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -68,6 +70,8 @@ export const customerService = {
   // Get single customer by ID
   async getCustomer(id: string): Promise<Customer | null> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -81,6 +85,7 @@ export const customerService = {
   // Create new customer
   async createCustomer(customerData: CreateCustomerData): Promise<Customer> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
     
     // Get user's org_id from users table
     const { data: { user } } = await supabase.auth.getUser()
@@ -109,6 +114,8 @@ export const customerService = {
   // Update existing customer
   async updateCustomer(id: string, customerData: UpdateCustomerData): Promise<Customer> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { data, error } = await supabase
       .from('customers')
       .update(customerData)
@@ -123,6 +130,8 @@ export const customerService = {
   // Soft delete (archive) customer
   async archiveCustomer(id: string): Promise<void> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { error } = await supabase
       .from('customers')
       .update({ status: 'archived' })
@@ -134,6 +143,8 @@ export const customerService = {
   // Hard delete customer (use with caution)
   async deleteCustomer(id: string): Promise<void> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { error } = await supabase
       .from('customers')
       .delete()
@@ -145,6 +156,8 @@ export const customerService = {
   // Search customers by name
   async searchCustomers(query: string): Promise<Customer[]> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -159,6 +172,8 @@ export const customerService = {
   // Get customer count
   async getCustomerCount(): Promise<number> {
     const supabase = createClient()
+    if (!supabase) throw new Error('Failed to create Supabase client')
+    
     const { count, error } = await supabase
       .from('customers')
       .select('*', { count: 'exact', head: true })
