@@ -2,8 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
+export const runtime = 'edge'
+
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { token: string } }
 ) {
   try {
@@ -11,15 +13,6 @@ export async function POST(
     const supabase = await createClient()
     const headersList = await headers()
     const ip = headersList.get('x-forwarded-for') || 'unknown'
-
-    // Get optional decline reason from body
-    let declineReason = ''
-    try {
-      const body = await request.json()
-      declineReason = body.reason || ''
-    } catch {
-      // No body or invalid JSON is fine
-    }
 
     // Validate token
     const { data: tokenData, error: tokenError } = await supabase
@@ -65,7 +58,6 @@ export async function POST(
       .from('quotes')
       .update({
         status: 'declined',
-        notes: declineReason ? `Declined: ${declineReason}` : tokenData.quotes?.notes,
         updated_at: new Date().toISOString()
       })
       .eq('id', tokenData.entity_id)
@@ -83,8 +75,7 @@ export async function POST(
       token_id: tokenData.id,
       action: 'quote_declined',
       ip_address: ip,
-      user_agent: headersList.get('user-agent') || 'unknown',
-      metadata: declineReason ? { reason: declineReason } : null
+      user_agent: headersList.get('user-agent') || 'unknown'
     })
 
     return NextResponse.json({

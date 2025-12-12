@@ -19,15 +19,14 @@ export async function GET(
       .from('portal_tokens')
       .select(`
         *,
-        invoices (
+        quotes (
           id,
-          invoice_number,
+          quote_number,
           status,
           subtotal,
           tax,
           total,
-          due_date,
-          issued_date,
+          valid_until,
           notes,
           line_items,
           customer_name,
@@ -39,7 +38,7 @@ export async function GET(
         )
       `)
       .eq('token', token)
-      .eq('token_type', 'invoice')
+      .eq('token_type', 'quote')
       .single()
 
     if (tokenError || !tokenData) {
@@ -68,18 +67,18 @@ export async function GET(
     // Log access
     await supabase.from('portal_access_logs').insert({
       token_id: tokenData.id,
-      action: 'invoice_viewed',
+      action: 'quote_viewed',
       ip_address: ip,
       user_agent: headersList.get('user-agent') || 'unknown'
     })
 
-    // Return invoice data (without sensitive business info)
+    // Return quote data (without sensitive business info)
     return NextResponse.json({
-      invoice: tokenData.invoices,
+      quote: tokenData.quotes,
       token_expires_at: tokenData.expires_at
     })
   } catch (error) {
-    console.error('Error fetching invoice:', error)
+    console.error('Error fetching quote:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

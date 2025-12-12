@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
+export const runtime = 'edge'
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { token: string } }

@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
+export const runtime = 'edge'
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: { token: string } }
@@ -46,7 +48,7 @@ export async function POST(
     // Check invoice status
     if (tokenData.invoices?.status === 'paid') {
       return NextResponse.json(
-        { error: 'Invoice has already been paid' },
+        { error: 'Invoice is already paid' },
         { status: 400 }
       )
     }
@@ -59,7 +61,7 @@ export async function POST(
       user_agent: headersList.get('user-agent') || 'unknown'
     })
 
-    // TODO: Integrate with Stripe
+    // TODO: Integrate with Stripe payment
     // For now, return a placeholder response
     return NextResponse.json({
       success: true,
@@ -68,7 +70,7 @@ export async function POST(
       amount: tokenData.invoices?.total
     })
   } catch (error) {
-    console.error('Error initiating payment:', error)
+    console.error('Error in invoice pay:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
