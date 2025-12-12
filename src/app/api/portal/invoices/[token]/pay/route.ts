@@ -7,19 +7,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
 });
 
-// Next.js 15 route handler with async params
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function POST(
-  request: NextRequest,
-  context: any
-): Promise<NextResponse> {
+// Next.js 15 route handler - extract token from URL to bypass route validation
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Await params (Next.js 15 async params requirement)
-    const { token } = await context.params;
+    // Extract token from URL path (bypasses Next.js route validation layer)
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/');
+    // URL: /api/portal/invoices/[token]/pay
+    // pathSegments: ['', 'api', 'portal', 'invoices', 'TOKEN_VALUE', 'pay']
+    const tokenIndex = pathSegments.indexOf('invoices') + 1;
+    const token = pathSegments[tokenIndex];
     
-    if (!token) {
+    if (!token || token === 'pay') {
       return NextResponse.json(
-        { error: 'Token not found' },
+        { error: 'Token not found in URL' },
         { status: 400 }
       );
     }
