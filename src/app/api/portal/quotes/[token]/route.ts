@@ -48,7 +48,7 @@ function getClientIp(request: NextRequest): string | null {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { token: string } | Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   const clientIp = getClientIp(request);
   const rateLimitKey = clientIp || 'unknown';
@@ -61,18 +61,8 @@ export async function GET(
     );
   }
 
-  // Handle both sync and async params (Next.js 14 vs 15 compatibility)
-  let token: string;
-  try {
-    const params = await Promise.resolve(context.params);
-    token = params.token;
-  } catch {
-    return NextResponse.json(
-      { error: 'invalid', message: 'Invalid request' },
-      { status: 400 }
-    );
-  }
-
+  // Next.js 15 async params
+  const { token } = await params;
   const supabase = getSupabaseClient();
 
   try {
