@@ -59,14 +59,14 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-20 bg-gray-50">
+    <section id="pricing" className="py-20 bg-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-flowtrade-navy mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             All prices in AUD. No hidden fees. Cancel anytime.
           </p>
         </div>
@@ -78,36 +78,36 @@ export default function Pricing() {
               key={index}
               className={`relative p-8 rounded-2xl ${
                 plan.featured
-                  ? 'bg-flowtrade-navy text-white ring-4 ring-flowtrade-cyan'
-                  : 'bg-white border border-gray-200'
+                  ? 'bg-slate-900 text-white ring-4 ring-teal-500'
+                  : 'bg-slate-900 border border-slate-700'
               }`}
             >
               {plan.featured && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-flowtrade-orange text-white text-sm font-semibold px-4 py-1 rounded-full">
+                  <span className="bg-amber-500 text-white text-sm font-semibold px-4 py-1 rounded-full">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="text-center mb-8">
-                <h3 className={`text-xl font-bold mb-2 ${plan.featured ? 'text-white' : 'text-flowtrade-navy'}`}>
+                <h3 className={`text-xl font-bold mb-2 ${plan.featured ? 'text-white' : 'text-slate-50'}`}>
                   {plan.name}
                 </h3>
                 <div className="mb-2">
-                  <span className={`text-4xl font-bold ${plan.featured ? 'text-white' : 'text-flowtrade-navy'}`}>
+                  <span className={`text-4xl font-bold ${plan.featured ? 'text-white' : 'text-slate-50'}`}>
                     {plan.price}
                   </span>
-                  <span className={plan.featured ? 'text-white/70' : 'text-gray-500'}>
+                  <span className={plan.featured ? 'text-white/70' : 'text-slate-500'}>
                     {plan.period}
                   </span>
                 </div>
-                <p className={`text-sm ${plan.featured ? 'text-white/80' : 'text-gray-500'}`}>
+                <p className={`text-sm ${plan.featured ? 'text-white/80' : 'text-slate-500'}`}>
                   {plan.users}
                 </p>
               </div>
 
-              <p className={`text-center mb-6 ${plan.featured ? 'text-white/80' : 'text-gray-600'}`}>
+              <p className={`text-center mb-6 ${plan.featured ? 'text-white/80' : 'text-slate-400'}`}>
                 {plan.description}
               </p>
 
@@ -115,9 +115,7 @@ export default function Pricing() {
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start">
                     <svg
-                      className={`w-5 h-5 mr-3 flex-shrink-0 ${
-                        plan.featured ? 'text-flowtrade-cyan' : 'text-flowtrade-cyan'
-                      }`}
+                      className="w-5 h-5 mr-3 flex-shrink-0 text-teal-500"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -127,7 +125,7 @@ export default function Pricing() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className={plan.featured ? 'text-white/90' : 'text-gray-700'}>
+                    <span className={plan.featured ? 'text-white/90' : 'text-slate-300'}>
                       {feature}
                     </span>
                   </li>
@@ -138,8 +136,8 @@ export default function Pricing() {
                 href="/signup"
                 className={`block w-full text-center py-3 rounded-lg font-semibold transition-colors ${
                   plan.featured
-                    ? 'bg-flowtrade-cyan text-white hover:bg-flowtrade-cyan-dark'
-                    : 'bg-flowtrade-navy text-white hover:bg-flowtrade-navy-light'
+                    ? 'bg-teal-500 text-white hover:bg-teal-600'
+                    : 'bg-teal-500 text-white hover:bg-teal-600'
                 }`}
               >
                 {plan.cta}
@@ -150,10 +148,10 @@ export default function Pricing() {
 
         {/* Enterprise CTA */}
         <div className="text-center mt-12">
-          <p className="text-gray-600 mb-4">Need more than 15 users?</p>
+          <p className="text-slate-400 mb-4">Need more than 15 users?</p>
           <a
             href="#contact"
-            className="text-flowtrade-cyan hover:text-flowtrade-cyan-dark font-semibold"
+            className="text-teal-400 hover:text-teal-300 font-semibold"
           >
             Contact us for Enterprise pricing →
           </a>
@@ -161,17 +159,17 @@ export default function Pricing() {
 
         {/* FAQ Preview */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <h3 className="text-xl font-bold text-flowtrade-navy mb-6 text-center">
+          <h3 className="text-xl font-bold text-slate-50 mb-6 text-center">
             Common Questions
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-xl">
-              <h4 className="font-semibold text-flowtrade-navy mb-2">Can I change plans later?</h4>
-              <p className="text-gray-600 text-sm">Yes, upgrade or downgrade anytime. Changes take effect on your next billing cycle.</p>
+            <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
+              <h4 className="font-semibold text-slate-50 mb-2">Can I change plans later?</h4>
+              <p className="text-slate-400 text-sm">Yes, upgrade or downgrade anytime. Changes take effect on your next billing cycle.</p>
             </div>
-            <div className="bg-white p-6 rounded-xl">
-              <h4 className="font-semibold text-flowtrade-navy mb-2">Is there a contract?</h4>
-              <p className="text-gray-600 text-sm">No contracts. Cancel anytime with 30 days notice.</p>
+            <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
+              <h4 className="font-semibold text-slate-50 mb-2">Is there a contract?</h4>
+              <p className="text-slate-400 text-sm">No contracts. Cancel anytime with 30 days notice.</p>
             </div>
           </div>
         </div>

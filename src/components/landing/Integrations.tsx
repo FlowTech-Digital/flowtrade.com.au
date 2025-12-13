@@ -17,14 +17,14 @@ const comingSoon = [
 
 export default function Integrations() {
   return (
-    <section id="integrations" className="py-20 bg-white">
+    <section id="integrations" className="py-20 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-flowtrade-navy mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
             Connects to the Tools You Already Use
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             FlowTrade syncs with your accounting software, payment providers, and Australian suppliers.
           </p>
         </div>
@@ -34,16 +34,16 @@ export default function Integrations() {
           {integrations.map((integration, index) => (
             <div
               key={index}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-flowtrade-cyan/30 hover:shadow-md transition-all text-center"
+              className="p-6 bg-slate-800 rounded-xl border border-slate-700 hover:border-teal-500/30 hover:shadow-md hover:shadow-teal-500/5 transition-all text-center"
             >
-              <div className="text-2xl font-bold text-flowtrade-navy mb-2">
+              <div className="text-2xl font-bold text-slate-50 mb-2">
                 {integration.name}
               </div>
-              <div className="text-sm text-gray-500 mb-3">
+              <div className="text-sm text-slate-500 mb-3">
                 {integration.category}
               </div>
-              <div className="inline-flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
+              <div className="inline-flex items-center text-xs font-medium text-teal-400 bg-teal-500/10 px-2 py-1 rounded-full">
+                <span className="w-2 h-2 bg-teal-500 rounded-full mr-1.5"></span>
                 Available
               </div>
             </div>
@@ -51,18 +51,18 @@ export default function Integrations() {
         </div>
 
         {/* Coming Soon */}
-        <div className="bg-gray-50 rounded-2xl p-8">
-          <h3 className="text-lg font-semibold text-flowtrade-navy mb-4">
+        <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">
             Coming Soon: Australian Supplier Integrations
           </h3>
           <div className="flex flex-wrap gap-4">
             {comingSoon.map((item, index) => (
               <div
                 key={index}
-                className="inline-flex items-center px-4 py-2 bg-white rounded-lg border border-gray-200"
+                className="inline-flex items-center px-4 py-2 bg-slate-900 rounded-lg border border-slate-700"
               >
-                <span className="text-gray-700 font-medium">{item.name}</span>
-                <span className="ml-2 text-xs text-gray-500">({item.category})</span>
+                <span className="text-slate-300 font-medium">{item.name}</span>
+                <span className="ml-2 text-xs text-slate-500">({item.category})</span>
               </div>
             ))}
           </div>

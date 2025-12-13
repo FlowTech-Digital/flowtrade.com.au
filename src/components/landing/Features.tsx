@@ -39,14 +39,14 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 bg-gray-50">
+    <section id="features" className="py-20 bg-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-flowtrade-navy mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
             Built for the Way You Work
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             Every feature designed with Australian tradies in mind.
           </p>
         </div>
@@ -62,19 +62,19 @@ export default function Features() {
             >
               {/* Content */}
               <div className="lg:w-1/2 space-y-6">
-                <h3 className="text-2xl sm:text-3xl font-bold text-flowtrade-navy">
+                <h3 className="text-2xl sm:text-3xl font-bold text-slate-50">
                   {feature.title}
                 </h3>
-                <p className="text-lg text-flowtrade-cyan font-medium">
+                <p className="text-lg text-teal-400 font-medium">
                   {feature.subtitle}
                 </p>
-                <p className="text-gray-600 text-lg leading-relaxed">
+                <p className="text-slate-400 text-lg leading-relaxed">
                   {feature.description}
                 </p>
                 <ul className="space-y-3">
                   {feature.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-center text-gray-700">
-                      <svg className="w-5 h-5 text-flowtrade-cyan mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <li key={i} className="flex items-center text-slate-300">
+                      <svg className="w-5 h-5 text-teal-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       {benefit}
@@ -85,8 +85,8 @@ export default function Features() {
 
               {/* Visual */}
               <div className="lg:w-1/2">
-                <div className="bg-flowtrade-navy rounded-2xl p-8 aspect-[4/3] flex items-center justify-center">
-                  <div className="text-white/30 text-lg">{feature.imageAlt}</div>
+                <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 aspect-[4/3] flex items-center justify-center">
+                  <div className="text-slate-600 text-lg">{feature.imageAlt}</div>
                 </div>
               </div>
             </div>

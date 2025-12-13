@@ -23,14 +23,14 @@ const pillars = [
 
 export default function FourPillars() {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-flowtrade-navy mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
             Everything You Need to Run Your Trade Business
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             From your first quote to your last invoice, FlowTrade handles it all.
           </p>
         </div>
@@ -40,13 +40,13 @@ export default function FourPillars() {
           {pillars.map((pillar, index) => (
             <div
               key={index}
-              className="group p-8 bg-white rounded-2xl border border-gray-100 hover:border-flowtrade-cyan/30 hover:shadow-xl transition-all duration-300"
+              className="group p-8 bg-slate-800 rounded-2xl border border-slate-700 hover:border-teal-500/30 hover:shadow-xl hover:shadow-teal-500/5 transition-all duration-300"
             >
               <div className="text-5xl mb-6">{pillar.icon}</div>
-              <h3 className="text-xl font-bold text-flowtrade-navy mb-3">
+              <h3 className="text-xl font-bold text-slate-50 mb-3">
                 {pillar.title}
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-slate-400 leading-relaxed">
                 {pillar.description}
               </p>
             </div>
