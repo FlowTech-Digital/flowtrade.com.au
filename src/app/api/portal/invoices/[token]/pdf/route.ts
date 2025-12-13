@@ -218,13 +218,16 @@ export async function GET(
       businessInfo,
     });
 
+    // Convert Uint8Array to Buffer for NextResponse compatibility (Next.js 15 strict types)
+    const pdfBuffer = Buffer.from(pdfBytes);
+
     // Return PDF as download
-    return new NextResponse(pdfBytes, {
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${invoice.invoice_number}.pdf"`,
-        'Content-Length': pdfBytes.length.toString(),
+        'Content-Length': pdfBuffer.length.toString(),
         'Cache-Control': 'no-store',
       },
     });
