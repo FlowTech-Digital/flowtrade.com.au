@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
-import { getRequestContext } from '@cloudflare/next-on-pages';
-
-// Get environment variables - works in both Node.js and CloudFlare Workers
-function getEnv(key: string): string | undefined {
-  // Try CloudFlare Workers context first
-  try {
-    const { env } = getRequestContext();
-    if (env && env[key]) {
-      return env[key] as string;
-    }
-  } catch {
-    // Not in CloudFlare Workers context
-  }
-  // Fall back to process.env
-  return process.env[key];
-}
 
 // Create Supabase client with service role for anonymous portal access
 function getSupabaseClient() {
-  const url = getEnv('NEXT_PUBLIC_SUPABASE_URL');
-  const key = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!url || !key) {
     console.error('[DEBUG] Supabase config missing:', { hasUrl: !!url, hasKey: !!key });
@@ -31,9 +15,9 @@ function getSupabaseClient() {
   return createClient(url, key);
 }
 
-// Get Stripe client
+// Debug: Check Stripe key format
 function getStripeClient() {
-  const key = getEnv('STRIPE_SECRET_KEY');
+  const key = process.env.STRIPE_SECRET_KEY;
   
   if (!key) {
     console.error('[DEBUG] STRIPE_SECRET_KEY is empty/undefined');
@@ -84,8 +68,6 @@ function getClientIp(request: NextRequest): string {
 
 // Next.js 15 async params type
 type Params = { params: Promise<{ token: string }> }
-
-export const runtime = 'edge';
 
 export async function POST(request: NextRequest, { params }: Params): Promise<NextResponse> {
   console.log('[DEBUG] invoice-pay route called');
@@ -200,7 +182,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       );
     }
 
-    const baseUrl = getEnv('NEXT_PUBLIC_APP_URL') || 'https://flowtrade.com.au';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
     const customerEmail = invoice.customers?.email;
     
     console.log('[DEBUG] Creating Stripe session for amount:', invoice.total);
