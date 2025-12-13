@@ -13,16 +13,18 @@
 - `STRIPE_SECRET_KEY` - Stripe secret key for server-side operations
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role for admin operations
+- `RESEND_API_KEY` - Email service API key
+- `STRIPE_PUBLISHABLE_KEY` - (legacy, use NEXT_PUBLIC version)
 
-## Setting Secrets
+## Secrets Status
 
-Secrets configured via Wrangler CLI (2025-12-13T21:05:00+11:00):
-```
-npx wrangler pages secret put STRIPE_SECRET_KEY --project-name=flowtrade-com-au
-npx wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name=flowtrade-com-au
-npx wrangler pages secret put SUPABASE_SERVICE_ROLE_KEY --project-name=flowtrade-com-au
-```
+All 5 secrets verified via `wrangler pages secret list` (2025-12-13T21:10:00+11:00):
+- RESEND_API_KEY: ✓ Encrypted
+- STRIPE_PUBLISHABLE_KEY: ✓ Encrypted
+- STRIPE_SECRET_KEY: ✓ Encrypted
+- STRIPE_WEBHOOK_SECRET: ✓ Encrypted
+- SUPABASE_SERVICE_ROLE_KEY: ✓ Encrypted
 
-All 3 secrets confirmed uploaded successfully.
+Triggering fresh deployment to bind secrets to runtime.
 
-Last updated: 2025-12-13T21:05:00+11:00
+Last updated: 2025-12-13T21:10:00+11:00
