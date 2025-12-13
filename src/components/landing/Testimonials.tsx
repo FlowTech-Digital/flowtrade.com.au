@@ -32,8 +32,8 @@ export default function Testimonials() {
                 ))}
               </div>
               <p className="text-gray-600 mb-6 italic">
-                "We're just getting started, but early feedback has been incredible.
-                Our quoting time has been cut in half."
+                &ldquo;We&apos;re just getting started, but early feedback has been incredible.
+                Our quoting time has been cut in half.&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-flowtrade-cyan/20 rounded-full flex items-center justify-center text-flowtrade-cyan font-bold">
