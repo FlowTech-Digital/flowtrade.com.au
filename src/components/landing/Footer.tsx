@@ -52,12 +52,12 @@ export default function Footer() {
             <h3 className="text-flowtrade-light font-semibold mb-4">Company</h3>
             <ul className="space-y-3">
               <li>
-                <a href="https://flowtechai.com.au" target="_blank" rel="noopener noreferrer" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
-                  About FlowTech
-                </a>
+                <Link href="/about" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
+                  About FlowTrade
+                </Link>
               </li>
               <li>
-                <a href="mailto:hello@flowtechdigital.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
+                <a href="mailto:hello@flowtrade.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
                   Contact
                 </a>
               </li>
@@ -69,12 +69,12 @@ export default function Footer() {
             <h3 className="text-flowtrade-light font-semibold mb-4">Support</h3>
             <ul className="space-y-3">
               <li>
-                <a href="mailto:hello@flowtechdigital.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
+                <a href="mailto:hello@flowtrade.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
                   Help Center
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@flowtechdigital.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
+                <a href="mailto:hello@flowtrade.com.au" className="text-flowtrade-slate hover:text-flowtrade-cyan text-sm transition-colors">
                   Contact Support
                 </a>
               </li>

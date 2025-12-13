@@ -19,7 +19,7 @@ export default function FinalCTA() {
             Start Free Trial
           </Link>
           <a
-            href="mailto:hello@flowtechdigital.com.au"
+            href="mailto:hello@flowtrade.com.au"
             className="inline-flex items-center justify-center px-8 py-4 border-2 border-flowtrade-navy text-flowtrade-light/80 rounded-lg hover:bg-flowtrade-navy transition-colors font-semibold text-lg"
           >
             Schedule a Demo
@@ -28,8 +28,8 @@ export default function FinalCTA() {
 
         <p className="text-flowtrade-slate text-sm">
           Questions? Email us at{' '}
-          <a href="mailto:hello@flowtechdigital.com.au" className="text-flowtrade-cyan hover:underline">
-            hello@flowtechdigital.com.au
+          <a href="mailto:hello@flowtrade.com.au" className="text-flowtrade-cyan hover:underline">
+            hello@flowtrade.com.au
           </a>
         </p>
       </div>
