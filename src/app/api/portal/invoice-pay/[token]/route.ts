@@ -14,7 +14,7 @@ function getSupabaseClient() {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 // Rate limiting map (in production, use Redis)
-const rateLimitMap = new Map&lt;string, { count: number; resetTime: number }>();
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -42,7 +42,7 @@ function getClientIp(request: NextRequest): string {
   if (forwardedFor) {
     const parts = forwardedFor.split(',');
     const firstIp = parts[0]?.trim();
-    if (firstIp &amp;&amp; /^[\d.:a-fA-F]+$/.test(firstIp)) {
+    if (firstIp && /^[\d.:a-fA-F]+$/.test(firstIp)) {
       return firstIp;
     }
   }
@@ -50,9 +50,9 @@ function getClientIp(request: NextRequest): string {
 }
 
 // Next.js 15 async params type
-type Params = { params: Promise&lt;{ token: string }> }
+type Params = { params: Promise<{ token: string }> }
 
-export async function POST(request: NextRequest, { params }: Params): Promise&lt;NextResponse> {
+export async function POST(request: NextRequest, { params }: Params): Promise<NextResponse> {
   try {
     const { token } = await params;
     
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise&lt
     }
 
     // Check if expired or revoked
-    if (tokenData.is_revoked || new Date(tokenData.expires_at) &lt; new Date()) {
+    if (tokenData.is_revoked || new Date(tokenData.expires_at) < new Date()) {
       return NextResponse.json(
         { error: 'This link has expired or been revoked' },
         { status: 403 }
