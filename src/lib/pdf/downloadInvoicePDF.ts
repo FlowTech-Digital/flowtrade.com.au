@@ -1,9 +1,7 @@
 'use client';
 
-import { pdf } from '@react-pdf/renderer';
-import { createElement } from 'react';
 import type { ReactElement } from 'react';
-import InvoicePDF, { type Invoice, type InvoiceLineItem, type BusinessInfo } from './InvoicePDF';
+import type { Invoice, InvoiceLineItem, BusinessInfo } from './InvoicePDF';
 
 export type { Invoice, InvoiceLineItem, BusinessInfo };
 
@@ -16,12 +14,19 @@ interface DownloadInvoicePDFOptions {
 
 /**
  * Generate and download an invoice PDF client-side
- * Uses @react-pdf/renderer's browser-compatible pdf() function
+ * Uses dynamic import to ensure @react-pdf/renderer only loads in browser
  */
 export async function downloadInvoicePDF(options: DownloadInvoicePDFOptions): Promise<void> {
   const { invoice, lineItems, businessInfo, filename } = options;
 
   try {
+    // Dynamic imports to ensure browser-only loading
+    const [{ pdf }, { createElement }, { default: InvoicePDF }] = await Promise.all([
+      import('@react-pdf/renderer'),
+      import('react'),
+      import('./InvoicePDF'),
+    ]);
+
     // Create the PDF document element with type assertion for @react-pdf/renderer compatibility
     const element = createElement(InvoicePDF, { invoice, lineItems, businessInfo }) as ReactElement<any>;
     
