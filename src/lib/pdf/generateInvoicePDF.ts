@@ -1,6 +1,5 @@
 import { renderToBuffer } from '@react-pdf/renderer'
-import React from 'react'
-import InvoicePDF, { type Invoice, type InvoiceLineItem, type BusinessInfo, type InvoicePDFProps } from './InvoicePDF'
+import InvoicePDF, { type Invoice, type InvoiceLineItem, type BusinessInfo } from './InvoicePDF'
 
 export type { Invoice, InvoiceLineItem, BusinessInfo }
 
@@ -18,13 +17,9 @@ export async function generateInvoicePDFBuffer(options: GenerateInvoicePDFOption
   const { invoice, lineItems, businessInfo } = options
 
   try {
-    // Create the PDF document using React.createElement (proper JSX factory)
-    // Must use React.createElement, not destructured createElement
-    const doc = React.createElement(InvoicePDF, { 
-      invoice, 
-      lineItems, 
-      businessInfo 
-    } as InvoicePDFProps)
+    // Call InvoicePDF as a function to get the Document element directly
+    // This returns ReactElement<DocumentProps> which renderToBuffer expects
+    const doc = InvoicePDF({ invoice, lineItems, businessInfo })
     
     // Generate the PDF buffer (server-side compatible)
     const buffer = await renderToBuffer(doc)
