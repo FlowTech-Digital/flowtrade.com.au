@@ -23,17 +23,30 @@ type InvoiceJob = {
   job_notes: string | null
 }
 
+type InvoiceLineItem = {
+  id: string
+  description: string
+  quantity: number
+  unit: string
+  unit_price: number
+  line_total: number
+}
+
 type InvoiceData = {
   invoice_number: string
   invoice_date: string
   due_date: string | null
+  status: string
   subtotal: number
   tax_rate: number
   tax_amount: number
   total: number
+  amount_paid?: number
   notes: string | null
+  payment_terms?: string | null
   customer: InvoiceCustomer | null
   job: InvoiceJob | null
+  line_items?: InvoiceLineItem[]
 }
 
 type BusinessInfo = {
@@ -118,31 +131,38 @@ export function InvoicePDFDownload({
         phone: '0400 000 000',
       }
 
-      // Dynamically import @react-pdf/renderer to avoid SSR issues
-      // This is required for CloudFlare Pages edge runtime compatibility
-      const [{ pdf }, { InvoicePDFTemplate }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('./InvoicePDFTemplate')
-      ])
+      // Dynamically import the jsPDF-based download function
+      const { downloadInvoicePDF } = await import('@/lib/pdf')
       
-      // Generate PDF blob
-      const blob = await pdf(
-        <InvoicePDFTemplate invoice={invoice} business={business} />
-      ).toBlob()
-
-      // Create download link
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${invoice.invoice_number}.pdf`
+      // Transform data to match the Invoice type expected by downloadInvoicePDF
+      const invoiceForPDF = {
+        invoice_number: invoice.invoice_number,
+        invoice_date: invoice.invoice_date,
+        due_date: invoice.due_date || invoice.invoice_date,
+        status: invoice.status || 'draft',
+        subtotal: invoice.subtotal,
+        tax_rate: invoice.tax_rate,
+        gst_amount: invoice.tax_amount,
+        total: invoice.total,
+        amount_paid: invoice.amount_paid || 0,
+        notes: invoice.notes,
+        payment_terms: invoice.payment_terms || null,
+        customer: {
+          first_name: invoice.customer?.first_name || null,
+          last_name: invoice.customer?.last_name || null,
+          company_name: invoice.customer?.company_name || null,
+          email: invoice.customer?.email || null,
+          phone: invoice.customer?.phone || null,
+          street_address: invoice.customer?.address_line1 || null,
+          suburb: invoice.customer?.suburb || null,
+          state: invoice.customer?.state || null,
+          postcode: invoice.customer?.postcode || null,
+        },
+        line_items: invoice.line_items || [],
+        business_info: business,
+      }
       
-      // Trigger download
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Cleanup
-      URL.revokeObjectURL(url)
+      await downloadInvoicePDF(invoiceForPDF)
     } catch (error) {
       console.error('Error generating PDF:', error)
     } finally {
