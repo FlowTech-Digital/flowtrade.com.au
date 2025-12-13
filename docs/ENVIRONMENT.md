@@ -22,4 +22,12 @@ wrangler pages secret put STRIPE_WEBHOOK_SECRET --project-name flowtrade-com-au
 wrangler pages secret put SUPABASE_SERVICE_ROLE_KEY --project-name flowtrade-com-au
 ```
 
-Last updated: 2025-12-13
+## Deployment Notes
+
+Secrets set via Wrangler CLI should be picked up on next deployment.
+If secrets aren't propagating, try:
+1. Retry deployment from CloudFlare Dashboard → Pages → flowtrade-com-au
+2. Or push a new commit to trigger fresh build
+
+Last updated: 2025-12-13T20:28:00+11:00
+Deployment trigger: 2025-12-13 20:28 - Secret binding refresh
