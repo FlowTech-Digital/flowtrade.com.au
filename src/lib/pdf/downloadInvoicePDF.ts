@@ -2,6 +2,7 @@
 
 import { pdf } from '@react-pdf/renderer';
 import { createElement } from 'react';
+import type { ReactElement } from 'react';
 import InvoicePDF, { type Invoice, type InvoiceLineItem, type BusinessInfo } from './InvoicePDF';
 
 export type { Invoice, InvoiceLineItem, BusinessInfo };
@@ -21,8 +22,8 @@ export async function downloadInvoicePDF(options: DownloadInvoicePDFOptions): Pr
   const { invoice, lineItems, businessInfo, filename } = options;
 
   try {
-    // Create the PDF document element
-    const element = createElement(InvoicePDF, { invoice, lineItems, businessInfo });
+    // Create the PDF document element with type assertion for @react-pdf/renderer compatibility
+    const element = createElement(InvoicePDF, { invoice, lineItems, businessInfo }) as ReactElement<any>;
     
     // Generate PDF blob in browser
     const blob = await pdf(element).toBlob();
