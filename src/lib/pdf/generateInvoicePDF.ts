@@ -1,4 +1,5 @@
 import { renderToBuffer } from '@react-pdf/renderer'
+import React from 'react'
 import InvoicePDF, { type Invoice, type InvoiceLineItem, type BusinessInfo } from './InvoicePDF'
 
 export type { Invoice, InvoiceLineItem, BusinessInfo }
@@ -17,12 +18,11 @@ export async function generateInvoicePDFBuffer(options: GenerateInvoicePDFOption
   const { invoice, lineItems, businessInfo } = options
 
   try {
-    // Call InvoicePDF as a function to get the Document element directly
-    // This returns ReactElement<DocumentProps> which renderToBuffer expects
-    const doc = InvoicePDF({ invoice, lineItems, businessInfo })
-    
-    // Generate the PDF buffer (server-side compatible)
-    const buffer = await renderToBuffer(doc)
+    // Use React.createElement for proper element creation in all runtime contexts
+    // Type assertion needed because InvoicePDFProps doesn't extend DocumentProps
+    // but InvoicePDF returns a Document element which is what renderToBuffer expects
+    const element = React.createElement(InvoicePDF, { invoice, lineItems, businessInfo })
+    const buffer = await renderToBuffer(element as React.ReactElement<any>)
     return buffer
   } catch (error) {
     console.error('Error generating invoice PDF buffer:', error)
