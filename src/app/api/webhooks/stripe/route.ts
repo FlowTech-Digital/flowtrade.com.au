@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-02-24.acacia',
-});
+// Use service role for webhook processing (no user session)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+// Let Stripe SDK use its default API version (compatible with installed types)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -32,16 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
-    // Null check for supabase client (TypeScript strict mode)
-    if (!supabase) {
-      console.error('Database connection failed in Stripe webhook');
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 503 }
-      );
-    }
+    const supabase = getSupabaseClient();
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // eslint-disable-next-line no-console
         console.info(`Payment completed for invoice ${invoiceId}`);
         break;
       }
@@ -125,7 +122,6 @@ export async function POST(request: NextRequest) {
           .update({ status: 'expired' })
           .eq('stripe_session_id', session.id);
 
-        // eslint-disable-next-line no-console
         console.info(`Checkout session expired: ${session.id}`);
         break;
       }
@@ -146,7 +142,6 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        // eslint-disable-next-line no-console
         console.debug(`Unhandled event type: ${event.type}`);
     }
 
