@@ -1,13 +1,13 @@
 export default function Testimonials() {
   return (
-    <section className="py-20 bg-slate-900">
+    <section className="py-20 bg-flowtrade-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-flowtrade-light mb-4">
             Trusted by Australian Tradies
           </h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+          <p className="text-xl text-flowtrade-slate max-w-2xl mx-auto">
             See why businesses like yours choose FlowTrade.
           </p>
         </div>
@@ -17,13 +17,13 @@ export default function Testimonials() {
           {[1, 2, 3].map((_, index) => (
             <div
               key={index}
-              className="p-8 bg-slate-800 rounded-2xl border border-slate-700"
+              className="p-8 bg-flowtrade-navy rounded-2xl border border-flowtrade-dark"
             >
               <div className="flex items-center mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className="w-5 h-5 text-amber-400"
+                    className="w-5 h-5 text-flowtrade-orange"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -31,19 +31,19 @@ export default function Testimonials() {
                   </svg>
                 ))}
               </div>
-              <p className="text-slate-400 mb-6 italic">
+              <p className="text-flowtrade-slate mb-6 italic">
                 &ldquo;We&apos;re just getting started, but early feedback has been incredible.
                 Our quoting time has been cut in half.&rdquo;
               </p>
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-teal-500/20 rounded-full flex items-center justify-center text-teal-400 font-bold">
+                <div className="w-12 h-12 bg-flowtrade-cyan/20 rounded-full flex items-center justify-center text-flowtrade-cyan font-bold">
                   {['MT', 'JS', 'RK'][index]}
                 </div>
                 <div className="ml-4">
-                  <div className="font-semibold text-slate-50">
+                  <div className="font-semibold text-flowtrade-light">
                     {['Mike T.', 'James S.', 'Rachel K.'][index]}
                   </div>
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-flowtrade-slate">
                     {['Plumber, Melbourne', 'Electrician, Sydney', 'HVAC, Brisbane'][index]}
                   </div>
                 </div>
@@ -54,7 +54,7 @@ export default function Testimonials() {
 
         {/* Early Access Note */}
         <div className="text-center mt-12">
-          <p className="text-slate-500 text-sm">
+          <p className="text-flowtrade-slate text-sm">
             FlowTrade is in early access. Be one of the first Australian tradies to transform your business.
           </p>
         </div>

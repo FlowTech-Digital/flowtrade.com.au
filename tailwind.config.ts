@@ -50,17 +50,21 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // FlowTrade brand colors
+        // FlowTrade Brand Colors (Official Guidelines)
         flowtrade: {
-          cyan: '#00d4ff',
-          'cyan-dark': '#00b8e6',
-          'cyan-light': '#33ddff',
-          orange: '#f97316',
-          'orange-dark': '#ea580c',
-          'orange-light': '#fb923c',
-          navy: '#0a0e17',
-          'navy-light': '#111827',
-          'navy-lighter': '#1f2937',
+          // Primary cyan
+          cyan: '#00D4FF',
+          'cyan-dark': '#00B8E6',
+          'cyan-light': '#33DDFF',
+          // Dark backgrounds
+          dark: '#0A1628',
+          navy: '#0F2744',
+          // Neutral tones
+          slate: '#64748B',
+          light: '#E2E8F0',
+          // Accent
+          orange: '#F97316',
+          'orange-dark': '#EA580C',
         },
       },
       borderRadius: {
