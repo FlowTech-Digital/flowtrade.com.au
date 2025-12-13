@@ -50,7 +50,7 @@ export default function AboutPage() {
                 <div className="text-3xl mb-4">🛠️</div>
                 <h3 className="text-lg font-semibold text-flowtrade-light mb-2">Built for the Field</h3>
                 <p className="text-flowtrade-slate text-sm">
-                  Mobile-first design because we know you're on-site, not behind a desk.
+                  Mobile-first design because we know you&apos;re on-site, not behind a desk.
                 </p>
               </div>
               <div className="bg-flowtrade-navy/50 rounded-xl p-6 border border-flowtrade-navy">
@@ -105,7 +105,7 @@ export default function AboutPage() {
               Ready to simplify your trade business?
             </h2>
             <p className="text-flowtrade-slate mb-8">
-              Join thousands of Australian tradies who've already made the switch.
+              Join thousands of Australian tradies who&apos;ve already made the switch.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
