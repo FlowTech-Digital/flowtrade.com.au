@@ -73,18 +73,19 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       );
     }
 
-    // Fetch invoice
+    // Fetch invoice with correct customer column names
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
         *,
-        customers (id, name, email),
+        customers (id, first_name, last_name, company_name, email),
         organizations (id, name)
       `)
       .eq('id', tokenData.resource_id)
       .single();
 
     if (invoiceError || !invoice) {
+      console.error('Invoice lookup error:', invoiceError);
       return NextResponse.json(
         { error: 'Invoice not found' },
         { status: 404 }
@@ -109,6 +110,9 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
 
+    // Build customer email from customer data
+    const customerEmail = invoice.customers?.email;
+
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -126,7 +130,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       mode: 'payment',
       success_url: `${baseUrl}/portal/invoice/${token}?payment=success`,
       cancel_url: `${baseUrl}/portal/invoice/${token}?payment=cancelled`,
-      customer_email: invoice.customers?.email,
+      customer_email: customerEmail,
       metadata: {
         invoice_id: invoice.id,
         org_id: invoice.org_id,
