@@ -50,6 +50,30 @@ function getClientIp(request: NextRequest): string {
   return 'unknown';
 }
 
+// Helper to safely convert value to string
+function safeString(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return '';
+}
+
+// Helper to build address from parts
+function buildAddress(org: {
+  address_line1?: string | null;
+  address_line2?: string | null;
+  suburb?: string | null;
+  state?: string | null;
+  postcode?: string | null;
+}): string {
+  const parts = [
+    org.address_line1,
+    org.address_line2,
+    [org.suburb, org.state, org.postcode].filter(Boolean).join(' ')
+  ].filter(Boolean);
+  return parts.join(', ');
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -148,10 +172,10 @@ export async function GET(
       );
     }
 
-    // Fetch organization/business info
+    // Fetch organization/business info - use correct column names
     const { data: org, error: orgError } = await supabase
       .from('organizations')
-      .select('name, abn, email, phone, address, logo_url')
+      .select('name, abn, email, phone, address_line1, address_line2, suburb, state, postcode, logo_url')
       .eq('id', invoice.org_id)
       .single();
 
@@ -177,41 +201,56 @@ export async function GET(
       ? invoice.customers[0] 
       : invoice.customers;
 
+    // Safely build customer object with string values only
+    const safeCustomer = customerData ? {
+      id: safeString(customerData.id),
+      first_name: safeString(customerData.first_name),
+      last_name: safeString(customerData.last_name),
+      company_name: safeString(customerData.company_name),
+      email: safeString(customerData.email),
+      phone: safeString(customerData.phone),
+      street_address: safeString(customerData.street_address),
+      suburb: safeString(customerData.suburb),
+      state: safeString(customerData.state),
+      postcode: safeString(customerData.postcode),
+    } : undefined;
+
     const pdfInvoice: Invoice = {
-      id: invoice.id,
-      invoice_number: invoice.invoice_number,
-      status: invoice.status,
-      subtotal: Number(invoice.subtotal),
-      gst_amount: Number(invoice.gst_amount),
+      id: safeString(invoice.id),
+      invoice_number: safeString(invoice.invoice_number),
+      status: safeString(invoice.status),
+      subtotal: Number(invoice.subtotal) || 0,
+      gst_amount: Number(invoice.gst_amount) || 0,
       discount_amount: invoice.discount_amount ? Number(invoice.discount_amount) : null,
-      total: Number(invoice.total),
-      amount_paid: Number(invoice.amount_paid),
+      total: Number(invoice.total) || 0,
+      amount_paid: Number(invoice.amount_paid) || 0,
       amount_due: invoice.amount_due ? Number(invoice.amount_due) : null,
-      issue_date: invoice.issue_date,
-      due_date: invoice.due_date,
-      payment_terms: invoice.payment_terms,
-      notes: invoice.notes,
-      footer_text: invoice.footer_text,
-      customer: customerData as Invoice['customer'],
+      issue_date: safeString(invoice.issue_date),
+      due_date: safeString(invoice.due_date),
+      payment_terms: safeString(invoice.payment_terms),
+      notes: safeString(invoice.notes),
+      footer_text: safeString(invoice.footer_text),
+      customer: safeCustomer as Invoice['customer'],
     };
 
     const pdfLineItems: InvoiceLineItem[] = (lineItems || []).map((item) => ({
-      id: item.id,
-      item_order: item.item_order,
-      description: item.description,
-      quantity: Number(item.quantity),
-      unit: item.unit || 'each',
-      unit_price: Number(item.unit_price),
-      line_total: Number(item.line_total),
+      id: safeString(item.id),
+      item_order: Number(item.item_order) || 0,
+      description: safeString(item.description),
+      quantity: Number(item.quantity) || 0,
+      unit: safeString(item.unit) || 'each',
+      unit_price: Number(item.unit_price) || 0,
+      line_total: Number(item.line_total) || 0,
     }));
 
+    // Build business info with address from parts
     const businessInfo: BusinessInfo | undefined = org ? {
-      name: org.name,
-      abn: org.abn ? `ABN: ${org.abn}` : '',
-      email: org.email || '',
-      phone: org.phone || '',
-      address: org.address || '',
-      logo_url: org.logo_url,
+      name: safeString(org.name),
+      abn: org.abn ? `ABN: ${safeString(org.abn)}` : '',
+      email: safeString(org.email),
+      phone: safeString(org.phone),
+      address: buildAddress(org),
+      logo_url: org.logo_url ? safeString(org.logo_url) : undefined,
     } : undefined;
 
     // Generate PDF on-the-fly
