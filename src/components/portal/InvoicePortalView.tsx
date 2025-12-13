@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Download, FileText, Calendar, Clock, AlertCircle, CheckCircle, DollarSign } from 'lucide-react';
+import { Download, FileText, Calendar, Clock, AlertCircle, CheckCircle, DollarSign, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PaymentButton } from './PaymentButton';
+import { downloadInvoicePDF } from '@/lib/pdf/downloadInvoicePDF';
+import type { Invoice as PDFInvoice, InvoiceLineItem as PDFLineItem, BusinessInfo } from '@/lib/pdf/downloadInvoicePDF';
 
 interface Payment {
   id: string;
@@ -78,6 +80,8 @@ export function InvoicePortalView({
   paymentResult 
 }: InvoicePortalViewProps) {
   const [currentStatus] = useState(invoice.status);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const status = statusConfig[currentStatus] ?? defaultStatus;
   const isOverdue = new Date(invoice.due_date) < new Date() && currentStatus !== 'paid';
@@ -103,6 +107,74 @@ export function InvoicePortalView({
   const completedPayments = payments.filter(p => p.status === 'completed');
   const totalPaid = completedPayments.reduce((sum, p) => sum + p.amount, 0);
 
+  // Handle PDF download client-side
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    setDownloadError(null);
+    
+    try {
+      // Transform data for PDF component
+      const pdfInvoice: PDFInvoice = {
+        id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        status: invoice.status,
+        subtotal: invoice.subtotal,
+        gst_amount: invoice.gst,
+        discount_amount: null,
+        total: invoice.total,
+        amount_paid: totalPaid,
+        amount_due: invoice.total - totalPaid,
+        issue_date: invoice.issue_date,
+        due_date: invoice.due_date,
+        payment_terms: invoice.terms,
+        notes: invoice.notes,
+        footer_text: null,
+        customer: {
+          id: customer.id,
+          first_name: customer.name.split(' ')[0] || null,
+          last_name: customer.name.split(' ').slice(1).join(' ') || null,
+          company_name: null,
+          email: customer.email,
+          phone: null,
+          street_address: null,
+          suburb: null,
+          state: null,
+          postcode: null,
+        },
+      };
+
+      const pdfLineItems: PDFLineItem[] = invoice.items.map((item, index) => ({
+        id: item.id,
+        item_order: index + 1,
+        description: item.description,
+        quantity: item.quantity,
+        unit: 'each',
+        unit_price: item.unit_price,
+        line_total: item.total,
+      }));
+
+      const businessInfo: BusinessInfo = {
+        name: organization.name,
+        abn: organization.abn ? `ABN: ${organization.abn}` : '',
+        email: organization.email || '',
+        phone: organization.phone || '',
+        address: organization.address || '',
+        logo_url: organization.logo_url,
+      };
+
+      await downloadInvoicePDF({
+        invoice: pdfInvoice,
+        lineItems: pdfLineItems,
+        businessInfo,
+      });
+    } catch (error) {
+      console.error('PDF download error:', error);
+      setDownloadError('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Payment Result Banner */}
@@ -122,6 +194,14 @@ export function InvoicePortalView({
               ? 'Payment successful! Thank you for your payment.'
               : 'Payment was cancelled. You can try again when ready.'}
           </span>
+        </div>
+      )}
+
+      {/* Download Error Banner */}
+      {downloadError && (
+        <div className="p-4 rounded-lg flex items-center gap-3 bg-red-50 border border-red-200">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <span className="text-red-800">{downloadError}</span>
         </div>
       )}
 
@@ -287,10 +367,15 @@ export function InvoicePortalView({
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
             <Button
               variant="outline"
-              onClick={() => window.open(`/api/portal/invoices/${token}/pdf`, '_blank')}
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Download PDF
+              {isDownloading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              {isDownloading ? 'Generating PDF...' : 'Download PDF'}
             </Button>
             
             {canPay && (
