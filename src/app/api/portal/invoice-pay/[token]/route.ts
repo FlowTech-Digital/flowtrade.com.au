@@ -27,7 +27,11 @@ function getStripeClient() {
   // Log key prefix for debugging (safe - only first 7 chars)
   console.log('[DEBUG] Stripe key prefix:', key.substring(0, 7));
   
-  return new Stripe(key);
+  // CRITICAL: Use fetch-based HTTP client for CloudFlare Workers/Edge runtime
+  // The default Node.js http client doesn't work in Edge environments
+  return new Stripe(key, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 }
 
 // Rate limiting map (in production, use Redis)
@@ -97,7 +101,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
     let stripe: Stripe;
     try {
       stripe = getStripeClient();
-      console.log('[DEBUG] Stripe client initialized');
+      console.log('[DEBUG] Stripe client initialized with fetch httpClient');
     } catch (stripeInitError) {
       console.error('[DEBUG] Stripe init failed:', stripeInitError);
       return NextResponse.json(
