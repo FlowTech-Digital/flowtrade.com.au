@@ -1,8 +1,6 @@
 'use client'
 
-import { pdf } from '@react-pdf/renderer'
-import QuotePDF from './QuotePDF'
-import { createElement, type ReactElement } from 'react'
+import type { ReactElement } from 'react'
 
 // Types matching QuotePDF
 type Customer = {
@@ -57,6 +55,7 @@ type BusinessInfo = {
   email: string
   phone: string
   address: string
+  logo_url?: string | null
 }
 
 interface GeneratePDFOptions {
@@ -67,15 +66,21 @@ interface GeneratePDFOptions {
 
 /**
  * Generate and download a PDF for a quote
+ * Uses dynamic imports to avoid @react-pdf/renderer bundling issues in CloudFlare
  */
 export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<void> {
   const { quote, lineItems, businessInfo } = options
 
   try {
-    // Create the PDF document using createElement to avoid JSX in .ts file
-    // Type assertion needed because pdf() expects ReactElement<DocumentProps>
-    // but createElement returns FunctionComponentElement<QuotePDFProps>
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
+    // Dynamic imports to ensure browser-only loading
+    const [{ pdf }, { createElement }, { default: QuotePDF }] = await Promise.all([
+      import('@react-pdf/renderer'),
+      import('react'),
+      import('./QuotePDF'),
+    ])
+    
+    // Create the PDF document with type assertion for @react-pdf/renderer compatibility
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement<any>
     
     // Generate the PDF blob
     const blob = await pdf(doc).toBlob()
@@ -101,12 +106,20 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
 
 /**
  * Generate a PDF blob for a quote (useful for email attachments, etc.)
+ * Uses dynamic imports to avoid @react-pdf/renderer bundling issues in CloudFlare
  */
 export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise<Blob> {
   const { quote, lineItems, businessInfo } = options
 
   try {
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
+    // Dynamic imports
+    const [{ pdf }, { createElement }, { default: QuotePDF }] = await Promise.all([
+      import('@react-pdf/renderer'),
+      import('react'),
+      import('./QuotePDF'),
+    ])
+    
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement<any>
     const blob = await pdf(doc).toBlob()
     return blob
   } catch (error) {
@@ -117,12 +130,20 @@ export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise
 
 /**
  * Generate a PDF data URL for preview
+ * Uses dynamic imports to avoid @react-pdf/renderer bundling issues in CloudFlare
  */
 export async function generateQuotePDFDataURL(options: GeneratePDFOptions): Promise<string> {
   const { quote, lineItems, businessInfo } = options
 
   try {
-    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement
+    // Dynamic imports
+    const [{ pdf }, { createElement }, { default: QuotePDF }] = await Promise.all([
+      import('@react-pdf/renderer'),
+      import('react'),
+      import('./QuotePDF'),
+    ])
+    
+    const doc = createElement(QuotePDF, { quote, lineItems, businessInfo }) as ReactElement<any>
     const blob = await pdf(doc).toBlob()
     
     return new Promise((resolve, reject) => {
