@@ -4,14 +4,31 @@ import Stripe from 'stripe';
 
 // Create Supabase client with service role for anonymous portal access
 function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !key) {
+    console.error('[DEBUG] Supabase config missing:', { hasUrl: !!url, hasKey: !!key });
+    throw new Error('Supabase not configured');
+  }
+  
+  return createClient(url, key);
 }
 
-// Let Stripe SDK use its default API version (compatible with installed types)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+// Debug: Check Stripe key format
+function getStripeClient() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  
+  if (!key) {
+    console.error('[DEBUG] STRIPE_SECRET_KEY is empty/undefined');
+    throw new Error('Stripe not configured');
+  }
+  
+  // Log key prefix for debugging (safe - only first 7 chars)
+  console.log('[DEBUG] Stripe key prefix:', key.substring(0, 7));
+  
+  return new Stripe(key);
+}
 
 // Rate limiting map (in production, use Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -53,8 +70,11 @@ function getClientIp(request: NextRequest): string {
 type Params = { params: Promise<{ token: string }> }
 
 export async function POST(request: NextRequest, { params }: Params): Promise<NextResponse> {
+  console.log('[DEBUG] invoice-pay route called');
+  
   try {
     const { token } = await params;
+    console.log('[DEBUG] Token received:', token ? 'yes' : 'no');
     
     if (!token) {
       return NextResponse.json(
@@ -73,18 +93,33 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       );
     }
 
-    // Check if Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY not configured');
+    // Initialize clients with debug logging
+    let stripe: Stripe;
+    try {
+      stripe = getStripeClient();
+      console.log('[DEBUG] Stripe client initialized');
+    } catch (stripeInitError) {
+      console.error('[DEBUG] Stripe init failed:', stripeInitError);
       return NextResponse.json(
         { error: 'Payment processing is not configured' },
         { status: 503 }
       );
     }
 
-    const supabase = getSupabaseClient();
+    let supabase;
+    try {
+      supabase = getSupabaseClient();
+      console.log('[DEBUG] Supabase client initialized');
+    } catch (supabaseInitError) {
+      console.error('[DEBUG] Supabase init failed:', supabaseInitError);
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      );
+    }
 
     // Validate token
+    console.log('[DEBUG] Looking up token...');
     const { data: tokenData, error: tokenError } = await supabase
       .from('portal_tokens')
       .select('*')
@@ -93,15 +128,17 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       .single();
 
     if (tokenError || !tokenData) {
-      console.error('Token lookup error:', tokenError);
+      console.error('[DEBUG] Token lookup error:', tokenError);
       return NextResponse.json(
         { error: 'Invalid or expired token' },
         { status: 404 }
       );
     }
+    console.log('[DEBUG] Token found:', tokenData.id);
 
     // Check if expired or revoked
     if (tokenData.is_revoked || new Date(tokenData.expires_at) < new Date()) {
+      console.log('[DEBUG] Token expired or revoked');
       return NextResponse.json(
         { error: 'This link has expired or been revoked' },
         { status: 403 }
@@ -109,6 +146,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
     }
 
     // Fetch invoice with correct customer column names
+    console.log('[DEBUG] Fetching invoice:', tokenData.resource_id);
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
@@ -120,12 +158,13 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       .single();
 
     if (invoiceError || !invoice) {
-      console.error('Invoice lookup error:', invoiceError);
+      console.error('[DEBUG] Invoice lookup error:', invoiceError);
       return NextResponse.json(
         { error: 'Invoice not found' },
         { status: 404 }
       );
     }
+    console.log('[DEBUG] Invoice found:', invoice.invoice_number);
 
     // Check if invoice is already paid
     if (invoice.status === 'paid') {
@@ -144,9 +183,9 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://flowtrade.com.au';
-
-    // Build customer email from customer data
     const customerEmail = invoice.customers?.email;
+    
+    console.log('[DEBUG] Creating Stripe session for amount:', invoice.total);
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -174,6 +213,8 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       },
     });
 
+    console.log('[DEBUG] Stripe session created:', session.id);
+
     // Log the payment initiation in portal access logs (fire and forget)
     supabase.from('portal_access_logs').insert({
       token_id: tokenData.id,
@@ -181,7 +222,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       user_agent: request.headers.get('user-agent') || 'unknown',
       action: 'initiate_payment'
     }).then(({ error }) => {
-      if (error) console.error('Access log error (non-fatal):', error);
+      if (error) console.error('[DEBUG] Access log error (non-fatal):', error);
     });
 
     // Create pending payment record (fire and forget)
@@ -193,7 +234,7 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
       stripe_session_id: session.id,
       status: 'pending'
     }).then(({ error }) => {
-      if (error) console.error('Payment record error (non-fatal):', error);
+      if (error) console.error('[DEBUG] Payment record error (non-fatal):', error);
     });
 
     return NextResponse.json({
@@ -202,7 +243,12 @@ export async function POST(request: NextRequest, { params }: Params): Promise<Ne
     });
 
   } catch (error) {
-    console.error('Payment creation error:', error);
+    // Enhanced error logging
+    console.error('[DEBUG] Payment creation error:', error);
+    if (error instanceof Error) {
+      console.error('[DEBUG] Error message:', error.message);
+      console.error('[DEBUG] Error stack:', error.stack);
+    }
     return NextResponse.json(
       { error: 'Failed to create payment session' },
       { status: 500 }
