@@ -1,3 +1,6 @@
+// Force Node.js runtime - @react-pdf/renderer uses Node.js APIs incompatible with Edge
+export const runtime = 'nodejs';
+
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateInvoicePDFBytes } from '@/lib/pdf/generateInvoicePDF';
