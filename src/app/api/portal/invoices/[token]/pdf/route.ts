@@ -169,6 +169,11 @@ export async function GET(
     }
 
     // Prepare data for PDF generation
+    // Note: Supabase returns foreign key relations as arrays, extract first element
+    const customerData = Array.isArray(invoice.customers) 
+      ? invoice.customers[0] 
+      : invoice.customers;
+
     const pdfInvoice: Invoice = {
       id: invoice.id,
       invoice_number: invoice.invoice_number,
@@ -184,7 +189,7 @@ export async function GET(
       payment_terms: invoice.payment_terms,
       notes: invoice.notes,
       footer_text: invoice.footer_text,
-      customer: invoice.customers as Invoice['customer'],
+      customer: customerData as Invoice['customer'],
     };
 
     const pdfLineItems: InvoiceLineItem[] = (lineItems || []).map((item) => ({
