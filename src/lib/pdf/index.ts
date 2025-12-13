@@ -1,8 +1,8 @@
-// Quote PDF exports
-export { default as QuotePDF } from './QuotePDF'
+// Quote PDF exports (jsPDF-based)
 export { downloadQuotePDF, generateQuotePDFBlob, generateQuotePDFDataURL } from './generateQuotePDF'
 
-// Invoice PDF exports
-export { default as InvoicePDF } from './InvoicePDF'
-export type { Invoice, InvoiceLineItem, InvoiceCustomer, BusinessInfo, InvoicePDFProps } from './InvoicePDF'
-export { generateInvoicePDFBuffer, generateInvoicePDFBytes } from './generateInvoicePDF'
+// Invoice PDF exports (jsPDF-based)
+export { downloadInvoicePDF } from './downloadInvoicePDF'
+
+// Note: InvoicePDF.tsx and QuotePDF.tsx are deprecated React PDF components
+// that don't work with CloudFlare. Use the jsPDF-based functions above instead.
