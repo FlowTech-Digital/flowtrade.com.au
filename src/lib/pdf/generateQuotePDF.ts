@@ -395,7 +395,8 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
  * Generate a PDF blob for a quote (useful for email attachments, etc.)
  */
 export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise<Blob> {
-  const { quote, lineItems, businessInfo } = options
+  // Note: lineItems available via options if needed for full implementation
+  const { quote, lineItems: _lineItems, businessInfo } = options
 
   try {
     const { default: jsPDF } = await import('jspdf')
@@ -422,8 +423,6 @@ export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise
  * Generate a PDF data URL for preview
  */
 export async function generateQuotePDFDataURL(options: GeneratePDFOptions): Promise<string> {
-  const { quote, lineItems, businessInfo } = options
-
   try {
     const blob = await generateQuotePDFBlob(options)
     
