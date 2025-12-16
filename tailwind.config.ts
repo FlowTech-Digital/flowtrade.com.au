@@ -56,9 +56,14 @@ const config: Config = {
           cyan: '#00D4FF',
           'cyan-dark': '#00B8E6',
           'cyan-light': '#33DDFF',
-          // Dark backgrounds
+          // Dark backgrounds (gradient for visual hierarchy)
           dark: '#0A1628',
           navy: '#0F2744',
+          'navy-dark': '#0a1628',      // Darkest - main background
+          'navy-light': '#162544',      // Card backgrounds - visible against navy
+          'navy-lighter': '#1e3a5f',    // Borders, dividers - clear separation
+          'navy-border': '#2a4a73',     // High contrast borders
+          'navy-hover': '#1a3050',      // Hover states
           // Neutral tones
           slate: '#64748B',
           light: '#E2E8F0',
@@ -74,6 +79,13 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        // Custom shadows for card depth
+        'card': '0 2px 8px rgba(0, 0, 0, 0.3)',
+        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.4)',
+        'section': '0 1px 3px rgba(0, 0, 0, 0.2)',
+        'glow-cyan': '0 0 20px rgba(0, 212, 255, 0.2)',
       },
       keyframes: {
         'accordion-down': {
