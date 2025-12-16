@@ -303,7 +303,7 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
     
     doc.setFontSize(10)
     doc.setTextColor(...textColor)
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.text('Subtotal:', totalsX, yPos)
     doc.text(formatCurrency(quote.subtotal), pageWidth - 20, yPos, { align: 'right' })
     yPos += 7
@@ -317,7 +317,7 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
     doc.rect(totalsX - 5, yPos - 5, pageWidth - totalsX + 5 - 15, 12, 'F')
     
     doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.text('Total:', totalsX, yPos + 3)
     doc.text(formatCurrency(quote.total), pageWidth - 20, yPos + 3, { align: 'right' })
     
@@ -329,12 +329,12 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
       doc.rect(20, yPos - 5, pageWidth - 40, 20, 'F')
       
       doc.setFontSize(11)
-      doc.setFont(undefined, 'bold')
+      doc.setFont('helvetica', 'bold')
       doc.setTextColor(...greenColor)
       doc.text('Deposit Required', 25, yPos + 3)
       
       doc.setFontSize(10)
-      doc.setFont(undefined, 'normal')
+      doc.setFont('helvetica', 'normal')
       const depositText = quote.deposit_percentage 
         ? `${quote.deposit_percentage}% deposit (${formatCurrency(quote.deposit_amount || 0)}) required to commence work`
         : `${formatCurrency(quote.deposit_amount || 0)} deposit required to commence work`
@@ -347,7 +347,7 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
     if (quote.customer_notes) {
       doc.setFontSize(10)
       doc.setTextColor(...lightGray)
-      doc.setFont(undefined, 'normal')
+      doc.setFont('helvetica', 'normal')
       doc.text('Notes:', 20, yPos)
       yPos += 5
       doc.setTextColor(...textColor)
