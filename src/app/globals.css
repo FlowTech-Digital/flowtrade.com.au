@@ -71,6 +71,7 @@
 
 /* FlowTrade specific utilities */
 @layer utilities {
+  /* Gradient backgrounds */
   .gradient-cyan {
     background: linear-gradient(135deg, #00d4ff 0%, #00b8e6 100%);
   }
@@ -79,11 +80,118 @@
     background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   }
   
+  /* Glow effects */
   .glow-cyan {
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
   }
   
   .glow-orange {
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  }
+
+  /* Section separation utilities */
+  .section-divider {
+    @apply border-t border-flowtrade-navy-lighter/50 my-6;
+  }
+  
+  .section-divider-strong {
+    @apply border-t-2 border-flowtrade-navy-border my-8;
+  }
+  
+  /* Card enhancements for better separation */
+  .card-elevated {
+    @apply bg-flowtrade-navy-light border border-flowtrade-navy-lighter shadow-card;
+  }
+  
+  .card-elevated-hover {
+    @apply bg-flowtrade-navy-light border border-flowtrade-navy-lighter shadow-card 
+           hover:shadow-card-hover hover:border-flowtrade-navy-border transition-all duration-200;
+  }
+  
+  /* Table row separation */
+  .table-row-separated {
+    @apply border-b border-flowtrade-navy-lighter;
+  }
+  
+  .table-row-hover {
+    @apply hover:bg-flowtrade-navy-lighter/30 transition-colors;
+  }
+  
+  /* Alternating row backgrounds for better readability */
+  .table-row-alt:nth-child(even) {
+    @apply bg-flowtrade-navy-dark/30;
+  }
+  
+  /* Form section separation */
+  .form-section {
+    @apply p-4 bg-flowtrade-navy-dark/50 rounded-lg border border-flowtrade-navy-lighter/30;
+  }
+  
+  .form-section-header {
+    @apply text-sm font-medium text-gray-400 uppercase tracking-wider mb-3 pb-2 
+           border-b border-flowtrade-navy-lighter/50;
+  }
+  
+  /* List item separation */
+  .list-item-separated {
+    @apply border-b border-flowtrade-navy-lighter/50 last:border-b-0;
+  }
+  
+  /* Navigation category headers */
+  .nav-category {
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 
+           mt-4 first:mt-0;
+  }
+  
+  /* Stats card grid gap enhancement */
+  .stats-grid {
+    @apply grid gap-4 md:gap-6;
+  }
+  
+  /* Action button group separation */
+  .action-group {
+    @apply flex items-center gap-2 p-1 bg-flowtrade-navy-dark/30 rounded-lg;
+  }
+  
+  /* Content section with visible boundary */
+  .content-section {
+    @apply p-6 bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter;
+  }
+  
+  .content-section-header {
+    @apply pb-4 mb-4 border-b border-flowtrade-navy-lighter;
+  }
+  
+  /* Empty state styling */
+  .empty-state {
+    @apply text-center py-12 px-6 bg-flowtrade-navy-light rounded-xl 
+           border border-flowtrade-navy-lighter border-dashed;
+  }
+}
+
+/* Custom scrollbar for dark theme */
+@layer utilities {
+  .scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: #1e3a5f #0F2744;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-track {
+    background: #0F2744;
+    border-radius: 4px;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-thumb {
+    background: #1e3a5f;
+    border-radius: 4px;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background: #2a4a73;
   }
 }
