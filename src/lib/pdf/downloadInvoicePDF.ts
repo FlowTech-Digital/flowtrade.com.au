@@ -63,6 +63,36 @@ export interface InvoicePDFProps {
 }
 
 /**
+ * Load an image URL as base64 data URL for jsPDF
+ * Handles CORS by fetching through browser and converting via FileReader
+ */
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return null
+    const blob = await response.blob()
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch (error) {
+    console.error('Failed to load logo:', error)
+    return null
+  }
+}
+
+/**
+ * Determine image type from base64 data URL
+ */
+function getImageTypeFromBase64(base64: string): 'PNG' | 'JPEG' | 'WEBP' {
+  if (base64.includes('image/png')) return 'PNG'
+  if (base64.includes('image/webp')) return 'WEBP'
+  return 'JPEG'
+}
+
+/**
  * Download Invoice PDF using jsPDF (CloudFlare-compatible)
  */
 export async function downloadInvoicePDF(props: InvoicePDFProps): Promise<void> {
@@ -84,10 +114,28 @@ export async function downloadInvoicePDF(props: InvoicePDFProps): Promise<void> 
     
     let yPos = 20
     
-    // Header - Business Info (left) and Invoice Title (right)
+    // Header - Logo (if available) + Business Info (left) and Invoice Title (right)
+    let businessNameX = 20 // Default position without logo
+    
+    // Try to load and render business logo
+    if (businessInfo?.logo_url) {
+      const logoBase64 = await loadImageAsBase64(businessInfo.logo_url)
+      if (logoBase64) {
+        try {
+          const imageType = getImageTypeFromBase64(logoBase64)
+          // Logo: 30x30px at position (20, 12) - slightly above text baseline
+          doc.addImage(logoBase64, imageType, 20, 12, 30, 30)
+          businessNameX = 55 // Shift business name to right of logo
+        } catch (imgError) {
+          console.error('Failed to add logo to PDF:', imgError)
+          // Continue without logo
+        }
+      }
+    }
+    
     doc.setFontSize(24)
     doc.setTextColor(...primaryColor)
-    doc.text(businessInfo?.name || 'Your Business', 20, yPos)
+    doc.text(businessInfo?.name || 'Your Business', businessNameX, yPos)
     
     doc.setFontSize(28)
     doc.setTextColor(...textColor)
@@ -95,23 +143,23 @@ export async function downloadInvoicePDF(props: InvoicePDFProps): Promise<void> 
     
     yPos += 10
     
-    // Business details
+    // Business details (positioned relative to logo)
     doc.setFontSize(10)
     doc.setTextColor(...lightGray)
     if (businessInfo?.abn) {
-      doc.text(businessInfo.abn, 20, yPos)
+      doc.text(businessInfo.abn, businessNameX, yPos)
       yPos += 5
     }
     if (businessInfo?.email) {
-      doc.text(businessInfo.email, 20, yPos)
+      doc.text(businessInfo.email, businessNameX, yPos)
       yPos += 5
     }
     if (businessInfo?.phone) {
-      doc.text(businessInfo.phone, 20, yPos)
+      doc.text(businessInfo.phone, businessNameX, yPos)
       yPos += 5
     }
     if (businessInfo?.address) {
-      doc.text(businessInfo.address, 20, yPos)
+      doc.text(businessInfo.address, businessNameX, yPos)
       yPos += 5
     }
     
