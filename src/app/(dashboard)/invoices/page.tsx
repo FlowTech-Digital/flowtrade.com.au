@@ -166,7 +166,7 @@ export default function InvoicesPage() {
     const Icon = config.icon
     
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.color}`}>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.color} border border-current/20`}>
         <Icon className="h-3 w-3" />
         {config.label}
       </span>
@@ -193,7 +193,7 @@ export default function InvoicesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 pb-4 border-b border-flowtrade-navy-lighter">
         <div>
           <h1 className="text-2xl font-bold text-white">Invoices</h1>
           <p className="text-gray-400 mt-1">Manage invoices and track payments</p>
@@ -209,7 +209,7 @@ export default function InvoicesPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4">
+        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-900/30 rounded-lg">
               <Clock className="h-5 w-5 text-blue-400" />
@@ -220,7 +220,7 @@ export default function InvoicesPage() {
             </div>
           </div>
         </div>
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4">
+        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-900/30 rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-400" />
@@ -231,7 +231,7 @@ export default function InvoicesPage() {
             </div>
           </div>
         </div>
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4">
+        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-900/30 rounded-lg">
               <FileText className="h-5 w-5 text-purple-400" />
@@ -245,38 +245,40 @@ export default function InvoicesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-          />
-        </div>
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent cursor-pointer"
-          >
-            <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+      <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
+            />
+          </div>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="pl-10 pr-8 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Invoices List */}
       {filteredInvoices.length === 0 ? (
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-12 text-center">
-          <div className="w-16 h-16 bg-flowtrade-navy-lighter rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="border-2 border-dashed border-flowtrade-navy-lighter rounded-xl p-12 text-center">
+          <div className="w-16 h-16 bg-flowtrade-navy-light rounded-full flex items-center justify-center mx-auto mb-4">
             <FileText className="h-8 w-8 text-gray-500" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
@@ -288,7 +290,7 @@ export default function InvoicesPage() {
               : 'Try adjusting your search or filter to find what you\'re looking for.'
             }
           </p>
-          {invoices.length === 0 && (
+          {invoices.length === 0 ? (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => router.push('/invoices/new')}
@@ -299,35 +301,42 @@ export default function InvoicesPage() {
               </button>
               <button
                 onClick={() => router.push('/jobs?status=completed')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white font-medium rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white font-medium rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors border border-flowtrade-navy-border"
               >
                 <FileText className="h-5 w-5" />
                 View Completed Jobs
               </button>
             </div>
+          ) : (
+            <button
+              onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white font-medium rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors border border-flowtrade-navy-border"
+            >
+              Clear Filters
+            </button>
           )}
         </div>
       ) : (
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter overflow-hidden">
+        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter overflow-hidden shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-flowtrade-navy-lighter">
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Invoice #</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Customer</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Total</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Issue Date</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Due Date</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Job #</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Actions</th>
+                <tr className="bg-flowtrade-navy-dark/50 border-b-2 border-flowtrade-navy-lighter">
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Invoice #</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Issue Date</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Due Date</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Job #</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredInvoices.map((invoice) => (
+              <tbody className="divide-y divide-flowtrade-navy-lighter">
+                {filteredInvoices.map((invoice, index) => (
                   <tr 
                     key={invoice.id} 
-                    className="border-b border-flowtrade-navy-lighter hover:bg-flowtrade-navy-lighter/50 transition-colors cursor-pointer"
+                    className={`hover:bg-flowtrade-navy-hover transition-colors cursor-pointer ${index % 2 === 0 ? 'bg-flowtrade-navy-light' : 'bg-flowtrade-navy-dark/30'}`}
                     onClick={() => router.push(`/invoices/${invoice.id}`)}
                   >
                     <td className="px-6 py-4">
@@ -364,7 +373,7 @@ export default function InvoicesPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1 bg-flowtrade-navy/50 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => router.push(`/invoices/${invoice.id}`)}
                           className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
@@ -379,12 +388,20 @@ export default function InvoicesPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
-
-      {invoices.length > 0 && (
-        <div className="mt-4 text-sm text-gray-500">
-          Showing {filteredInvoices.length} of {invoices.length} invoices
+          {/* Footer with count and clear filter */}
+          <div className="px-6 py-4 border-t border-flowtrade-navy-lighter flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              Showing {filteredInvoices.length} of {invoices.length} invoices
+            </span>
+            {(searchTerm || statusFilter !== 'all') && (
+              <button
+                onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}
+                className="text-sm text-flowtrade-cyan hover:text-flowtrade-cyan/80 transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
