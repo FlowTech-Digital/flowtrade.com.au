@@ -247,7 +247,7 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
         margin: { left: 20, right: 20 }
       })
       
-      yPos = (doc as any).lastAutoTable.finalY + 10
+      yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
     
     // Optional items
@@ -293,7 +293,7 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
         margin: { left: 20, right: 20 }
       })
       
-      yPos = (doc as any).lastAutoTable.finalY + 10
+      yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     }
     
     yPos += 5
@@ -393,10 +393,10 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
 
 /**
  * Generate a PDF blob for a quote (useful for email attachments, etc.)
+ * Note: This is a simplified version - lineItems available in options.lineItems if full implementation needed
  */
 export async function generateQuotePDFBlob(options: GeneratePDFOptions): Promise<Blob> {
-  // Note: lineItems available via options if needed for full implementation
-  const { quote, lineItems: _lineItems, businessInfo } = options
+  const { quote, businessInfo } = options
 
   try {
     const { default: jsPDF } = await import('jspdf')
