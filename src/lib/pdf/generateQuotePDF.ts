@@ -165,11 +165,11 @@ export async function downloadQuotePDF(options: GeneratePDFOptions): Promise<voi
       yPos += 5
     }
     
-    // Customer address
+    // Customer address - filter to non-null strings only
     const addressParts = [
       quote.customer.street_address,
       [quote.customer.suburb, quote.customer.state, quote.customer.postcode].filter(Boolean).join(' ')
-    ].filter(Boolean)
+    ].filter((part): part is string => typeof part === 'string' && part.length > 0)
     
     addressParts.forEach(line => {
       doc.text(line, 20, yPos)
