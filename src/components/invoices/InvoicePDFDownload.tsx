@@ -134,35 +134,34 @@ export function InvoicePDFDownload({
       // Dynamically import the jsPDF-based download function
       const { downloadInvoicePDF } = await import('@/lib/pdf')
       
-      // Transform data to match the Invoice type expected by downloadInvoicePDF
-      const invoiceForPDF = {
-        invoice_number: invoice.invoice_number,
-        invoice_date: invoice.invoice_date,
-        due_date: invoice.due_date || invoice.invoice_date,
-        status: invoice.status || 'draft',
-        subtotal: invoice.subtotal,
-        tax_rate: invoice.tax_rate,
-        gst_amount: invoice.tax_amount,
-        total: invoice.total,
-        amount_paid: invoice.amount_paid || 0,
-        notes: invoice.notes,
-        payment_terms: invoice.payment_terms || null,
-        customer: {
-          first_name: invoice.customer?.first_name || null,
-          last_name: invoice.customer?.last_name || null,
-          company_name: invoice.customer?.company_name || null,
-          email: invoice.customer?.email || null,
-          phone: invoice.customer?.phone || null,
-          street_address: invoice.customer?.address_line1 || null,
-          suburb: invoice.customer?.suburb || null,
-          state: invoice.customer?.state || null,
-          postcode: invoice.customer?.postcode || null,
+      // Transform data to match InvoicePDFProps interface
+      await downloadInvoicePDF({
+        invoice: {
+          invoice_number: invoice.invoice_number,
+          status: invoice.status || 'draft',
+          subtotal: invoice.subtotal,
+          gst_amount: invoice.tax_amount,
+          total: invoice.total,
+          amount_paid: invoice.amount_paid || 0,
+          issue_date: invoice.invoice_date,
+          due_date: invoice.due_date || invoice.invoice_date,
+          payment_terms: invoice.payment_terms || null,
+          notes: invoice.notes,
+          customer: {
+            first_name: invoice.customer?.first_name || null,
+            last_name: invoice.customer?.last_name || null,
+            company_name: invoice.customer?.company_name || null,
+            email: invoice.customer?.email || null,
+            phone: invoice.customer?.phone || null,
+            street_address: invoice.customer?.address_line1 || null,
+            suburb: invoice.customer?.suburb || null,
+            state: invoice.customer?.state || null,
+            postcode: invoice.customer?.postcode || null,
+          },
         },
-        line_items: invoice.line_items || [],
-        business_info: business,
-      }
-      
-      await downloadInvoicePDF(invoiceForPDF)
+        lineItems: invoice.line_items || [],
+        businessInfo: business,
+      })
     } catch (error) {
       console.error('Error generating PDF:', error)
     } finally {
