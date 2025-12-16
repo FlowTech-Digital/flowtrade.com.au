@@ -1,16 +1,78 @@
 'use client'
 
-import type { Invoice, InvoiceLineItem, InvoiceCustomer, BusinessInfo } from './InvoicePDF'
+/**
+ * Invoice PDF generation using jsPDF (CloudFlare-compatible)
+ * Replaces @react-pdf/renderer which has bundler incompatibilities
+ */
+
+// Types for invoice PDF generation
+export type InvoiceCustomer = {
+  id?: string
+  first_name: string | null
+  last_name: string | null
+  company_name: string | null
+  email: string | null
+  phone: string | null
+  street_address: string | null
+  suburb: string | null
+  state: string | null
+  postcode: string | null
+}
+
+export type InvoiceLineItem = {
+  id: string
+  item_order?: number
+  description: string
+  quantity: number
+  unit: string
+  unit_price: number
+  line_total: number
+}
+
+export type Invoice = {
+  id?: string
+  invoice_number: string
+  status: string
+  subtotal: number
+  gst_amount: number
+  discount_amount?: number | null
+  total: number
+  amount_paid: number
+  amount_due?: number | null
+  issue_date: string
+  due_date: string
+  payment_terms: string | null
+  notes: string | null
+  footer_text?: string | null
+  customer: InvoiceCustomer
+}
+
+export type BusinessInfo = {
+  name: string
+  abn: string
+  email: string
+  phone: string
+  address: string
+  logo_url?: string | null
+}
+
+export interface InvoicePDFProps {
+  invoice: Invoice
+  lineItems: InvoiceLineItem[]
+  businessInfo?: BusinessInfo
+}
 
 /**
  * Download Invoice PDF using jsPDF (CloudFlare-compatible)
- * Replaces @react-pdf/renderer which has bundler incompatibilities
  */
-export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
+export async function downloadInvoicePDF(props: InvoicePDFProps): Promise<void> {
+  const { invoice, lineItems, businessInfo } = props
+  
   try {
     // Dynamic import jsPDF to ensure browser-only loading
     const { default: jsPDF } = await import('jspdf')
-    const { default: autoTable } = await import('jspdf-autotable')
+    const autoTableModule = await import('jspdf-autotable')
+    const autoTable = autoTableModule.default
     
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -25,7 +87,7 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     // Header - Business Info (left) and Invoice Title (right)
     doc.setFontSize(24)
     doc.setTextColor(...primaryColor)
-    doc.text(invoice.business_info?.name || 'Your Business', 20, yPos)
+    doc.text(businessInfo?.name || 'Your Business', 20, yPos)
     
     doc.setFontSize(28)
     doc.setTextColor(...textColor)
@@ -36,20 +98,20 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     // Business details
     doc.setFontSize(10)
     doc.setTextColor(...lightGray)
-    if (invoice.business_info?.abn) {
-      doc.text(`ABN: ${invoice.business_info.abn}`, 20, yPos)
+    if (businessInfo?.abn) {
+      doc.text(businessInfo.abn, 20, yPos)
       yPos += 5
     }
-    if (invoice.business_info?.email) {
-      doc.text(invoice.business_info.email, 20, yPos)
+    if (businessInfo?.email) {
+      doc.text(businessInfo.email, 20, yPos)
       yPos += 5
     }
-    if (invoice.business_info?.phone) {
-      doc.text(invoice.business_info.phone, 20, yPos)
+    if (businessInfo?.phone) {
+      doc.text(businessInfo.phone, 20, yPos)
       yPos += 5
     }
-    if (invoice.business_info?.address) {
-      doc.text(invoice.business_info.address, 20, yPos)
+    if (businessInfo?.address) {
+      doc.text(businessInfo.address, 20, yPos)
       yPos += 5
     }
     
@@ -60,7 +122,7 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     doc.setFontSize(10)
     doc.setTextColor(...textColor)
     doc.text(`Invoice #: ${invoice.invoice_number}`, pageWidth - 20, invoiceDetailsY, { align: 'right' })
-    doc.text(`Date: ${formatDate(invoice.invoice_date)}`, pageWidth - 20, invoiceDetailsY + 6, { align: 'right' })
+    doc.text(`Date: ${formatDate(invoice.issue_date)}`, pageWidth - 20, invoiceDetailsY + 6, { align: 'right' })
     doc.text(`Due: ${formatDate(invoice.due_date)}`, pageWidth - 20, invoiceDetailsY + 12, { align: 'right' })
     
     // Status badge
@@ -83,40 +145,43 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     
     doc.setFontSize(11)
     doc.setTextColor(...textColor)
-    const customerName = invoice.customer.company_name || 
-      `${invoice.customer.first_name || ''} ${invoice.customer.last_name || ''}`.trim()
+    const customerName = invoice.customer?.company_name || 
+      `${invoice.customer?.first_name || ''} ${invoice.customer?.last_name || ''}`.trim() ||
+      'Customer'
     doc.text(customerName, 20, yPos)
     yPos += 5
     
     doc.setFontSize(10)
     doc.setTextColor(...lightGray)
-    if (invoice.customer.email) {
+    if (invoice.customer?.email) {
       doc.text(invoice.customer.email, 20, yPos)
       yPos += 5
     }
-    if (invoice.customer.phone) {
+    if (invoice.customer?.phone) {
       doc.text(invoice.customer.phone, 20, yPos)
       yPos += 5
     }
     
     // Customer address
     const addressParts = [
-      invoice.customer.street_address,
-      [invoice.customer.suburb, invoice.customer.state, invoice.customer.postcode].filter(Boolean).join(' ')
+      invoice.customer?.street_address,
+      [invoice.customer?.suburb, invoice.customer?.state, invoice.customer?.postcode].filter(Boolean).join(' ')
     ].filter(Boolean)
     
     addressParts.forEach(line => {
-      doc.text(line, 20, yPos)
-      yPos += 5
+      if (line) {
+        doc.text(line, 20, yPos)
+        yPos += 5
+      }
     })
     
     yPos += 10
     
     // Line items table
-    const tableData = invoice.line_items.map(item => [
+    const tableData = lineItems.map(item => [
       item.description,
       item.quantity.toString(),
-      item.unit,
+      item.unit || 'each',
       formatCurrency(item.unit_price),
       formatCurrency(item.line_total)
     ])
@@ -147,7 +212,8 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     })
     
     // Get the final Y position after the table
-    const finalY = (doc as any).lastAutoTable.finalY || yPos + 50
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50
     yPos = finalY + 15
     
     // Totals section (right aligned)
@@ -155,20 +221,30 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     
     doc.setFontSize(10)
     doc.setTextColor(...textColor)
+    doc.setFont('helvetica', 'normal')
     doc.text('Subtotal:', totalsX, yPos)
     doc.text(formatCurrency(invoice.subtotal), pageWidth - 20, yPos, { align: 'right' })
     yPos += 7
     
-    doc.text(`GST (${invoice.tax_rate}%):`, totalsX, yPos)
+    // Calculate GST rate from amounts (default 10%)
+    const gstRate = invoice.subtotal > 0 ? Math.round((invoice.gst_amount / invoice.subtotal) * 100) : 10
+    doc.text(`GST (${gstRate}%):`, totalsX, yPos)
     doc.text(formatCurrency(invoice.gst_amount), pageWidth - 20, yPos, { align: 'right' })
     yPos += 7
+    
+    // Discount if present
+    if (invoice.discount_amount && invoice.discount_amount > 0) {
+      doc.text('Discount:', totalsX, yPos)
+      doc.text(`-${formatCurrency(invoice.discount_amount)}`, pageWidth - 20, yPos, { align: 'right' })
+      yPos += 7
+    }
     
     // Total with background
     doc.setFillColor(243, 244, 246) // Light gray background
     doc.rect(totalsX - 5, yPos - 5, pageWidth - totalsX + 5 - 15, 12, 'F')
     
     doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.text('Total:', totalsX, yPos + 3)
     doc.text(formatCurrency(invoice.total), pageWidth - 20, yPos + 3, { align: 'right' })
     
@@ -176,14 +252,14 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     
     // Amount paid and balance due
     if (invoice.amount_paid > 0) {
-      doc.setFont(undefined, 'normal')
+      doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
       doc.text('Amount Paid:', totalsX, yPos)
       doc.text(formatCurrency(invoice.amount_paid), pageWidth - 20, yPos, { align: 'right' })
       yPos += 7
       
-      const balanceDue = invoice.total - invoice.amount_paid
-      doc.setFont(undefined, 'bold')
+      const balanceDue = invoice.amount_due ?? (invoice.total - invoice.amount_paid)
+      doc.setFont('helvetica', 'bold')
       doc.setTextColor(...primaryColor)
       doc.text('Balance Due:', totalsX, yPos)
       doc.text(formatCurrency(balanceDue), pageWidth - 20, yPos, { align: 'right' })
@@ -192,7 +268,7 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     
     // Notes section
     if (invoice.notes) {
-      doc.setFont(undefined, 'normal')
+      doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
       doc.setTextColor(...lightGray)
       doc.text('Notes:', 20, yPos)
@@ -220,25 +296,29 @@ export async function downloadInvoicePDF(invoice: Invoice): Promise<void> {
     const footerY = doc.internal.pageSize.getHeight() - 15
     doc.setFontSize(8)
     doc.setTextColor(...lightGray)
-    doc.text('Thank you for your business!', pageWidth / 2, footerY, { align: 'center' })
+    doc.text(invoice.footer_text || 'Thank you for your business!', pageWidth / 2, footerY, { align: 'center' })
     
     // Download the PDF
     doc.save(`${invoice.invoice_number}.pdf`)
     
   } catch (error) {
-    console.error('Error generating PDF:', error)
-    throw new Error('Failed to generate PDF. Please try again.')
+    console.error('Error generating invoice PDF:', error)
+    throw new Error('Failed to generate invoice PDF. Please try again.')
   }
 }
 
 // Helper functions
 function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  })
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-AU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+  } catch {
+    return dateString
+  }
 }
 
 function formatCurrency(amount: number): string {
@@ -253,6 +333,7 @@ function getStatusColor(status: string): [number, number, number] {
     case 'paid':
       return [34, 197, 94] // Green
     case 'sent':
+    case 'viewed':
       return [59, 130, 246] // Blue
     case 'overdue':
       return [239, 68, 68] // Red
