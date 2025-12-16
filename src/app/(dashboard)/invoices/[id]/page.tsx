@@ -309,6 +309,7 @@ export default function InvoiceDetailPage() {
     invoice_number: invoice.invoice_number,
     invoice_date: invoice.issue_date,
     due_date: invoice.due_date,
+    status: invoice.status,
     subtotal: invoice.subtotal,
     tax_rate: invoice.tax_rate,
     tax_amount: invoice.gst_amount,
