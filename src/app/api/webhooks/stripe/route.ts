@@ -281,30 +281,51 @@ export async function POST(request: NextRequest) {
           connectionStatus = 'error';
         }
 
-        // Update organization_integrations for this Stripe account
-        const { error: updateError } = await supabase
+        // Find the integration record for this Stripe account
+        const { data: existingIntegration } = await supabase
           .from('organization_integrations')
-          .update({
-            status: connectionStatus,
-            config: supabase.rpc ? undefined : {
-              stripe_account_id: account.id,
-              charges_enabled: account.charges_enabled,
-              payouts_enabled: account.payouts_enabled,
-              details_submitted: account.details_submitted,
-              requirements: account.requirements?.currently_due || [],
-              disabled_reason: account.requirements?.disabled_reason
-            },
-            updated_at: new Date().toISOString()
-          })
+          .select('id, config')
           .eq('integration_type', 'stripe')
-          .eq('config->>stripe_account_id', account.id);
+          .filter('config->>stripe_account_id', 'eq', account.id)
+          .single();
 
-        if (updateError) {
-          await logWebhookEvent(supabase, eventType, eventId, 'failed', {
-            error: 'Failed to update Stripe integration status',
+        if (existingIntegration) {
+          // Merge existing config with updated Stripe account data
+          const existingConfig = (existingIntegration.config || {}) as Record<string, unknown>;
+          const updatedConfig = {
+            ...existingConfig,
+            stripe_account_id: account.id,
+            charges_enabled: account.charges_enabled,
+            payouts_enabled: account.payouts_enabled,
+            details_submitted: account.details_submitted,
+            requirements: account.requirements?.currently_due || [],
+            disabled_reason: account.requirements?.disabled_reason || null
+          };
+
+          // Update the integration record
+          const { error: updateError } = await supabase
+            .from('organization_integrations')
+            .update({
+              status: connectionStatus,
+              config: updatedConfig,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingIntegration.id);
+
+          if (updateError) {
+            await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+              error: 'Failed to update Stripe integration status',
+              account_id: account.id,
+              details: updateError
+            });
+          }
+        } else {
+          // No existing integration found - log but don't fail
+          await logWebhookEvent(supabase, eventType, eventId, 'processed', {
             account_id: account.id,
-            details: updateError
+            note: 'No matching integration found for this Stripe account'
           });
+          break;
         }
 
         await logWebhookEvent(supabase, eventType, eventId, 'processed', {
