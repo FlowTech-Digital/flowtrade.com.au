@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 const features = [
   {
     title: 'Professional Quoting',
@@ -10,6 +12,7 @@ const features = [
       'Send via SMS or email',
     ],
     imageAlt: 'Quote creation interface',
+    imageSrc: '/images/features/feature-quotes.png',
   },
   {
     title: 'Job Management',
@@ -22,6 +25,7 @@ const features = [
       'Assign to team members',
     ],
     imageAlt: 'Job management dashboard',
+    imageSrc: '/images/features/feature-jobs.png',
   },
   {
     title: 'Smart Invoicing',
@@ -34,6 +38,7 @@ const features = [
       'Automatic reminders',
     ],
     imageAlt: 'Invoicing interface',
+    imageSrc: '/images/features/feature-invoices.png',
   },
 ]
 
@@ -83,10 +88,16 @@ export default function Features() {
                 </ul>
               </div>
 
-              {/* Visual */}
+              {/* Visual - Now with actual screenshots */}
               <div className="lg:w-1/2">
-                <div className="bg-flowtrade-dark border border-flowtrade-navy rounded-2xl p-8 aspect-[4/3] flex items-center justify-center">
-                  <div className="text-flowtrade-slate/50 text-lg">{feature.imageAlt}</div>
+                <div className="bg-flowtrade-dark border border-flowtrade-navy rounded-2xl overflow-hidden shadow-2xl">
+                  <Image
+                    src={feature.imageSrc}
+                    alt={feature.imageAlt}
+                    width={800}
+                    height={600}
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </div>
