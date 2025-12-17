@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { uploadLogo, updateOrgLogo, deleteLogo } from '@/lib/supabase/storage'
-import { Building2, Mail, Phone, FileText, Upload, X, Loader2, Check, AlertCircle, MapPin } from 'lucide-react'
+import { Building2, Mail, Phone, FileText, Upload, X, Loader2, Check, AlertCircle, MapPin, CreditCard, FileSpreadsheet, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 
 type Organization = {
@@ -22,9 +22,49 @@ type Organization = {
   postcode: string | null
 }
 
+type IntegrationStatus = 'not_connected' | 'pending' | 'connected' | 'error'
+
+type OrganizationIntegration = {
+  id: string
+  organization_id: string
+  integration_type: 'stripe' | 'resend' | 'xero'
+  status: IntegrationStatus
+  config: Record<string, unknown>
+  connected_at: string | null
+  error_message: string | null
+}
+
+const statusConfig = {
+  not_connected: {
+    icon: null,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-700/50',
+    label: 'Not Connected',
+  },
+  pending: {
+    icon: Loader2,
+    color: 'text-flowtrade-cyan',
+    bgColor: 'bg-flowtrade-cyan/10',
+    label: 'Connecting...',
+  },
+  connected: {
+    icon: CheckCircle2,
+    color: 'text-green-400',
+    bgColor: 'bg-green-900/30',
+    label: 'Connected',
+  },
+  error: {
+    icon: AlertCircle,
+    color: 'text-red-400',
+    bgColor: 'bg-red-900/30',
+    label: 'Error',
+  },
+}
+
 export default function SettingsPage() {
   const { user } = useAuth()
   const [org, setOrg] = useState<Organization | null>(null)
+  const [integrations, setIntegrations] = useState<OrganizationIntegration[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -46,7 +86,7 @@ export default function SettingsPage() {
   // Drag state
   const [isDragging, setIsDragging] = useState(false)
 
-  // Fetch organization data
+  // Fetch organization data and integrations
   useEffect(() => {
     async function fetchOrg() {
       if (!user) return
@@ -83,7 +123,14 @@ export default function SettingsPage() {
         return
       }
 
+      // Get integrations
+      const { data: integrationData } = await supabase
+        .from('organization_integrations')
+        .select('*')
+        .eq('organization_id', userData.org_id)
+
       setOrg(orgData)
+      setIntegrations(integrationData || [])
       setFormData({
         name: orgData.name || '',
         email: orgData.email || '',
@@ -100,6 +147,25 @@ export default function SettingsPage() {
 
     fetchOrg()
   }, [user])
+
+  // Get integration status helper
+  const getIntegrationStatus = (type: 'stripe' | 'resend' | 'xero'): IntegrationStatus => {
+    const integration = integrations.find(i => i.integration_type === type)
+    return integration?.status || 'not_connected'
+  }
+
+  const getIntegrationDetails = (type: 'stripe' | 'resend' | 'xero'): string | undefined => {
+    const integration = integrations.find(i => i.integration_type === type)
+    if (!integration || integration.status !== 'connected') return undefined
+    
+    if (type === 'stripe' && integration.config) {
+      return (integration.config as { account_name?: string }).account_name || 'Connected'
+    }
+    if (type === 'resend' && integration.config) {
+      return (integration.config as { domain_name?: string }).domain_name || 'Configured'
+    }
+    return undefined
+  }
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -227,6 +293,95 @@ export default function SettingsPage() {
     { value: 'NT', label: 'Northern Territory' }
   ]
 
+  // Integration card component
+  const IntegrationCard = ({
+    type,
+    title,
+    description,
+    comingSoon = false
+  }: {
+    type: 'stripe' | 'resend' | 'xero'
+    title: string
+    description: string
+    comingSoon?: boolean
+  }) => {
+    const status = getIntegrationStatus(type)
+    const config = statusConfig[status]
+    const StatusIcon = config.icon
+    const details = getIntegrationDetails(type)
+    const iconMap = {
+      stripe: CreditCard,
+      resend: Mail,
+      xero: FileSpreadsheet
+    }
+    const Icon = iconMap[type]
+
+    return (
+      <div className="bg-flowtrade-navy rounded-xl p-5 border border-flowtrade-navy-lighter relative overflow-hidden">
+        {comingSoon && (
+          <div className="absolute top-3 right-3 bg-flowtrade-navy-lighter text-gray-400 text-xs px-2 py-1 rounded-full">
+            Coming Soon
+          </div>
+        )}
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`p-2.5 rounded-lg ${config.bgColor}`}>
+            <Icon className={`h-5 w-5 ${config.color}`} />
+          </div>
+          <div>
+            <h3 className="text-white font-medium">{title}</h3>
+            <p className="text-gray-500 text-sm">{description}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {StatusIcon && (
+              <StatusIcon
+                className={`h-4 w-4 ${config.color} ${status === 'pending' ? 'animate-spin' : ''}`}
+              />
+            )}
+            {!StatusIcon && (
+              <div className="h-2 w-2 rounded-full bg-gray-600" />
+            )}
+            <span className={`text-sm font-medium ${config.color}`}>
+              {config.label}
+            </span>
+          </div>
+          <div>
+            {status === 'not_connected' && !comingSoon && (
+              <button className="px-4 py-1.5 bg-flowtrade-cyan text-flowtrade-navy text-sm font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors">
+                Set Up
+              </button>
+            )}
+            {status === 'pending' && (
+              <button disabled className="px-4 py-1.5 bg-flowtrade-navy-lighter text-gray-400 text-sm font-medium rounded-lg flex items-center gap-2 cursor-not-allowed">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Connecting
+              </button>
+            )}
+            {status === 'connected' && (
+              <button className="px-4 py-1.5 border border-flowtrade-navy-lighter text-gray-300 text-sm font-medium rounded-lg hover:bg-flowtrade-navy-lighter transition-colors">
+                Manage
+              </button>
+            )}
+            {status === 'error' && (
+              <button className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                Fix Issues
+              </button>
+            )}
+            {comingSoon && (
+              <button disabled className="px-4 py-1.5 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed">
+                Notify Me
+              </button>
+            )}
+          </div>
+        </div>
+        {status === 'connected' && details && (
+          <p className="mt-3 text-sm text-gray-400 border-t border-flowtrade-navy-lighter pt-3">{details}</p>
+        )}
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -236,10 +391,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-gray-400 mt-1">Manage your organization settings and branding</p>
+        <p className="text-gray-400 mt-1">Manage your integrations and organization settings</p>
       </div>
 
       {/* Message Banner */}
@@ -253,6 +408,29 @@ export default function SettingsPage() {
           {message.text}
         </div>
       )}
+
+      {/* Integrations Section */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-white mb-4">Integrations</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <IntegrationCard
+            type="stripe"
+            title="Payments"
+            description="Accept credit cards via Stripe"
+          />
+          <IntegrationCard
+            type="resend"
+            title="Email"
+            description="Send from your own domain"
+          />
+          <IntegrationCard
+            type="xero"
+            title="Accounting"
+            description="Sync invoices with Xero"
+            comingSoon={true}
+          />
+        </div>
+      </div>
 
       {/* Logo Upload Section */}
       <div className="bg-flowtrade-navy-light rounded-xl p-6 mb-6 border border-flowtrade-navy-lighter">
