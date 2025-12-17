@@ -18,7 +18,7 @@ export async function POST(
     }
 
     // Verify domain with Resend
-    const { data: verifyData, error: verifyError } = await resend.domains.verify(id);
+    const { error: verifyError } = await resend.domains.verify(id);
 
     if (verifyError) {
       console.error('Resend verify error:', verifyError);
