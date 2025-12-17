@@ -3,6 +3,7 @@
   "include": ["/*"],
   "exclude": [
     "/_next/static/*",
+    "/images/*",
     "/favicon.ico",
     "/favicon.svg",
     "/flowtrade-logo.svg",
