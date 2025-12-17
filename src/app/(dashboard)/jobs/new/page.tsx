@@ -29,7 +29,7 @@ type Customer = {
   company_name: string | null
   email: string | null
   phone: string | null
-  street_address: string | null
+  address_line1: string | null
   suburb: string | null
   state: string | null
   postcode: string | null
@@ -92,7 +92,7 @@ export default function CreateJobPage() {
     company_name: '',
     email: '',
     phone: '',
-    street_address: '',
+    address_line1: '',
     suburb: '',
     state: 'NSW',
     postcode: '',
@@ -156,7 +156,7 @@ export default function CreateJobPage() {
       // Build query - either all customers or filtered by search term
       let query = supabase
         .from('customers')
-        .select('id, first_name, last_name, company_name, email, phone, street_address, suburb, state, postcode')
+        .select('id, first_name, last_name, company_name, email, phone, address_line1, suburb, state, postcode')
         .eq('org_id', orgId)
         .order('company_name', { ascending: true, nullsFirst: false })
         .limit(10)
@@ -186,7 +186,7 @@ export default function CreateJobPage() {
   // Get customer address
   const getCustomerAddress = (customer: Customer) => {
     const parts = [
-      customer.street_address,
+      customer.address_line1,
       customer.suburb,
       customer.state,
       customer.postcode
@@ -244,7 +244,7 @@ export default function CreateJobPage() {
         company_name: '',
         email: '',
         phone: '',
-        street_address: '',
+        address_line1: '',
         suburb: '',
         state: 'NSW',
         postcode: '',
@@ -686,8 +686,8 @@ export default function CreateJobPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-1">Street Address</label>
                 <input
                   type="text"
-                  value={newCustomer.street_address}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, street_address: e.target.value }))}
+                  value={newCustomer.address_line1}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, address_line1: e.target.value }))}
                   className="w-full px-3 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                 />
               </div>
