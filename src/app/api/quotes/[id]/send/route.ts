@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { QuoteEmail } from '@/lib/email/templates/QuoteEmail'
+import { EMAIL_CONFIG } from '@/lib/email'
 
 // Create Supabase client inside handler (edge runtime requires this)
 function getSupabaseClient() {
@@ -21,11 +22,11 @@ function getResendClient() {
 
 // Generate portal token for quote
 async function generateQuotePortalToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType&lt;typeof createClient&gt;,
   quoteId: string,
   customerId: string,
   orgId: string
-): Promise<string | null> {
+): Promise&lt;string | null&gt; {
   // Check for existing valid token
   const { data: existingToken } = await supabase
     .from('portal_tokens')
@@ -67,7 +68,7 @@ async function generateQuotePortalToken(
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise&lt;{ id: string }&gt; }
 ) {
   try {
     const { id: quoteId } = await params
@@ -132,10 +133,10 @@ export async function POST(
       'Valued Customer'
 
     // Build organization name
-    const businessName = quoteData.organization?.name || 'Your Business'
+    const businessName = quoteData.organization?.name || 'FlowTrade'
 
     // Format currency
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: number) =&gt; {
       return new Intl.NumberFormat('en-AU', {
         style: 'currency',
         currency: 'AUD'
@@ -143,7 +144,7 @@ export async function POST(
     }
 
     // Format date
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString: string) =&gt; {
       return new Date(dateString).toLocaleDateString('en-AU', {
         day: 'numeric',
         month: 'long',
@@ -151,15 +152,14 @@ export async function POST(
       })
     }
 
-    // Determine from address
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 
-      `${businessName} <onboarding@resend.dev>`
+    // Use centralized EMAIL_CONFIG for from address
+    const fromAddress = `${businessName} &lt;${EMAIL_CONFIG.fromDomain}&gt;`
 
     // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: quoteData.customer.email,
-      replyTo: quoteData.organization?.email || 'hello@flowtechdigital.com.au',
+      replyTo: quoteData.organization?.email || EMAIL_CONFIG.replyTo,
       subject: `Quote ${quoteData.quote_number} from ${businessName}`,
       react: QuoteEmail({
         customerName,
