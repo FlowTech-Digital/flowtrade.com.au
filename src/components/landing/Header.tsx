@@ -7,6 +7,8 @@ import FlowTradeLogo from '../FlowTradeLogo'
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  const closeMobileMenu = () => setMobileMenuOpen(false)
+
   return (
     <header className="sticky top-0 z-50 bg-flowtrade-dark border-b border-flowtrade-navy/50 shadow-lg shadow-flowtrade-dark/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,24 +74,25 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-flowtrade-navy border-t border-flowtrade-dark">
           <div className="px-4 py-4 space-y-3">
-            <a href="#features" className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
+            <a href="#features" onClick={closeMobileMenu} className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
               Features
             </a>
-            <a href="#pricing" className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
+            <a href="#pricing" onClick={closeMobileMenu} className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
               Pricing
             </a>
-            <a href="#integrations" className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
+            <a href="#integrations" onClick={closeMobileMenu} className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
               Integrations
             </a>
-            <a href="#contact" className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
+            <a href="#contact" onClick={closeMobileMenu} className="block py-2 text-flowtrade-light/80 hover:text-flowtrade-cyan font-medium">
               Support
             </a>
             <div className="pt-4 space-y-3">
-              <Link href="/login" className="block text-center py-2 text-flowtrade-light/80 font-medium">
+              <Link href="/login" onClick={closeMobileMenu} className="block text-center py-2 text-flowtrade-light/80 font-medium">
                 Login
               </Link>
               <Link
                 href="/signup"
+                onClick={closeMobileMenu}
                 className="block text-center py-3 bg-flowtrade-cyan text-flowtrade-dark rounded-lg font-semibold"
               >
                 Start Free Trial
