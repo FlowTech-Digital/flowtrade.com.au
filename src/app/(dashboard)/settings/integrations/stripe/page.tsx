@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,6 @@ import { CreditCard, CheckCircle2, ExternalLink, ArrowLeft, Loader2, AlertCircle
 import Link from "next/link";
 
 export default function StripeSetupPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'not_connected' | 'pending' | 'connected' | 'error'>('not_connected');
@@ -58,7 +57,7 @@ export default function StripeSetupPage() {
       .single();
 
     if (integration) {
-      setConnectionStatus(integration.status as any);
+      setConnectionStatus(integration.status as 'not_connected' | 'pending' | 'connected' | 'error');
       if (integration.config?.stripe_user_id) {
         setStripeAccountId(integration.config.stripe_user_id);
       }
