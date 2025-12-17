@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
     
     // Use actual_total if available, otherwise quoted_total
     const subtotal = job.actual_total || job.quoted_total || 0
-    const taxRate = 10.00
-    const taxAmount = subtotal * (taxRate / 100)
-    const total = subtotal + taxAmount
+    const gstRate = 0.10  // 10% GST
+    const gstAmount = subtotal * gstRate
+    const total = subtotal + gstAmount
     
     // Calculate due date (14 days from now)
     const dueDate = new Date()
@@ -115,8 +115,7 @@ export async function POST(request: NextRequest) {
         issue_date: new Date().toISOString().split('T')[0],
         due_date: dueDate.toISOString().split('T')[0],
         subtotal: subtotal,
-        tax_rate: taxRate,
-        tax_amount: taxAmount,
+        gst_amount: gstAmount,
         total: total,
         status: 'draft',
         notes: `Invoice generated from ${job.job_number}`,
