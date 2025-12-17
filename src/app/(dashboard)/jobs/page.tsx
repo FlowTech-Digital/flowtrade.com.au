@@ -18,7 +18,8 @@ import {
   Wrench,
   Pause,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from 'lucide-react'
 
 type Job = {
@@ -138,6 +139,12 @@ export default function JobsPage() {
     return matchesSearch && matchesStatus
   })
 
+  // Calculate summary stats
+  const activeJobs = jobs.filter(j => ['scheduled', 'in_progress'].includes(j.status)).length
+  const completedJobs = jobs.filter(j => j.status === 'completed' || j.status === 'invoiced').length
+  const scheduledJobs = jobs.filter(j => j.status === 'scheduled').length
+  const totalValue = jobs.reduce((sum, j) => sum + (j.quoted_total || 0), 0)
+
   // Format currency
   const formatCurrency = (amount: number | null) => {
     if (amount === null || amount === undefined) return '—'
@@ -187,184 +194,248 @@ export default function JobsPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-flowtrade-navy-lighter">
+      <div className="flex items-center justify-between pb-4 border-b border-flowtrade-navy-lighter">
         <div>
           <h1 className="text-2xl font-bold text-white">Jobs</h1>
           <p className="text-gray-400 mt-1">Track and manage your active jobs</p>
         </div>
         <button
           onClick={() => router.push('/jobs/new')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors shadow-card"
+          className="flex items-center gap-2 px-4 py-2.5 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors shadow-lg shadow-flowtrade-cyan/20"
         >
           <Plus className="h-5 w-5" />
           New Job
         </button>
       </div>
 
-      {/* Filters Section */}
-      <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-            />
+      {/* Summary Stats */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Overview</h2>
+          <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-amber-400/20 rounded-xl p-4 shadow-lg shadow-amber-400/5 hover:shadow-amber-400/10 hover:border-amber-400/40 hover:ring-2 hover:ring-amber-400/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50 transition-all">
+                <Briefcase className="h-5 w-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Total Jobs</p>
+                <p className="text-2xl font-bold text-white">{jobs.length}</p>
+              </div>
+            </div>
           </div>
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 rounded-xl p-4 shadow-lg shadow-blue-400/5 hover:shadow-blue-400/10 hover:border-blue-400/40 hover:ring-2 hover:ring-blue-400/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
+                <Wrench className="h-5 w-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Active</p>
+                <p className="text-2xl font-bold text-white">{activeJobs}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 rounded-xl p-4 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Completed</p>
+                <p className="text-2xl font-bold text-white">{completedJobs}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-purple-400/20 rounded-xl p-4 shadow-lg shadow-purple-400/5 hover:shadow-purple-400/10 hover:border-purple-400/40 hover:ring-2 hover:ring-purple-400/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-purple-400/20 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50 transition-all">
+                <Calendar className="h-5 w-5 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Scheduled</p>
+                <p className="text-2xl font-bold text-white">{scheduledJobs}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="pl-10 pr-8 py-2.5 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent cursor-pointer min-w-[160px]"
-            >
-              <option value="all">All Status</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="in_progress">In Progress</option>
-              <option value="on_hold">On Hold</option>
-              <option value="completed">Completed</option>
-              <option value="invoiced">Invoiced</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+      {/* Filters Section */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Search & Filter</h2>
+          <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
+        </div>
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy rounded-xl border-2 border-flowtrade-navy-lighter p-4 shadow-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-flowtrade-navy border-2 border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="pl-10 pr-8 py-2.5 bg-flowtrade-navy border-2 border-flowtrade-navy-lighter rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 cursor-pointer min-w-[160px] transition-all"
+              >
+                <option value="all">All Status</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="on_hold">On Hold</option>
+                <option value="completed">Completed</option>
+                <option value="invoiced">Invoiced</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Jobs List */}
-      {filteredJobs.length === 0 ? (
-        // Empty State
-        <div className="bg-flowtrade-navy-light rounded-xl border-2 border-dashed border-flowtrade-navy-lighter p-12 text-center">
-          <div className="w-16 h-16 bg-flowtrade-navy-lighter rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase className="h-8 w-8 text-gray-500" />
-          </div>
-          <h3 className="text-lg font-medium text-white mb-2">
-            {jobs.length === 0 ? 'No jobs yet' : 'No matching jobs'}
-          </h3>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">
-            {jobs.length === 0 
-              ? 'Create your first job manually or convert an accepted quote to get started.'
-              : 'Try adjusting your search or filter to find what you\'re looking for.'
-            }
-          </p>
-          {jobs.length === 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => router.push('/jobs/new')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors"
-              >
-                <Plus className="h-5 w-5" />
-                Create Job
-              </button>
-              <button
-                onClick={() => router.push('/quotes')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-flowtrade-navy-lighter text-white font-medium rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors border border-flowtrade-navy-border"
-              >
-                <ArrowRight className="h-5 w-5" />
-                View Quotes
-              </button>
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">All Jobs</h2>
+          <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
+        </div>
+        
+        {filteredJobs.length === 0 ? (
+          // Empty State
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy rounded-xl border-2 border-dashed border-flowtrade-navy-lighter p-12 text-center">
+            <div className="w-16 h-16 bg-amber-400/10 rounded-full flex items-center justify-center mx-auto mb-4 ring-2 ring-amber-400/20">
+              <Briefcase className="h-8 w-8 text-amber-400" />
             </div>
-          )}
-        </div>
-      ) : (
-        // Jobs Table
-        <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter overflow-hidden shadow-card">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-flowtrade-navy-dark/50 border-b-2 border-flowtrade-navy-lighter">
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Job #</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quoted</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Scheduled</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quote #</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-flowtrade-navy-lighter">
-                {filteredJobs.map((job, index) => (
-                  <tr 
-                    key={job.id} 
-                    className={`
-                      hover:bg-flowtrade-navy-hover transition-colors cursor-pointer
-                      ${index % 2 === 0 ? 'bg-flowtrade-navy-light' : 'bg-flowtrade-navy-dark/30'}
-                    `}
-                    onClick={() => router.push(`/jobs/${job.id}`)}
-                  >
-                    <td className="px-6 py-4">
-                      <span className="text-white font-semibold">{job.job_number}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-300">{getCustomerName(job.customer)}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-white font-semibold">{formatCurrency(job.quoted_total)}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-400">{formatDate(job.scheduled_date)}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {job.quote ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/quotes/${job.quote!.id}`)
-                          }}
-                          className="text-flowtrade-cyan hover:text-flowtrade-cyan/80 text-sm font-medium transition-colors"
-                        >
-                          {job.quote.quote_number}
-                        </button>
-                      ) : (
-                        <span className="text-gray-500">—</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 bg-flowtrade-navy/50 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => router.push(`/jobs/${job.id}`)}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-md transition-colors"
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => router.push(`/jobs/${job.id}/edit`)}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-md transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h3 className="text-lg font-medium text-white mb-2">
+              {jobs.length === 0 ? 'No jobs yet' : 'No matching jobs'}
+            </h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              {jobs.length === 0 
+                ? 'Create your first job manually or convert an accepted quote to get started.'
+                : 'Try adjusting your search or filter to find what you\'re looking for.'
+              }
+            </p>
+            {jobs.length === 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => router.push('/jobs/new')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors shadow-lg shadow-flowtrade-cyan/20"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create Job
+                </button>
+                <button
+                  onClick={() => router.push('/quotes')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-flowtrade-navy-lighter text-white font-medium rounded-lg hover:bg-flowtrade-navy-lighter/80 transition-colors border-2 border-flowtrade-navy-border"
+                >
+                  <ArrowRight className="h-5 w-5" />
+                  View Quotes
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        ) : (
+          // Jobs Table
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy rounded-xl border-2 border-flowtrade-navy-lighter overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-flowtrade-navy-dark/50 border-b-2 border-flowtrade-navy-lighter">
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Job #</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quoted</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Scheduled</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quote #</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-flowtrade-navy-lighter">
+                  {filteredJobs.map((job) => (
+                    <tr 
+                      key={job.id} 
+                      className="border-l-4 border-l-amber-400 hover:bg-flowtrade-navy-hover hover:border-l-amber-400/80 transition-all duration-200 cursor-pointer group"
+                      onClick={() => router.push(`/jobs/${job.id}`)}
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-white font-semibold group-hover:text-amber-400 transition-colors">{job.job_number}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-300">{getCustomerName(job.customer)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={job.status} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-white font-semibold">{formatCurrency(job.quoted_total)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-400">{formatDate(job.scheduled_date)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {job.quote ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/quotes/${job.quote!.id}`)
+                            }}
+                            className="text-flowtrade-cyan hover:text-flowtrade-cyan/80 text-sm font-medium transition-colors"
+                          >
+                            {job.quote.quote_number}
+                          </button>
+                        ) : (
+                          <span className="text-gray-500">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 bg-flowtrade-navy/50 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => router.push(`/jobs/${job.id}`)}
+                            className="p-2 text-gray-400 hover:text-amber-400 hover:bg-amber-400/10 rounded-md transition-all"
+                            title="View"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => router.push(`/jobs/${job.id}/edit`)}
+                            className="p-2 text-gray-400 hover:text-amber-400 hover:bg-amber-400/10 rounded-md transition-all"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Summary Footer */}
       {jobs.length > 0 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500 px-2">
+        <div className="flex items-center justify-between text-sm text-gray-500 px-2">
           <span>
             Showing {filteredJobs.length} of {jobs.length} jobs
           </span>
           {statusFilter !== 'all' && (
             <button
               onClick={() => setStatusFilter('all')}
-              className="text-flowtrade-cyan hover:text-flowtrade-cyan-light transition-colors"
+              className="text-flowtrade-cyan hover:text-flowtrade-cyan/80 transition-colors"
             >
               Clear filter
             </button>
