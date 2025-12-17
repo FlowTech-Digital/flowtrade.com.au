@@ -42,6 +42,8 @@ export default function EmailSetupPage() {
   useEffect(() => {
     async function checkExisting() {
       const supabase = createClient();
+      if (!supabase) return;
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
