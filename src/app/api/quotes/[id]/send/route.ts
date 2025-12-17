@@ -22,11 +22,11 @@ function getResendClient() {
 
 // Generate portal token for quote
 async function generateQuotePortalToken(
-  supabase: ReturnType&lt;typeof createClient&gt;,
+  supabase: ReturnType<typeof createClient>,
   quoteId: string,
   customerId: string,
   orgId: string
-): Promise&lt;string | null&gt; {
+): Promise<string | null> {
   // Check for existing valid token
   const { data: existingToken } = await supabase
     .from('portal_tokens')
@@ -68,7 +68,7 @@ async function generateQuotePortalToken(
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise&lt;{ id: string }&gt; }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: quoteId } = await params
@@ -136,7 +136,7 @@ export async function POST(
     const businessName = quoteData.organization?.name || 'FlowTrade'
 
     // Format currency
-    const formatCurrency = (amount: number) =&gt; {
+    const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-AU', {
         style: 'currency',
         currency: 'AUD'
@@ -144,7 +144,7 @@ export async function POST(
     }
 
     // Format date
-    const formatDate = (dateString: string) =&gt; {
+    const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString('en-AU', {
         day: 'numeric',
         month: 'long',
@@ -153,7 +153,7 @@ export async function POST(
     }
 
     // Use centralized EMAIL_CONFIG for from address
-    const fromAddress = `${businessName} &lt;${EMAIL_CONFIG.fromDomain}&gt;`
+    const fromAddress = `${businessName} <${EMAIL_CONFIG.fromDomain}>`
 
     // Send email via Resend with portal link
     const { data: emailResult, error: emailError } = await resend.emails.send({
