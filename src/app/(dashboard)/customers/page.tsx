@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Users, Loader2, AlertCircle, Briefcase, FileText, DollarSign } from 'lucide-react'
+import { Plus, Search, Users, Loader2, AlertCircle, Briefcase, FileText } from 'lucide-react'
 import { customerService } from '@/services/customerService'
 import CustomerCard from '@/components/customers/CustomerCard'
 import CustomerModal from '@/components/customers/CustomerModal'

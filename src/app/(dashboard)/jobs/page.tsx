@@ -18,8 +18,7 @@ import {
   Wrench,
   Pause,
   FileText,
-  ArrowRight,
-  Clock
+  ArrowRight
 } from 'lucide-react'
 
 type Job = {
@@ -143,7 +142,6 @@ export default function JobsPage() {
   const activeJobs = jobs.filter(j => ['scheduled', 'in_progress'].includes(j.status)).length
   const completedJobs = jobs.filter(j => j.status === 'completed' || j.status === 'invoiced').length
   const scheduledJobs = jobs.filter(j => j.status === 'scheduled').length
-  const totalValue = jobs.reduce((sum, j) => sum + (j.quoted_total || 0), 0)
 
   // Format currency
   const formatCurrency = (amount: number | null) => {
