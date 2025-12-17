@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         invoice_number: invoiceNumber,
         job_id: job.id,
         customer_id: job.customer_id,
-        invoice_date: new Date().toISOString().split('T')[0],
+        issue_date: new Date().toISOString().split('T')[0],
         due_date: dueDate.toISOString().split('T')[0],
         subtotal: subtotal,
         tax_rate: taxRate,
