@@ -10,12 +10,35 @@ function getSupabaseClient() {
   );
 }
 
-// Let Stripe SDK use its default API version (compatible with installed types)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
+// Webhook event logger for audit trail
+async function logWebhookEvent(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  eventType: string,
+  eventId: string,
+  status: 'received' | 'processed' | 'failed',
+  details?: Record<string, unknown>
+) {
+  try {
+    await supabase.from('webhook_events').insert({
+      event_type: eventType,
+      event_id: eventId,
+      status,
+      details,
+      processed_at: new Date().toISOString()
+    });
+  } catch {
+    // Don't fail webhook if logging fails - just continue
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
+  let eventId = 'unknown';
+  let eventType = 'unknown';
+
   try {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
@@ -31,17 +54,27 @@ export async function POST(request: NextRequest) {
 
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+    } catch {
+      await logWebhookEvent(supabase, 'signature_verification', 'failed', 'failed', {
+        error: 'Webhook signature verification failed'
+      });
       return NextResponse.json(
         { error: 'Webhook signature verification failed' },
         { status: 400 }
       );
     }
 
-    const supabase = getSupabaseClient();
+    eventId = event.id;
+    eventType = event.type;
+
+    // Log event received
+    await logWebhookEvent(supabase, eventType, eventId, 'received');
 
     switch (event.type) {
+      // ═══════════════════════════════════════════════════════════════
+      // CHECKOUT SESSION EVENTS
+      // ═══════════════════════════════════════════════════════════════
+      
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
@@ -49,7 +82,9 @@ export async function POST(request: NextRequest) {
         const portalToken = session.metadata?.portal_token;
 
         if (!invoiceId) {
-          console.error('No invoice_id in session metadata');
+          await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+            error: 'No invoice_id in session metadata'
+          });
           break;
         }
 
@@ -64,7 +99,10 @@ export async function POST(request: NextRequest) {
           .eq('stripe_session_id', session.id);
 
         if (paymentError) {
-          console.error('Failed to update payment record:', paymentError);
+          await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+            error: 'Failed to update payment record',
+            details: paymentError
+          });
         }
 
         // Update invoice status
@@ -77,7 +115,10 @@ export async function POST(request: NextRequest) {
           .eq('id', invoiceId);
 
         if (invoiceError) {
-          console.error('Failed to update invoice status:', invoiceError);
+          await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+            error: 'Failed to update invoice status',
+            details: invoiceError
+          });
         }
 
         // Log activity in invoice_events
@@ -109,7 +150,10 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.info(`Payment completed for invoice ${invoiceId}`);
+        await logWebhookEvent(supabase, eventType, eventId, 'processed', {
+          invoice_id: invoiceId,
+          amount: session.amount_total ? session.amount_total / 100 : 0
+        });
         break;
       }
 
@@ -122,33 +166,172 @@ export async function POST(request: NextRequest) {
           .update({ status: 'expired' })
           .eq('stripe_session_id', session.id);
 
-        console.info(`Checkout session expired: ${session.id}`);
+        await logWebhookEvent(supabase, eventType, eventId, 'processed', {
+          session_id: session.id
+        });
+        break;
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // PAYMENT INTENT EVENTS (Phase 6.4)
+      // ═══════════════════════════════════════════════════════════════
+
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        
+        // Get invoice_id from metadata if available
+        const invoiceId = paymentIntent.metadata?.invoice_id;
+
+        if (invoiceId) {
+          // Update invoice status to paid
+          const { error: invoiceError } = await supabase
+            .from('invoices')
+            .update({
+              status: 'paid',
+              paid_at: new Date().toISOString()
+            })
+            .eq('id', invoiceId);
+
+          if (invoiceError) {
+            await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+              error: 'Failed to update invoice status',
+              invoice_id: invoiceId,
+              details: invoiceError
+            });
+          }
+
+          // Log invoice event
+          await supabase.from('invoice_events').insert({
+            invoice_id: invoiceId,
+            event_type: 'payment_succeeded',
+            event_data: {
+              amount: paymentIntent.amount / 100,
+              currency: paymentIntent.currency,
+              payment_intent_id: paymentIntent.id,
+              payment_method: paymentIntent.payment_method_types?.[0] || 'card'
+            }
+          });
+        }
+
+        // Update payment record by payment_intent_id
+        await supabase
+          .from('payments')
+          .update({
+            status: 'completed',
+            paid_at: new Date().toISOString()
+          })
+          .eq('stripe_payment_id', paymentIntent.id);
+
+        await logWebhookEvent(supabase, eventType, eventId, 'processed', {
+          payment_intent_id: paymentIntent.id,
+          invoice_id: invoiceId,
+          amount: paymentIntent.amount / 100
+        });
         break;
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        // Log payment failure
-        console.error(`Payment failed for intent: ${paymentIntent.id}`);
+        const invoiceId = paymentIntent.metadata?.invoice_id;
         
         // Update payment record if exists
         await supabase
           .from('payments')
-          .update({ status: 'failed' })
+          .update({ 
+            status: 'failed',
+            updated_at: new Date().toISOString()
+          })
           .eq('stripe_payment_id', paymentIntent.id);
 
+        // Log failure in invoice_events if invoice exists
+        if (invoiceId) {
+          await supabase.from('invoice_events').insert({
+            invoice_id: invoiceId,
+            event_type: 'payment_failed',
+            event_data: {
+              payment_intent_id: paymentIntent.id,
+              error_message: paymentIntent.last_payment_error?.message || 'Payment failed',
+              error_code: paymentIntent.last_payment_error?.code,
+              failure_reason: paymentIntent.last_payment_error?.type
+            }
+          });
+        }
+
+        await logWebhookEvent(supabase, eventType, eventId, 'processed', {
+          payment_intent_id: paymentIntent.id,
+          invoice_id: invoiceId,
+          error: paymentIntent.last_payment_error?.message
+        });
         break;
       }
 
+      // ═══════════════════════════════════════════════════════════════
+      // STRIPE CONNECT ACCOUNT EVENTS (Phase 6.4)
+      // ═══════════════════════════════════════════════════════════════
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account;
+        
+        // Determine connection status based on account state
+        let connectionStatus: 'connected' | 'pending' | 'error' = 'pending';
+        
+        if (account.charges_enabled && account.payouts_enabled) {
+          connectionStatus = 'connected';
+        } else if (account.requirements?.disabled_reason) {
+          connectionStatus = 'error';
+        }
+
+        // Update organization_integrations for this Stripe account
+        const { error: updateError } = await supabase
+          .from('organization_integrations')
+          .update({
+            status: connectionStatus,
+            config: supabase.rpc ? undefined : {
+              stripe_account_id: account.id,
+              charges_enabled: account.charges_enabled,
+              payouts_enabled: account.payouts_enabled,
+              details_submitted: account.details_submitted,
+              requirements: account.requirements?.currently_due || [],
+              disabled_reason: account.requirements?.disabled_reason
+            },
+            updated_at: new Date().toISOString()
+          })
+          .eq('integration_type', 'stripe')
+          .eq('config->>stripe_account_id', account.id);
+
+        if (updateError) {
+          await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+            error: 'Failed to update Stripe integration status',
+            account_id: account.id,
+            details: updateError
+          });
+        }
+
+        await logWebhookEvent(supabase, eventType, eventId, 'processed', {
+          account_id: account.id,
+          charges_enabled: account.charges_enabled,
+          payouts_enabled: account.payouts_enabled,
+          connection_status: connectionStatus
+        });
+        break;
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // UNHANDLED EVENTS
+      // ═══════════════════════════════════════════════════════════════
+
       default:
-        console.debug(`Unhandled event type: ${event.type}`);
+        await logWebhookEvent(supabase, eventType, eventId, 'received', {
+          note: 'Unhandled event type - logged but not processed'
+        });
     }
 
     return NextResponse.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    await logWebhookEvent(supabase, eventType, eventId, 'failed', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
