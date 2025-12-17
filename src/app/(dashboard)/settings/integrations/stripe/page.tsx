@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,6 +35,7 @@ export default function StripeSetupPage() {
 
   async function checkConnectionStatus() {
     const supabase = createClient();
+    if (!supabase) return;
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -149,7 +150,7 @@ export default function StripeSetupPage() {
           {connectionStatus === 'not_connected' && (
             <>
               <div className="space-y-4">
-                <h3 className="font-medium">What you'll need:</h3>
+                <h3 className="font-medium">What you&apos;ll need:</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -169,7 +170,7 @@ export default function StripeSetupPage() {
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm">How it works:</h4>
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Click "Connect with Stripe" below</li>
+                  <li>Click &quot;Connect with Stripe&quot; below</li>
                   <li>Create or sign in to your Stripe account</li>
                   <li>Authorize FlowTrade to process payments</li>
                   <li>Start accepting payments on invoices!</li>

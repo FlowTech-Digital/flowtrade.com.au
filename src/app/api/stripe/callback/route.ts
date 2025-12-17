@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -62,6 +62,12 @@ export async function GET(request: NextRequest) {
 
     // Verify user is still authenticated
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.redirect(
+        new URL(`${redirectBase}?error=${encodeURIComponent('Service unavailable')}`, request.url)
+      );
+    }
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user || user.id !== stateData.user_id) {

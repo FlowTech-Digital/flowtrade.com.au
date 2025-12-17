@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 const STRIPE_CLIENT_ID = process.env.STRIPE_CLIENT_ID;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL 
@@ -10,6 +10,13 @@ export async function POST() {
   try {
     // Verify user is authenticated
     const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Service unavailable' },
+        { status: 503 }
+      );
+    }
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
