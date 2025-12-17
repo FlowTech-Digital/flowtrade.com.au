@@ -160,11 +160,17 @@ export default function CreateQuotePage() {
     getOrgId()
   }, [user])
 
-  // Search customers
+  // Search customers - FIXED: Now loads all customers when search is empty
   useEffect(() => {
     async function searchCustomers() {
-      if (!orgId || customerSearch.length < 2) {
+      if (!orgId) {
         setCustomers([])
+        return
+      }
+
+      // Skip 1-character searches - too short for meaningful results
+      // But keep current results visible while typing
+      if (customerSearch.length === 1) {
         return
       }
 
@@ -175,14 +181,21 @@ export default function CreateQuotePage() {
         return
       }
 
-      const searchTerm = `%${customerSearch}%`
-      const { data } = await supabase
+      // Build query - either all customers or filtered by search term
+      let query = supabase
         .from('customers')
         .select('id, first_name, last_name, company_name, email, phone, address_line1, suburb, state, postcode')
         .eq('org_id', orgId)
-        .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company_name.ilike.${searchTerm},email.ilike.${searchTerm}`)
+        .order('company_name', { ascending: true, nullsFirst: false })
         .limit(10)
 
+      // Apply search filter only if search term has 2+ characters
+      if (customerSearch.length >= 2) {
+        const searchTerm = `%${customerSearch}%`
+        query = query.or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company_name.ilike.${searchTerm},email.ilike.${searchTerm}`)
+      }
+
+      const { data } = await query
       setCustomers(data || [])
       setSearchingCustomers(false)
     }
