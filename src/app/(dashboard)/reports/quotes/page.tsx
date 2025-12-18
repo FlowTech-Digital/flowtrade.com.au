@@ -1,0 +1,707 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
+import { 
+  FileText,
+  Send,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  RefreshCw,
+  Download,
+  Loader2,
+  BarChart3
+} from 'lucide-react'
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts'
+import { DateRangePicker, DateRange } from '@/components/ui/date-range-picker'
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns'
+
+type Quote = {
+  id: string
+  quote_number: string
+  status: string
+  total: number
+  valid_until: string | null
+  created_at: string
+  customer_id: string | null
+  customer: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    company_name: string | null
+  } | null
+}
+
+type QuoteMetrics = {
+  totalQuotes: number
+  pendingQuotes: number
+  acceptedQuotes: number
+  declinedQuotes: number
+  expiredQuotes: number
+  conversionRate: number
+  totalValue: number
+  avgQuoteValue: number
+  statusBreakdown: {
+    draft: number
+    sent: number
+    viewed: number
+    accepted: number
+    declined: number
+    expired: number
+  }
+}
+
+type DailyTrend = {
+  date: string
+  count: number
+  value: number
+}
+
+type TopCustomer = {
+  id: string
+  name: string
+  quoteCount: number
+  totalValue: number
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  draft: '#6B7280',      // gray
+  sent: '#3B82F6',       // blue
+  viewed: '#8B5CF6',     // purple
+  accepted: '#10B981',   // green
+  declined: '#EF4444',   // red
+  expired: '#F97316',    // orange
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  sent: 'Sent',
+  viewed: 'Viewed',
+  accepted: 'Accepted',
+  declined: 'Declined',
+  expired: 'Expired',
+}
+
+export default function QuotesReportPage() {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [metrics, setMetrics] = useState<QuoteMetrics | null>(null)
+  const [dailyTrends, setDailyTrends] = useState<DailyTrend[]>([])
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([])
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  })
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-AU', {
+      style: 'currency',
+      currency: 'AUD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return format(parseISO(dateString), 'd MMM')
+  }
+
+  // Get customer display name
+  const getCustomerName = (customer: Quote['customer']) => {
+    if (!customer) return 'No Customer'
+    if (customer.company_name) return customer.company_name
+    return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
+  }
+
+  // Calculate metrics from quotes
+  const calculateMetrics = useCallback((quotesData: Quote[]): QuoteMetrics => {
+    const statusBreakdown = {
+      draft: 0,
+      sent: 0,
+      viewed: 0,
+      accepted: 0,
+      declined: 0,
+      expired: 0,
+    }
+
+    let totalValue = 0
+
+    quotesData.forEach(quote => {
+      const status = quote.status as keyof typeof statusBreakdown
+      if (status in statusBreakdown) {
+        statusBreakdown[status]++
+      }
+      totalValue += quote.total || 0
+    })
+
+    const totalQuotes = quotesData.length
+    const pendingQuotes = statusBreakdown.draft + statusBreakdown.sent + statusBreakdown.viewed
+    const acceptedQuotes = statusBreakdown.accepted
+    const declinedQuotes = statusBreakdown.declined
+    const expiredQuotes = statusBreakdown.expired
+    
+    // Conversion rate: accepted / (accepted + declined + expired) - quotes that had a final outcome
+    const finalizedQuotes = acceptedQuotes + declinedQuotes + expiredQuotes
+    const conversionRate = finalizedQuotes > 0 
+      ? Math.round((acceptedQuotes / finalizedQuotes) * 100) 
+      : 0
+
+    const avgQuoteValue = totalQuotes > 0 ? totalValue / totalQuotes : 0
+
+    return {
+      totalQuotes,
+      pendingQuotes,
+      acceptedQuotes,
+      declinedQuotes,
+      expiredQuotes,
+      conversionRate,
+      totalValue,
+      avgQuoteValue,
+      statusBreakdown,
+    }
+  }, [])
+
+  // Calculate daily trends
+  const calculateDailyTrends = useCallback((quotesData: Quote[], from: Date, to: Date): DailyTrend[] => {
+    const days = eachDayOfInterval({ start: from, end: to })
+    
+    const dailyData = days.map(day => {
+      const dayStart = startOfDay(day)
+      const dayEnd = endOfDay(day)
+      
+      const dayQuotes = quotesData.filter(quote => {
+        const quoteDate = parseISO(quote.created_at)
+        return quoteDate >= dayStart && quoteDate <= dayEnd
+      })
+
+      return {
+        date: format(day, 'yyyy-MM-dd'),
+        count: dayQuotes.length,
+        value: dayQuotes.reduce((sum, q) => sum + (q.total || 0), 0),
+      }
+    })
+
+    return dailyData
+  }, [])
+
+  // Calculate top customers
+  const calculateTopCustomers = useCallback((quotesData: Quote[]): TopCustomer[] => {
+    const customerMap = new Map<string, { name: string; quoteCount: number; totalValue: number }>()
+
+    quotesData.forEach(quote => {
+      if (!quote.customer_id) return
+      
+      const existing = customerMap.get(quote.customer_id)
+      const customerName = getCustomerName(quote.customer)
+      
+      if (existing) {
+        existing.quoteCount++
+        existing.totalValue += quote.total || 0
+      } else {
+        customerMap.set(quote.customer_id, {
+          name: customerName,
+          quoteCount: 1,
+          totalValue: quote.total || 0,
+        })
+      }
+    })
+
+    return Array.from(customerMap.entries())
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.totalValue - a.totalValue)
+      .slice(0, 5)
+  }, [])
+
+  // Fetch quote data
+  const fetchQuoteData = useCallback(async () => {
+    if (!user || !dateRange.from || !dateRange.to) return
+
+    setRefreshing(true)
+    const supabase = createClient()
+    if (!supabase) {
+      setRefreshing(false)
+      setLoading(false)
+      return
+    }
+
+    try {
+      // Get user's org_id first
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('org_id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (userError || !userData?.org_id) {
+        console.error('Failed to get user org:', userError)
+        setRefreshing(false)
+        setLoading(false)
+        return
+      }
+
+      // Fetch quotes with customer info for date range
+      const fromDate = startOfDay(dateRange.from).toISOString()
+      const toDate = endOfDay(dateRange.to).toISOString()
+
+      const { data: quotesData, error: quotesError } = await supabase
+        .from('quotes')
+        .select(`
+          id,
+          quote_number,
+          status,
+          total,
+          valid_until,
+          created_at,
+          customer_id,
+          customer:customers(
+            id,
+            first_name,
+            last_name,
+            company_name
+          )
+        `)
+        .eq('org_id', userData.org_id)
+        .gte('created_at', fromDate)
+        .lte('created_at', toDate)
+        .order('created_at', { ascending: false })
+
+      if (quotesError) {
+        console.error('Failed to fetch quotes:', quotesError)
+      } else {
+        const quotes = quotesData || []
+        setQuotes(quotes)
+        setMetrics(calculateMetrics(quotes))
+        setDailyTrends(calculateDailyTrends(quotes, dateRange.from, dateRange.to))
+        setTopCustomers(calculateTopCustomers(quotes))
+      }
+    } catch (error) {
+      console.error('Error fetching quote data:', error)
+    }
+
+    setRefreshing(false)
+    setLoading(false)
+  }, [user, dateRange, calculateMetrics, calculateDailyTrends, calculateTopCustomers])
+
+  useEffect(() => {
+    fetchQuoteData()
+  }, [fetchQuoteData])
+
+  // Handle date range change
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range)
+  }
+
+  // Get period label for display
+  const periodLabel = dateRange.from && dateRange.to 
+    ? `${format(dateRange.from, 'd MMM yyyy').toLowerCase()} - ${format(dateRange.to, 'd MMM yyyy').toLowerCase()}`
+    : 'Select date range'
+
+  // Prepare pie chart data
+  const pieChartData = metrics ? Object.entries(metrics.statusBreakdown)
+    .filter(([, value]) => value > 0)
+    .map(([status, value]) => ({
+      name: STATUS_LABELS[status] || status,
+      value,
+      color: STATUS_COLORS[status] || '#6B7280',
+    })) : []
+
+  // Export to CSV
+  const exportToCSV = () => {
+    if (quotes.length === 0) return
+
+    const headers = ['Quote Number', 'Customer', 'Status', 'Total', 'Valid Until', 'Created At']
+    const rows = quotes.map(quote => [
+      quote.quote_number,
+      getCustomerName(quote.customer),
+      quote.status,
+      quote.total?.toString() || '0',
+      quote.valid_until || '',
+      quote.created_at,
+    ])
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const dateStr = dateRange.from && dateRange.to 
+      ? `${format(dateRange.from, 'yyyyMMdd')}-${format(dateRange.to, 'yyyyMMdd')}`
+      : format(new Date(), 'yyyyMMdd')
+    a.href = url
+    a.download = `quotes-report-${dateStr}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FileText className="h-7 w-7 text-flowtrade-cyan" />
+            Quotes Analytics
+          </h1>
+          <p className="text-gray-400 hidden sm:block">Track quote performance and conversion metrics</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Export Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportToCSV}
+              disabled={quotes.length === 0}
+              className="flex items-center gap-2 px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4" />
+              CSV
+            </button>
+            <button
+              className="flex items-center gap-2 px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </button>
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={fetchQuoteData}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+
+          {/* Date Range Picker */}
+          <DateRangePicker
+            value={dateRange}
+            onChange={handleDateRangeChange}
+          />
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Total Quotes */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Total Quotes</h3>
+            <FileText className="h-4 w-4 text-flowtrade-cyan" />
+          </div>
+          <p className="text-2xl font-bold text-white">{metrics?.totalQuotes || 0}</p>
+        </div>
+
+        {/* Pending */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Pending</h3>
+            <Clock className="h-4 w-4 text-blue-400" />
+          </div>
+          <p className="text-2xl font-bold text-white">{metrics?.pendingQuotes || 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Draft + Sent + Viewed</p>
+        </div>
+
+        {/* Conversion Rate */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Conversion</h3>
+            <TrendingUp className="h-4 w-4 text-green-400" />
+          </div>
+          <p className="text-2xl font-bold text-white">{metrics?.conversionRate || 0}%</p>
+          <p className="text-xs text-gray-500 mt-1">{metrics?.acceptedQuotes || 0} accepted</p>
+        </div>
+
+        {/* Average Value */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Avg Value</h3>
+            <DollarSign className="h-4 w-4 text-purple-400" />
+          </div>
+          <p className="text-2xl font-bold text-white">{formatCurrency(metrics?.avgQuoteValue || 0)}</p>
+        </div>
+
+        {/* Declined */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Declined</h3>
+            <XCircle className="h-4 w-4 text-red-400" />
+          </div>
+          <p className="text-2xl font-bold text-white">{metrics?.declinedQuotes || 0}</p>
+          <p className="text-xs text-gray-500 mt-1">{metrics?.expiredQuotes || 0} expired</p>
+        </div>
+
+        {/* Total Value */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-gray-400">Total Value</h3>
+            <BarChart3 className="h-4 w-4 text-flowtrade-cyan" />
+          </div>
+          <p className="text-2xl font-bold text-white">{formatCurrency(metrics?.totalValue || 0)}</p>
+        </div>
+      </div>
+
+      {/* Status Breakdown Bar */}
+      <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-gray-500" />
+            <span className="text-gray-400 text-sm">Draft</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.draft || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <span className="text-gray-400 text-sm">Sent</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.sent || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-purple-500" />
+            <span className="text-gray-400 text-sm">Viewed</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.viewed || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <span className="text-gray-400 text-sm">Accepted</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.accepted || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-gray-400 text-sm">Declined</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.declined || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <span className="text-gray-400 text-sm">Expired</span>
+            <span className="text-white font-semibold">{metrics?.statusBreakdown.expired || 0}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quote Trends Chart */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-flowtrade-cyan" />
+              Quote Trends
+            </h3>
+            <p className="text-sm text-gray-400">Daily quote volume for {periodLabel}</p>
+          </div>
+          
+          {dailyTrends.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={dailyTrends}>
+                <defs>
+                  <linearGradient id="quoteGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#00D4FF" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6B7280" 
+                  fontSize={12}
+                  tickFormatter={(value) => formatDate(value)}
+                />
+                <YAxis stroke="#6B7280" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0f2744',
+                    border: '1px solid #1e3a5f',
+                    borderRadius: '8px',
+                    color: '#fff',
+                  }}
+                  labelFormatter={(value) => format(parseISO(value as string), 'd MMM yyyy')}
+                  formatter={(value: number) => [value, 'Quotes']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#00D4FF"
+                  strokeWidth={2}
+                  fill="url(#quoteGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[250px] text-gray-500">
+              <TrendingDown className="h-12 w-12 mb-2 opacity-50" />
+              <p>No quote data for this period</p>
+            </div>
+          )}
+        </div>
+
+        {/* Status Distribution Pie Chart */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-flowtrade-cyan" />
+              Status Distribution
+            </h3>
+            <p className="text-sm text-gray-400">Breakdown by quote status</p>
+          </div>
+          
+          {pieChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={pieChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0f2744',
+                    border: '1px solid #1e3a5f',
+                    borderRadius: '8px',
+                    color: '#fff',
+                  }}
+                  formatter={(value: number, name: string) => [value, name]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value) => <span className="text-gray-300 text-sm">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[250px] text-gray-500">
+              <BarChart3 className="h-12 w-12 mb-2 opacity-50" />
+              <p>No status data available</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Row: Top Customers + Recent Quotes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Customers */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Users className="h-5 w-5 text-flowtrade-cyan" />
+              Top Customers
+            </h3>
+            <p className="text-sm text-gray-400">Top 5 by quote value</p>
+          </div>
+          
+          {topCustomers.length > 0 ? (
+            <div className="space-y-3">
+              {topCustomers.map((customer, index) => (
+                <div 
+                  key={customer.id}
+                  className="flex items-center justify-between p-3 bg-flowtrade-navy/50 rounded-lg border border-flowtrade-navy-lighter"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-flowtrade-cyan/20 text-flowtrade-cyan text-sm font-semibold flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-white font-medium">{customer.name}</p>
+                      <p className="text-xs text-gray-500">{customer.quoteCount} quotes</p>
+                    </div>
+                  </div>
+                  <p className="text-white font-semibold">{formatCurrency(customer.totalValue)}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+              <Users className="h-12 w-12 mb-2 opacity-50" />
+              <p>No customer data</p>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Quotes */}
+        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <FileText className="h-5 w-5 text-flowtrade-cyan" />
+              Recent Quotes
+            </h3>
+            <p className="text-sm text-gray-400">Last 10 quotes in selected period</p>
+          </div>
+          
+          {quotes.length > 0 ? (
+            <div className="space-y-2 max-h-[280px] overflow-y-auto">
+              {quotes.slice(0, 10).map((quote) => (
+                <div 
+                  key={quote.id}
+                  className="flex items-center justify-between p-3 bg-flowtrade-navy/50 rounded-lg border border-flowtrade-navy-lighter hover:border-flowtrade-cyan/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: STATUS_COLORS[quote.status] || '#6B7280' }}
+                    />
+                    <div>
+                      <p className="text-white font-medium text-sm">{quote.quote_number}</p>
+                      <p className="text-xs text-gray-500">{getCustomerName(quote.customer)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-semibold text-sm">{formatCurrency(quote.total)}</p>
+                    <p className="text-xs text-gray-500">{formatDate(quote.created_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+              <FileText className="h-12 w-12 mb-2 opacity-50" />
+              <p>No quotes found</p>
+              <p className="text-xs mt-1">Quotes will appear here when created</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
