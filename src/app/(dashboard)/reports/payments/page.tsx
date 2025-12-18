@@ -15,7 +15,6 @@ import {
   Loader2,
   Calendar,
   Receipt,
-  ArrowUpRight,
   ArrowDownRight,
   Wallet,
   RefreshCw,
@@ -23,7 +22,6 @@ import {
   Users,
   Trophy,
   PieChart,
-  Download,
   FileText,
   FileSpreadsheet
 } from 'lucide-react'
@@ -128,7 +126,7 @@ export default function PaymentsPage() {
     }
   }, [period])
 
-  const getDateRange = (p: ReportPeriod): { start: Date; end: Date } => {
+  const getDateRange = useCallback((p: ReportPeriod): { start: Date; end: Date } => {
     const end = new Date()
     const start = new Date()
     
@@ -151,10 +149,10 @@ export default function PaymentsPage() {
     }
     
     return { start, end }
-  }
+  }, [])
 
   // Phase 7.2 Completion - Calculate payment method breakdown
-  const calculateMethodBreakdown = (payments: Payment[]): PaymentMethodBreakdown[] => {
+  const calculateMethodBreakdown = useCallback((payments: Payment[]): PaymentMethodBreakdown[] => {
     const successfulPayments = payments.filter(p => p.status === 'succeeded')
     const methodMap = new Map<string, { count: number; total: number }>()
     
@@ -181,10 +179,10 @@ export default function PaymentsPage() {
     
     // Sort by count descending
     return breakdown.sort((a, b) => b.count - a.count)
-  }
+  }, [])
 
   // Phase 7.2 Completion - Calculate customer leaderboard
-  const calculateCustomerLeaderboard = (
+  const calculateCustomerLeaderboard = useCallback((
     payments: Payment[], 
     customerMap: Map<string, Customer>
   ): CustomerLeaderboardEntry[] => {
@@ -222,10 +220,10 @@ export default function PaymentsPage() {
     
     // Sort by total paid descending and take top 5
     return leaderboard.sort((a, b) => b.totalPaid - a.totalPaid).slice(0, 5)
-  }
+  }, [])
 
   // Phase 7.2 Completion - Calculate payment trends
-  const calculateTrends = (payments: Payment[], start: Date, end: Date): PaymentTrend[] => {
+  const calculateTrends = useCallback((payments: Payment[], start: Date, end: Date): PaymentTrend[] => {
     const successfulPayments = payments.filter(p => p.status === 'succeeded')
     const dayMap = new Map<string, { amount: number; count: number }>()
     
@@ -250,9 +248,9 @@ export default function PaymentsPage() {
     })
     
     // Convert to array and format for chart
-    const trends: PaymentTrend[] = []
+    const trendData: PaymentTrend[] = []
     dayMap.forEach((value, date) => {
-      trends.push({
+      trendData.push({
         date,
         amount: value.amount / 100, // Convert cents to dollars for display
         count: value.count
@@ -260,10 +258,10 @@ export default function PaymentsPage() {
     })
     
     // Sort by date
-    return trends.sort((a, b) => a.date.localeCompare(b.date))
-  }
+    return trendData.sort((a, b) => a.date.localeCompare(b.date))
+  }, [])
 
-  const fetchPaymentData = async (isRefresh = false) => {
+  const fetchPaymentData = useCallback(async (isRefresh = false) => {
     if (!user) return
 
     if (isRefresh) {
@@ -391,24 +389,17 @@ export default function PaymentsPage() {
 
     setLoading(false)
     setRefreshing(false)
-  }
+  }, [user, period, getDateRange, calculateMethodBreakdown, calculateCustomerLeaderboard, calculateTrends])
 
   useEffect(() => {
     fetchPaymentData()
-  }, [user, period])
+  }, [fetchPaymentData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
       currency: 'AUD'
     }).format(amount / 100) // Stripe amounts are in cents
-  }
-
-  const formatCurrencyDollars = (amount: number) => {
-    return new Intl.NumberFormat('en-AU', {
-      style: 'currency',
-      currency: 'AUD'
-    }).format(amount) // Already in dollars
   }
 
   const formatPercent = (value: number) => `${Math.round(value)}%`
@@ -889,7 +880,7 @@ export default function PaymentsPage() {
     } finally {
       setExporting(null)
     }
-  }, [metrics, allPayments, recentPayments, methodBreakdown, customerLeaderboard, period, periodLabel, revenueChange])
+  }, [metrics, recentPayments, methodBreakdown, customerLeaderboard, period, periodLabel, revenueChange, getDateRange])
 
   if (loading) {
     return (
@@ -1177,7 +1168,7 @@ export default function PaymentsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {methodBreakdown.map((method, index) => (
+                {methodBreakdown.map((method) => (
                   <div key={method.method} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1230,17 +1221,17 @@ export default function PaymentsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {customerLeaderboard.map((customer, index) => (
+                {customerLeaderboard.map((customer, _index) => (
                   <div 
                     key={customer.id} 
                     className="flex items-center justify-between bg-flowtrade-navy rounded-lg p-3 hover:bg-flowtrade-navy-lighter/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-flowtrade-navy-lighter ${getMedalColor(index)}`}>
-                        {index < 3 ? (
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-flowtrade-navy-lighter ${getMedalColor(_index)}`}>
+                        {_index < 3 ? (
                           <Trophy className="h-4 w-4" />
                         ) : (
-                          <span className="text-sm font-bold">{index + 1}</span>
+                          <span className="text-sm font-bold">{_index + 1}</span>
                         )}
                       </div>
                       <div>
