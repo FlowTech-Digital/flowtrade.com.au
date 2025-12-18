@@ -230,14 +230,14 @@ export default function PaymentsPage() {
     // Initialize all days in range
     const current = new Date(start)
     while (current <= end) {
-      const dateKey = current.toISOString().split('T')[0]
+      const dateKey = current.toISOString().split('T')[0] as string
       dayMap.set(dateKey, { amount: 0, count: 0 })
       current.setDate(current.getDate() + 1)
     }
     
     // Aggregate payments by day
     successfulPayments.forEach(payment => {
-      const dateKey = new Date(payment.created_at).toISOString().split('T')[0]
+      const dateKey = new Date(payment.created_at).toISOString().split('T')[0] as string
       const existing = dayMap.get(dateKey)
       if (existing) {
         dayMap.set(dateKey, {
