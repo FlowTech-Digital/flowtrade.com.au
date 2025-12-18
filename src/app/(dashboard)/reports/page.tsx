@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,7 +16,8 @@ import {
   Loader2,
   Calendar,
   BarChart3,
-  PieChart
+  PieChart,
+  ArrowRight
 } from 'lucide-react'
 
 type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
@@ -470,10 +472,12 @@ export default function ReportsPage() {
         {/* Job Metrics */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-amber-400" />
-              Job Performance
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-amber-400" />
+                Job Performance
+              </CardTitle>
+            </div>
             <CardDescription className="text-gray-400">{periodLabel}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -516,13 +520,22 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Quote Metrics */}
+        {/* Quote Metrics - with View Details link */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <FileText className="h-5 w-5 text-flowtrade-cyan" />
-              Quote Analytics
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <FileText className="h-5 w-5 text-flowtrade-cyan" />
+                Quote Analytics
+              </CardTitle>
+              <Link 
+                href="/reports/quotes"
+                className="flex items-center gap-1 text-xs text-flowtrade-cyan hover:text-flowtrade-cyan/80 transition-colors"
+              >
+                View Details
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
             <CardDescription className="text-gray-400">{periodLabel}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -576,10 +589,12 @@ export default function ReportsPage() {
         {/* Customer Insights */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-purple-400" />
-              Customer Insights
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-400" />
+                Customer Insights
+              </CardTitle>
+            </div>
             <CardDescription className="text-gray-400">{periodLabel}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -627,13 +642,22 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Monthly Revenue Trend */}
+        {/* Monthly Revenue Trend - with View Details link */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-green-400" />
-              Revenue Trend
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-green-400" />
+                Revenue Trend
+              </CardTitle>
+              <Link 
+                href="/reports/payments"
+                className="flex items-center gap-1 text-xs text-flowtrade-cyan hover:text-flowtrade-cyan/80 transition-colors"
+              >
+                View Details
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
             <CardDescription className="text-gray-400">Monthly breakdown</CardDescription>
           </CardHeader>
           <CardContent>
