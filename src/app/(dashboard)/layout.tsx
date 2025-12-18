@@ -4,17 +4,33 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3 } from 'lucide-react'
+import { Home, FileText, Briefcase, Users, Settings, LogOut, Loader2, Menu, X, Receipt, BarChart3, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
-const navigation = [
+type NavItem = {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  children?: { name: string; href: string }[]
+}
+
+const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Quotes', href: '/quotes', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Briefcase },
   { name: 'Invoices', href: '/invoices', icon: Receipt },
   { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
+  { 
+    name: 'Reports', 
+    href: '/reports', 
+    icon: BarChart3,
+    children: [
+      { name: 'Overview', href: '/reports' },
+      { name: 'Quotes Analytics', href: '/reports/quotes' },
+      { name: 'Payment Analytics', href: '/reports/payments' },
+    ]
+  },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -33,6 +49,7 @@ export default function DashboardLayout({
   const { user, loading, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null)
+  const [expandedItems, setExpandedItems] = useState<string[]>(['Reports']) // Reports expanded by default
 
   // Fetch organization info
   useEffect(() => {
@@ -78,9 +95,38 @@ export default function DashboardLayout({
     setMobileMenuOpen(false)
   }, [pathname])
 
+  // Auto-expand Reports if on a reports page
+  useEffect(() => {
+    if (pathname.startsWith('/reports') && !expandedItems.includes('Reports')) {
+      setExpandedItems(prev => [...prev, 'Reports'])
+    }
+  }, [pathname, expandedItems])
+
   const handleSignOut = async () => {
     await signOut()
     router.push('/login')
+  }
+
+  const toggleExpanded = (name: string) => {
+    setExpandedItems(prev => 
+      prev.includes(name) 
+        ? prev.filter(item => item !== name)
+        : [...prev, name]
+    )
+  }
+
+  const isItemActive = (item: NavItem) => {
+    if (item.children) {
+      return pathname.startsWith(item.href)
+    }
+    return pathname === item.href || pathname.startsWith(item.href + '/')
+  }
+
+  const isChildActive = (href: string) => {
+    if (href === '/reports') {
+      return pathname === '/reports'
+    }
+    return pathname === href || pathname.startsWith(href + '/')
   }
 
   // Show loading state while checking auth
@@ -98,6 +144,72 @@ export default function DashboardLayout({
       <div className="flex min-h-screen items-center justify-center bg-flowtrade-navy">
         <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" />
       </div>
+    )
+  }
+
+  const renderNavItem = (item: NavItem, isMobile: boolean = false) => {
+    const isActive = isItemActive(item)
+    const isExpanded = expandedItems.includes(item.name)
+    const hasChildren = item.children && item.children.length > 0
+
+    if (hasChildren) {
+      return (
+        <div key={item.name}>
+          <button
+            onClick={() => toggleExpanded(item.name)}
+            className={`flex items-center justify-between w-full px-3 ${isMobile ? 'py-3 text-base' : 'py-2 text-sm'} font-medium rounded-lg transition-colors ${
+              isActive
+                ? 'bg-flowtrade-cyan/10 text-flowtrade-cyan'
+                : 'text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter'
+            }`}
+          >
+            <div className="flex items-center">
+              <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-flowtrade-cyan' : ''}`} />
+              {item.name}
+            </div>
+            <ChevronDown 
+              className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+            />
+          </button>
+          
+          {/* Submenu */}
+          <div className={`overflow-hidden transition-all duration-200 ${isExpanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="ml-8 mt-1 space-y-1">
+              {item.children?.map((child) => {
+                const childActive = isChildActive(child.href)
+                return (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    className={`block px-3 ${isMobile ? 'py-2 text-sm' : 'py-1.5 text-xs'} font-medium rounded-lg transition-colors ${
+                      childActive
+                        ? 'text-flowtrade-cyan bg-flowtrade-cyan/5'
+                        : 'text-gray-500 hover:text-gray-300 hover:bg-flowtrade-navy-lighter/50'
+                    }`}
+                  >
+                    {child.name}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        className={`flex items-center px-3 ${isMobile ? 'py-3 text-base' : 'py-2 text-sm'} font-medium rounded-lg transition-colors ${
+          isActive
+            ? 'bg-flowtrade-cyan/10 text-flowtrade-cyan'
+            : 'text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter'
+        }`}
+      >
+        <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-flowtrade-cyan' : ''}`} />
+        {item.name}
+      </Link>
     )
   }
 
@@ -160,24 +272,8 @@ export default function DashboardLayout({
           )}
 
           {/* Mobile Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-3 py-3 text-base font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-flowtrade-cyan/10 text-flowtrade-cyan'
-                      : 'text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter'
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-flowtrade-cyan' : ''}`} />
-                  {item.name}
-                </Link>
-              )
-            })}
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+            {navigation.map((item) => renderNavItem(item, true))}
           </nav>
 
           {/* User section */}
@@ -239,24 +335,8 @@ export default function DashboardLayout({
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-flowtrade-cyan/10 text-flowtrade-cyan'
-                      : 'text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter'
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-flowtrade-cyan' : ''}`} />
-                  {item.name}
-                </Link>
-              )
-            })}
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+            {navigation.map((item) => renderNavItem(item, false))}
           </nav>
 
           {/* User section */}
