@@ -19,8 +19,20 @@ import {
   ArrowDownRight,
   Wallet,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Users,
+  Trophy,
+  PieChart
 } from 'lucide-react'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts'
 
 type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
 
@@ -67,10 +79,26 @@ type PaymentMetrics = {
   refundTotal: number
 }
 
-// TODO: Phase 7.2 Completion - Add these types and features
-// type PaymentMethodBreakdown = { method: string; count: number; total: number }[]
-// type CustomerLeaderboard = { id: string; name: string; totalPaid: number; paymentCount: number }[]
-// type PaymentTrend = { date: string; amount: number; count: number }[]
+// Phase 7.2 Completion - Types for additional analytics
+type PaymentMethodBreakdown = {
+  method: string
+  count: number
+  total: number
+  percentage: number
+}
+
+type CustomerLeaderboardEntry = {
+  id: string
+  name: string
+  totalPaid: number
+  paymentCount: number
+}
+
+type PaymentTrend = {
+  date: string
+  amount: number
+  count: number
+}
 
 export default function PaymentsPage() {
   const { user } = useAuth()
@@ -80,10 +108,10 @@ export default function PaymentsPage() {
   const [metrics, setMetrics] = useState<PaymentMetrics | null>(null)
   const [recentPayments, setRecentPayments] = useState<(Payment & { customer?: Customer; invoice?: Invoice })[]>([])
   
-  // TODO: Phase 7.2 Completion - Add these state variables
-  // const [methodBreakdown, setMethodBreakdown] = useState<PaymentMethodBreakdown>([])
-  // const [customerLeaderboard, setCustomerLeaderboard] = useState<CustomerLeaderboard>([])
-  // const [trends, setTrends] = useState<PaymentTrend[]>([])
+  // Phase 7.2 Completion - State variables for additional analytics
+  const [methodBreakdown, setMethodBreakdown] = useState<PaymentMethodBreakdown[]>([])
+  const [customerLeaderboard, setCustomerLeaderboard] = useState<CustomerLeaderboardEntry[]>([])
+  const [trends, setTrends] = useState<PaymentTrend[]>([])
 
   const periodLabel = useMemo(() => {
     switch (period) {
@@ -118,6 +146,116 @@ export default function PaymentsPage() {
     }
     
     return { start, end }
+  }
+
+  // Phase 7.2 Completion - Calculate payment method breakdown
+  const calculateMethodBreakdown = (payments: Payment[]): PaymentMethodBreakdown[] => {
+    const successfulPayments = payments.filter(p => p.status === 'succeeded')
+    const methodMap = new Map<string, { count: number; total: number }>()
+    
+    successfulPayments.forEach(payment => {
+      const method = payment.payment_method || 'unknown'
+      const existing = methodMap.get(method) || { count: 0, total: 0 }
+      methodMap.set(method, {
+        count: existing.count + 1,
+        total: existing.total + (payment.amount || 0)
+      })
+    })
+    
+    const totalPayments = successfulPayments.length
+    const breakdown: PaymentMethodBreakdown[] = []
+    
+    methodMap.forEach((value, key) => {
+      breakdown.push({
+        method: key,
+        count: value.count,
+        total: value.total,
+        percentage: totalPayments > 0 ? (value.count / totalPayments) * 100 : 0
+      })
+    })
+    
+    // Sort by count descending
+    return breakdown.sort((a, b) => b.count - a.count)
+  }
+
+  // Phase 7.2 Completion - Calculate customer leaderboard
+  const calculateCustomerLeaderboard = (
+    payments: Payment[], 
+    customerMap: Map<string, Customer>
+  ): CustomerLeaderboardEntry[] => {
+    const successfulPayments = payments.filter(p => p.status === 'succeeded')
+    const customerStats = new Map<string, { totalPaid: number; paymentCount: number }>()
+    
+    successfulPayments.forEach(payment => {
+      if (payment.customer_id) {
+        const existing = customerStats.get(payment.customer_id) || { totalPaid: 0, paymentCount: 0 }
+        customerStats.set(payment.customer_id, {
+          totalPaid: existing.totalPaid + (payment.amount || 0),
+          paymentCount: existing.paymentCount + 1
+        })
+      }
+    })
+    
+    const leaderboard: CustomerLeaderboardEntry[] = []
+    
+    customerStats.forEach((stats, customerId) => {
+      const customer = customerMap.get(customerId)
+      const name = customer 
+        ? (customer.company_name || 
+           `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 
+           customer.email || 
+           'Unknown Customer')
+        : 'Unknown Customer'
+      
+      leaderboard.push({
+        id: customerId,
+        name,
+        totalPaid: stats.totalPaid,
+        paymentCount: stats.paymentCount
+      })
+    })
+    
+    // Sort by total paid descending and take top 5
+    return leaderboard.sort((a, b) => b.totalPaid - a.totalPaid).slice(0, 5)
+  }
+
+  // Phase 7.2 Completion - Calculate payment trends
+  const calculateTrends = (payments: Payment[], start: Date, end: Date): PaymentTrend[] => {
+    const successfulPayments = payments.filter(p => p.status === 'succeeded')
+    const dayMap = new Map<string, { amount: number; count: number }>()
+    
+    // Initialize all days in range
+    const current = new Date(start)
+    while (current <= end) {
+      const dateKey = current.toISOString().split('T')[0]
+      dayMap.set(dateKey, { amount: 0, count: 0 })
+      current.setDate(current.getDate() + 1)
+    }
+    
+    // Aggregate payments by day
+    successfulPayments.forEach(payment => {
+      const dateKey = new Date(payment.created_at).toISOString().split('T')[0]
+      const existing = dayMap.get(dateKey)
+      if (existing) {
+        dayMap.set(dateKey, {
+          amount: existing.amount + (payment.amount || 0),
+          count: existing.count + 1
+        })
+      }
+    })
+    
+    // Convert to array and format for chart
+    const trends: PaymentTrend[] = []
+    dayMap.forEach((value, date) => {
+      trends.push({
+        date,
+        amount: value.amount / 100, // Convert cents to dollars for display
+        count: value.count
+      })
+    })
+    
+    // Sort by date
+    return trends.sort((a, b) => a.date.localeCompare(b.date))
   }
 
   const fetchPaymentData = async (isRefresh = false) => {
@@ -240,10 +378,10 @@ export default function PaymentsPage() {
 
     setRecentPayments(enrichedPayments)
 
-    // TODO: Phase 7.2 Completion - Calculate these additional metrics
-    // calculateMethodBreakdown(payments)
-    // calculateCustomerLeaderboard(payments, customerMap)
-    // calculateTrends(payments, start, end)
+    // Phase 7.2 Completion - Calculate additional metrics
+    setMethodBreakdown(calculateMethodBreakdown(payments))
+    setCustomerLeaderboard(calculateCustomerLeaderboard(payments, customerMap))
+    setTrends(calculateTrends(payments, start, end))
 
     setLoading(false)
     setRefreshing(false)
@@ -258,6 +396,13 @@ export default function PaymentsPage() {
       style: 'currency',
       currency: 'AUD'
     }).format(amount / 100) // Stripe amounts are in cents
+  }
+
+  const formatCurrencyDollars = (amount: number) => {
+    return new Intl.NumberFormat('en-AU', {
+      style: 'currency',
+      currency: 'AUD'
+    }).format(amount) // Already in dollars
   }
 
   const formatPercent = (value: number) => `${Math.round(value)}%`
@@ -322,6 +467,37 @@ export default function PaymentsPage() {
     // Format common payment method types
     const formatted = method.replace(/_/g, ' ')
     return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+  }
+
+  const getMethodIcon = (method: string) => {
+    const lowerMethod = method.toLowerCase()
+    if (lowerMethod.includes('card') || lowerMethod.includes('visa') || lowerMethod.includes('mastercard')) {
+      return <CreditCard className="h-4 w-4 text-blue-400" />
+    }
+    if (lowerMethod.includes('apple') || lowerMethod.includes('google') || lowerMethod.includes('wallet')) {
+      return <Wallet className="h-4 w-4 text-purple-400" />
+    }
+    if (lowerMethod.includes('bank') || lowerMethod.includes('transfer') || lowerMethod.includes('becs')) {
+      return <DollarSign className="h-4 w-4 text-green-400" />
+    }
+    return <CreditCard className="h-4 w-4 text-gray-400" />
+  }
+
+  const formatTrendDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return new Intl.DateTimeFormat('en-AU', {
+      day: '2-digit',
+      month: 'short'
+    }).format(date)
+  }
+
+  const getMedalColor = (index: number) => {
+    switch (index) {
+      case 0: return 'text-yellow-400' // Gold
+      case 1: return 'text-gray-300' // Silver
+      case 2: return 'text-amber-600' // Bronze
+      default: return 'text-gray-500'
+    }
   }
 
   if (loading) {
@@ -496,91 +672,117 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Payment Trends Chart - Phase 7.2 Completion */}
+      <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-400" />
+            Payment Trends
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Daily payment volume for {periodLabel.toLowerCase()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {trends.length === 0 ? (
+            <div className="text-center py-12">
+              <TrendingUp className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No payment data for chart</p>
+              <p className="text-gray-500 text-sm">Payment trends will appear here when data is available</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={trends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00D4AA" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#00D4AA" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatTrendDate}
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1F2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#F9FAFB'
+                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString('en-AU', { minimumFractionDigits: 2 })}`, 'Revenue']}
+                  labelFormatter={(label) => formatTrendDate(label)}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="#00D4AA" 
+                  fillOpacity={1} 
+                  fill="url(#colorAmount)" 
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payment Methods & Top Customers Grid - Phase 7.2 Completion */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent Payments */}
-        <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter lg:col-span-2">
+        {/* Payment Method Breakdown Card */}
+        <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-flowtrade-cyan" />
-              Recent Payments
+              <PieChart className="h-5 w-5 text-purple-400" />
+              Payment Methods
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Last 20 payments in {periodLabel.toLowerCase()}
+              Breakdown by payment type
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {recentPayments.length === 0 ? (
-              <div className="text-center py-12">
-                <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No payments found</p>
-                <p className="text-gray-500 text-sm">Payments will appear here when processed</p>
+            {methodBreakdown.length === 0 ? (
+              <div className="text-center py-8">
+                <CreditCard className="h-10 w-10 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No payment method data</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {recentPayments.map((payment) => (
-                  <div 
-                    key={payment.id} 
-                    className="flex items-center justify-between bg-flowtrade-navy rounded-lg p-4 hover:bg-flowtrade-navy-lighter/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Status icon */}
-                      {getStatusIcon(payment.status)}
-                      
-                      {/* Payment details */}
-                      <div>
-                        <p className="text-white font-medium">
-                          {getCustomerName(payment.customer)}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span>{formatTimestamp(payment.created_at)}</span>
-                          {payment.invoice && (
-                            <>
-                              <span>•</span>
-                              <span>Invoice #{payment.invoice.invoice_number}</span>
-                            </>
-                          )}
-                          {payment.payment_method && (
-                            <>
-                              <span>•</span>
-                              <span>{formatPaymentMethod(payment.payment_method)}</span>
-                            </>
-                          )}
-                        </div>
+              <div className="space-y-4">
+                {methodBreakdown.map((method, index) => (
+                  <div key={method.method} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getMethodIcon(method.method)}
+                        <span className="text-white text-sm font-medium">
+                          {formatPaymentMethod(method.method)}
+                        </span>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      {/* Status badge */}
-                      <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(payment.status)}`}>
-                        {payment.status}
-                      </span>
-                      
-                      {/* Amount */}
                       <div className="text-right">
-                        <p className={`font-bold ${
-                          payment.status === 'succeeded' ? 'text-green-400' :
-                          payment.status === 'refunded' ? 'text-purple-400' :
-                          payment.status === 'failed' ? 'text-red-400' :
-                          'text-white'
-                        }`}>
-                          {payment.status === 'refunded' ? '-' : ''}{formatCurrency(payment.amount)}
-                        </p>
+                        <span className="text-white font-bold">
+                          {formatCurrency(method.total)}
+                        </span>
+                        <span className="text-gray-500 text-xs ml-2">
+                          ({method.count} payments)
+                        </span>
                       </div>
-                      
-                      {/* Stripe link */}
-                      {payment.stripe_payment_intent_id && (
-                        <a
-                          href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_intent_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-flowtrade-cyan transition-colors"
-                          title="View in Stripe"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
                     </div>
+                    <div className="relative h-2 bg-flowtrade-navy rounded-full overflow-hidden">
+                      <div 
+                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full transition-all duration-500"
+                        style={{ width: `${method.percentage}%` }}
+                      />
+                    </div>
+                    <p className="text-gray-500 text-xs text-right">
+                      {Math.round(method.percentage)}% of payments
+                    </p>
                   </div>
                 ))}
               </div>
@@ -588,62 +790,147 @@ export default function PaymentsPage() {
           </CardContent>
         </Card>
 
-        {/* TODO: Phase 7.2 Completion - Payment Method Breakdown Card */}
-        {/* 
+        {/* Top Customers Leaderboard Card */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-400" />
-              Payment Methods
-            </CardTitle>
-            <CardDescription className="text-gray-400">Breakdown by payment type</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {methodBreakdown.map(method => (
-              <div key={method.method}>...</div>
-            ))}
-          </CardContent>
-        </Card>
-        */}
-
-        {/* TODO: Phase 7.2 Completion - Top Customers Card */}
-        {/*
-        <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-amber-400" />
+              <Trophy className="h-5 w-5 text-amber-400" />
               Top Customers
             </CardTitle>
-            <CardDescription className="text-gray-400">By payment volume</CardDescription>
+            <CardDescription className="text-gray-400">
+              Top 5 by payment volume
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {customerLeaderboard.map((customer, index) => (
-              <div key={customer.id}>...</div>
-            ))}
+            {customerLeaderboard.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-10 w-10 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No customer payment data</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {customerLeaderboard.map((customer, index) => (
+                  <div 
+                    key={customer.id} 
+                    className="flex items-center justify-between bg-flowtrade-navy rounded-lg p-3 hover:bg-flowtrade-navy-lighter/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-flowtrade-navy-lighter ${getMedalColor(index)}`}>
+                        {index < 3 ? (
+                          <Trophy className="h-4 w-4" />
+                        ) : (
+                          <span className="text-sm font-bold">{index + 1}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">{customer.name}</p>
+                        <p className="text-gray-500 text-xs">
+                          {customer.paymentCount} payment{customer.paymentCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-green-400 font-bold">
+                        {formatCurrency(customer.totalPaid)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
-        */}
       </div>
 
-      {/* TODO: Phase 7.2 Completion - Payment Trends Chart (integrate with 7.4 Recharts) */}
-      {/*
+      {/* Recent Payments */}
       <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-400" />
-            Payment Trends
+            <Wallet className="h-5 w-5 text-flowtrade-cyan" />
+            Recent Payments
           </CardTitle>
-          <CardDescription className="text-gray-400">Daily payment volume</CardDescription>
+          <CardDescription className="text-gray-400">
+            Last 20 payments in {periodLabel.toLowerCase()}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={trends}>
-              ...
-            </AreaChart>
-          </ResponsiveContainer>
+          {recentPayments.length === 0 ? (
+            <div className="text-center py-12">
+              <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400">No payments found</p>
+              <p className="text-gray-500 text-sm">Payments will appear here when processed</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentPayments.map((payment) => (
+                <div 
+                  key={payment.id} 
+                  className="flex items-center justify-between bg-flowtrade-navy rounded-lg p-4 hover:bg-flowtrade-navy-lighter/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Status icon */}
+                    {getStatusIcon(payment.status)}
+                    
+                    {/* Payment details */}
+                    <div>
+                      <p className="text-white font-medium">
+                        {getCustomerName(payment.customer)}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{formatTimestamp(payment.created_at)}</span>
+                        {payment.invoice && (
+                          <>
+                            <span>•</span>
+                            <span>Invoice #{payment.invoice.invoice_number}</span>
+                          </>
+                        )}
+                        {payment.payment_method && (
+                          <>
+                            <span>•</span>
+                            <span>{formatPaymentMethod(payment.payment_method)}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    {/* Status badge */}
+                    <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(payment.status)}`}>
+                      {payment.status}
+                    </span>
+                    
+                    {/* Amount */}
+                    <div className="text-right">
+                      <p className={`font-bold ${
+                        payment.status === 'succeeded' ? 'text-green-400' :
+                        payment.status === 'refunded' ? 'text-purple-400' :
+                        payment.status === 'failed' ? 'text-red-400' :
+                        'text-white'
+                      }`}>
+                        {payment.status === 'refunded' ? '-' : ''}{formatCurrency(payment.amount)}
+                      </p>
+                    </div>
+                    
+                    {/* Stripe link */}
+                    {payment.stripe_payment_intent_id && (
+                      <a
+                        href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_intent_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-flowtrade-cyan transition-colors"
+                        title="View in Stripe"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
-      */}
     </div>
   )
 }
