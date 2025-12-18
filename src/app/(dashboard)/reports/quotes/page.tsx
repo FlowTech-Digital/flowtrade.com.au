@@ -121,6 +121,16 @@ export default function QuotesReportPage() {
     }).format(amount)
   }
 
+  const formatCurrencyCompact = (amount: number) => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`
+    }
+    if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}K`
+    }
+    return `$${amount.toFixed(0)}`
+  }
+
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), 'd MMM')
   }
@@ -813,60 +823,119 @@ export default function QuotesReportPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-flowtrade-cyan" />
-              Quote Trends
-            </h3>
-            <p className="text-sm text-gray-400">Daily quote volume for {periodLabel.toLowerCase()}</p>
-          </div>
-          
-          {dailyTrends.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={dailyTrends}>
-                <defs>
-                  <linearGradient id="quoteGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#00D4FF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#6B7280" 
-                  fontSize={12}
-                  tickFormatter={(value) => formatDate(value)}
-                />
-                <YAxis stroke="#6B7280" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0f2744',
-                    border: '1px solid #1e3a5f',
-                    borderRadius: '8px',
-                    color: '#fff',
-                  }}
-                  labelFormatter={(value) => format(parseISO(value as string), 'd MMM yyyy')}
-                  formatter={(value: number) => [value, 'Quotes']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#00D4FF"
-                  strokeWidth={2}
-                  fill="url(#quoteGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[250px] text-gray-500">
-              <TrendingDown className="h-12 w-12 mb-2 opacity-50" />
-              <p>No quote data for this period</p>
-            </div>
-          )}
+      {/* Quote Volume Trends Chart */}
+      <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-flowtrade-cyan" />
+            Quote Volume Trends
+          </h3>
+          <p className="text-sm text-gray-400">Daily quote count for {periodLabel.toLowerCase()}</p>
         </div>
+        
+        {dailyTrends.length > 0 ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={dailyTrends}>
+              <defs>
+                <linearGradient id="quoteGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#00D4FF" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#6B7280" 
+                fontSize={12}
+                tickFormatter={(value) => formatDate(value)}
+              />
+              <YAxis stroke="#6B7280" fontSize={12} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#0f2744',
+                  border: '1px solid #1e3a5f',
+                  borderRadius: '8px',
+                  color: '#fff',
+                }}
+                labelFormatter={(value) => format(parseISO(value as string), 'd MMM yyyy')}
+                formatter={(value: number) => [value, 'Quotes']}
+              />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#00D4FF"
+                strokeWidth={2}
+                fill="url(#quoteGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[250px] text-gray-500">
+            <TrendingDown className="h-12 w-12 mb-2 opacity-50" />
+            <p>No quote data for this period</p>
+          </div>
+        )}
+      </div>
 
+      {/* Quote Value Trends Chart - Phase 8.4 */}
+      <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-green-400" />
+            Quote Value Trends
+          </h3>
+          <p className="text-sm text-gray-400">Daily quote value for {periodLabel.toLowerCase()}</p>
+        </div>
+        
+        {dailyTrends.length > 0 && dailyTrends.some(d => d.value > 0) ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={dailyTrends}>
+              <defs>
+                <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#6B7280" 
+                fontSize={12}
+                tickFormatter={(value) => formatDate(value)}
+              />
+              <YAxis 
+                stroke="#6B7280" 
+                fontSize={12}
+                tickFormatter={(value) => formatCurrencyCompact(value)}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#0f2744',
+                  border: '1px solid #1e3a5f',
+                  borderRadius: '8px',
+                  color: '#fff',
+                }}
+                labelFormatter={(value) => format(parseISO(value as string), 'd MMM yyyy')}
+                formatter={(value: number) => [formatCurrency(value), 'Value']}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#10B981"
+                strokeWidth={2}
+                fill="url(#valueGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[250px] text-gray-500">
+            <DollarSign className="h-12 w-12 mb-2 opacity-50" />
+            <p>No quote value data for this period</p>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -915,9 +984,7 @@ export default function QuotesReportPage() {
             </div>
           )}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -954,48 +1021,48 @@ export default function QuotesReportPage() {
             </div>
           )}
         </div>
+      </div>
 
-        <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <FileText className="h-5 w-5 text-flowtrade-cyan" />
-              Recent Quotes
-            </h3>
-            <p className="text-sm text-gray-400">Last 10 quotes in selected period</p>
-          </div>
-          
-          {quotes.length > 0 ? (
-            <div className="space-y-2 max-h-[280px] overflow-y-auto">
-              {quotes.slice(0, 10).map((quote) => (
-                <div 
-                  key={quote.id}
-                  className="flex items-center justify-between p-3 bg-flowtrade-navy/50 rounded-lg border border-flowtrade-navy-lighter hover:border-flowtrade-cyan/30 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: STATUS_COLORS[quote.status] || '#6B7280' }}
-                    />
-                    <div>
-                      <p className="text-white font-medium text-sm">{quote.quote_number}</p>
-                      <p className="text-xs text-gray-500">{getCustomerName(quote.customer)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white font-semibold text-sm">{formatCurrency(quote.total)}</p>
-                    <p className="text-xs text-gray-500">{formatDate(quote.created_at)}</p>
+      <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <FileText className="h-5 w-5 text-flowtrade-cyan" />
+            Recent Quotes
+          </h3>
+          <p className="text-sm text-gray-400">Last 10 quotes in selected period</p>
+        </div>
+        
+        {quotes.length > 0 ? (
+          <div className="space-y-2 max-h-[280px] overflow-y-auto">
+            {quotes.slice(0, 10).map((quote) => (
+              <div 
+                key={quote.id}
+                className="flex items-center justify-between p-3 bg-flowtrade-navy/50 rounded-lg border border-flowtrade-navy-lighter hover:border-flowtrade-cyan/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: STATUS_COLORS[quote.status] || '#6B7280' }}
+                  />
+                  <div>
+                    <p className="text-white font-medium text-sm">{quote.quote_number}</p>
+                    <p className="text-xs text-gray-500">{getCustomerName(quote.customer)}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
-              <FileText className="h-12 w-12 mb-2 opacity-50" />
-              <p>No quotes found</p>
-              <p className="text-xs mt-1">Quotes will appear here when created</p>
-            </div>
-          )}
-        </div>
+                <div className="text-right">
+                  <p className="text-white font-semibold text-sm">{formatCurrency(quote.total)}</p>
+                  <p className="text-xs text-gray-500">{formatDate(quote.created_at)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+            <FileText className="h-12 w-12 mb-2 opacity-50" />
+            <p>No quotes found</p>
+            <p className="text-xs mt-1">Quotes will appear here when created</p>
+          </div>
+        )}
       </div>
     </div>
   )
