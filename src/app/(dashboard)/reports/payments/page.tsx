@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,7 +22,10 @@ import {
   ExternalLink,
   Users,
   Trophy,
-  PieChart
+  PieChart,
+  Download,
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react'
 import {
   AreaChart,
@@ -105,8 +108,10 @@ export default function PaymentsPage() {
   const [period, setPeriod] = useState<ReportPeriod>('30d')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null)
   const [metrics, setMetrics] = useState<PaymentMetrics | null>(null)
   const [recentPayments, setRecentPayments] = useState<(Payment & { customer?: Customer; invoice?: Invoice })[]>([])
+  const [allPayments, setAllPayments] = useState<(Payment & { customer?: Customer; invoice?: Invoice })[]>([])
   
   // Phase 7.2 Completion - State variables for additional analytics
   const [methodBreakdown, setMethodBreakdown] = useState<PaymentMethodBreakdown[]>([])
@@ -369,14 +374,15 @@ export default function PaymentsPage() {
       refundTotal
     })
 
-    // Enrich recent payments with customer and invoice data
-    const enrichedPayments = payments.slice(0, 20).map(payment => ({
+    // Enrich all payments with customer and invoice data (for export)
+    const enrichedPayments = payments.map(payment => ({
       ...payment,
       customer: payment.customer_id ? customerMap.get(payment.customer_id) : undefined,
       invoice: payment.invoice_id ? invoiceMap.get(payment.invoice_id) : undefined
     }))
 
-    setRecentPayments(enrichedPayments)
+    setAllPayments(enrichedPayments)
+    setRecentPayments(enrichedPayments.slice(0, 20))
 
     // Phase 7.2 Completion - Calculate additional metrics
     setMethodBreakdown(calculateMethodBreakdown(payments))
@@ -454,6 +460,18 @@ export default function PaymentsPage() {
     }).format(new Date(timestamp))
   }
 
+  const formatDateForExport = (timestamp: string) => {
+    return new Intl.DateTimeFormat('en-AU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(new Date(timestamp))
+  }
+
   const getCustomerName = (customer?: Customer) => {
     if (!customer) return 'Unknown Customer'
     return customer.company_name || 
@@ -500,6 +518,379 @@ export default function PaymentsPage() {
     }
   }
 
+  // Phase 7.3 - Export to CSV
+  const exportToCSV = useCallback(() => {
+    if (allPayments.length === 0) return
+    
+    setExporting('csv')
+    
+    try {
+      // CSV Headers
+      const headers = [
+        'Date',
+        'Customer',
+        'Email',
+        'Invoice Number',
+        'Amount (AUD)',
+        'Status',
+        'Payment Method',
+        'Stripe Payment ID'
+      ]
+      
+      // CSV Rows
+      const rows = allPayments.map(payment => [
+        formatDateForExport(payment.created_at),
+        getCustomerName(payment.customer),
+        payment.customer?.email || '',
+        payment.invoice?.invoice_number || '',
+        (payment.amount / 100).toFixed(2),
+        payment.status,
+        formatPaymentMethod(payment.payment_method),
+        payment.stripe_payment_intent_id || ''
+      ])
+      
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n')
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      
+      const filename = `flowtrade-payments-${period}-${new Date().toISOString().split('T')[0]}.csv`
+      
+      link.setAttribute('href', url)
+      link.setAttribute('download', filename)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('CSV export error:', error)
+    } finally {
+      setExporting(null)
+    }
+  }, [allPayments, period])
+
+  // Phase 7.3 - Export to PDF (using printable HTML)
+  const exportToPDF = useCallback(() => {
+    if (!metrics) return
+    
+    setExporting('pdf')
+    
+    try {
+      const { start, end } = getDateRange(period)
+      const reportDate = new Date().toLocaleDateString('en-AU', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
+      
+      // Create printable HTML content
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>FlowTrade Payment Report - ${periodLabel}</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              padding: 40px;
+              color: #1f2937;
+              line-height: 1.6;
+            }
+            .header { 
+              border-bottom: 3px solid #00D4AA;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .logo { 
+              font-size: 28px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .logo span { color: #00D4AA; }
+            .report-title {
+              font-size: 20px;
+              color: #6b7280;
+              margin-top: 8px;
+            }
+            .report-meta {
+              font-size: 14px;
+              color: #9ca3af;
+              margin-top: 4px;
+            }
+            .metrics-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+            .metric-card {
+              background: #f9fafb;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 20px;
+            }
+            .metric-label {
+              font-size: 12px;
+              color: #6b7280;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .metric-value {
+              font-size: 24px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-top: 4px;
+            }
+            .metric-sub {
+              font-size: 12px;
+              color: #9ca3af;
+              margin-top: 4px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #0f172a;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 13px;
+            }
+            th {
+              background: #f3f4f6;
+              padding: 12px 8px;
+              text-align: left;
+              font-weight: 600;
+              color: #374151;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            td {
+              padding: 10px 8px;
+              border-bottom: 1px solid #e5e7eb;
+              color: #4b5563;
+            }
+            .status-succeeded { color: #059669; font-weight: 500; }
+            .status-failed { color: #dc2626; font-weight: 500; }
+            .status-pending { color: #d97706; font-weight: 500; }
+            .status-refunded { color: #7c3aed; font-weight: 500; }
+            .amount { font-weight: 600; text-align: right; }
+            .amount-succeeded { color: #059669; }
+            .amount-refunded { color: #7c3aed; }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 12px;
+              color: #9ca3af;
+              text-align: center;
+            }
+            .summary-row {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            .summary-item {
+              background: #f9fafb;
+              padding: 12px;
+              border-radius: 6px;
+              text-align: center;
+            }
+            .summary-count {
+              font-size: 20px;
+              font-weight: 700;
+            }
+            .summary-label {
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .green { color: #059669; }
+            .amber { color: #d97706; }
+            .red { color: #dc2626; }
+            .purple { color: #7c3aed; }
+            @media print {
+              body { padding: 20px; }
+              .metric-card { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">Flow<span>Trade</span></div>
+            <div class="report-title">Payment Analytics Report</div>
+            <div class="report-meta">
+              Period: ${periodLabel} (${start.toLocaleDateString('en-AU')} - ${end.toLocaleDateString('en-AU')})
+              <br>Generated: ${reportDate}
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Total Revenue</div>
+              <div class="metric-value">${formatCurrency(metrics.totalRevenue)}</div>
+              ${revenueChange !== null ? `<div class="metric-sub">${revenueChange >= 0 ? '+' : ''}${Math.round(revenueChange)}% vs previous period</div>` : ''}
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Success Rate</div>
+              <div class="metric-value">${formatPercent(metrics.successRate)}</div>
+              <div class="metric-sub">${metrics.successfulPayments} of ${metrics.totalPayments} payments</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Avg Payment</div>
+              <div class="metric-value">${formatCurrency(metrics.averagePayment)}</div>
+              <div class="metric-sub">${periodLabel}</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Refunds</div>
+              <div class="metric-value">${formatCurrency(metrics.refundTotal)}</div>
+              <div class="metric-sub">${metrics.refundedPayments} refunds</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Payment Status Summary</div>
+            <div class="summary-row">
+              <div class="summary-item">
+                <div class="summary-count green">${metrics.successfulPayments}</div>
+                <div class="summary-label">Successful</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count amber">${metrics.pendingPayments}</div>
+                <div class="summary-label">Pending</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count red">${metrics.failedPayments}</div>
+                <div class="summary-label">Failed</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count purple">${metrics.refundedPayments}</div>
+                <div class="summary-label">Refunded</div>
+              </div>
+            </div>
+          </div>
+
+          ${methodBreakdown.length > 0 ? `
+          <div class="section">
+            <div class="section-title">Payment Methods</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Payments</th>
+                  <th>Percentage</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${methodBreakdown.map(m => `
+                  <tr>
+                    <td>${formatPaymentMethod(m.method)}</td>
+                    <td>${m.count}</td>
+                    <td>${Math.round(m.percentage)}%</td>
+                    <td class="amount">${formatCurrency(m.total)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
+
+          ${customerLeaderboard.length > 0 ? `
+          <div class="section">
+            <div class="section-title">Top Customers</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Customer</th>
+                  <th>Payments</th>
+                  <th style="text-align: right;">Total Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${customerLeaderboard.map((c, i) => `
+                  <tr>
+                    <td>#${i + 1}</td>
+                    <td>${c.name}</td>
+                    <td>${c.paymentCount}</td>
+                    <td class="amount amount-succeeded">${formatCurrency(c.totalPaid)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
+
+          <div class="section">
+            <div class="section-title">Recent Payments (Last 20)</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Invoice</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${recentPayments.map(p => `
+                  <tr>
+                    <td>${formatTimestamp(p.created_at)}</td>
+                    <td>${getCustomerName(p.customer)}</td>
+                    <td>${p.invoice?.invoice_number || '-'}</td>
+                    <td>${formatPaymentMethod(p.payment_method)}</td>
+                    <td class="status-${p.status}">${p.status}</td>
+                    <td class="amount ${p.status === 'succeeded' ? 'amount-succeeded' : p.status === 'refunded' ? 'amount-refunded' : ''}">${p.status === 'refunded' ? '-' : ''}${formatCurrency(p.amount)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>Generated by FlowTrade • flowtrade.com.au</p>
+            <p>This report contains confidential business information.</p>
+          </div>
+        </body>
+        </html>
+      `
+      
+      // Open in new window for printing
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(printContent)
+        printWindow.document.close()
+        
+        // Wait for content to load, then print
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print()
+          }, 250)
+        }
+      }
+    } catch (error) {
+      console.error('PDF export error:', error)
+    } finally {
+      setExporting(null)
+    }
+  }, [metrics, allPayments, recentPayments, methodBreakdown, customerLeaderboard, period, periodLabel, revenueChange])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -521,6 +912,36 @@ export default function PaymentsPage() {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Export Buttons - Phase 7.3 */}
+          <div className="flex items-center gap-2 border-r border-flowtrade-navy-lighter pr-3">
+            <button
+              onClick={exportToCSV}
+              disabled={exporting !== null || allPayments.length === 0}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-flowtrade-navy-light text-gray-400 border border-flowtrade-navy-lighter hover:text-green-400 hover:border-green-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export to CSV"
+            >
+              {exporting === 'csv' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
+              CSV
+            </button>
+            <button
+              onClick={exportToPDF}
+              disabled={exporting !== null || !metrics}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-flowtrade-navy-light text-gray-400 border border-flowtrade-navy-lighter hover:text-red-400 hover:border-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export to PDF"
+            >
+              {exporting === 'pdf' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+              PDF
+            </button>
+          </div>
+
           {/* Refresh button */}
           <button
             onClick={() => fetchPaymentData(true)}
