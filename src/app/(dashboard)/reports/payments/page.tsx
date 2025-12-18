@@ -494,20 +494,6 @@ export default function PaymentsPage() {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1)
   }
 
-  const getMethodIcon = (method: string) => {
-    const lowerMethod = method.toLowerCase()
-    if (lowerMethod.includes('card') || lowerMethod.includes('visa') || lowerMethod.includes('mastercard')) {
-      return <CreditCard className="h-4 w-4 text-blue-400" />
-    }
-    if (lowerMethod.includes('apple') || lowerMethod.includes('google') || lowerMethod.includes('wallet')) {
-      return <Wallet className="h-4 w-4 text-purple-400" />
-    }
-    if (lowerMethod.includes('bank') || lowerMethod.includes('transfer') || lowerMethod.includes('becs')) {
-      return <DollarSign className="h-4 w-4 text-green-400" />
-    }
-    return <CreditCard className="h-4 w-4 text-gray-400" />
-  }
-
   const formatTrendDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return new Intl.DateTimeFormat('en-AU', {
