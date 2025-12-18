@@ -21,7 +21,7 @@ import {
   ExternalLink,
   Users,
   Trophy,
-  PieChart,
+  PieChart as PieChartIcon,
   FileText,
   FileSpreadsheet
 } from 'lucide-react'
@@ -32,7 +32,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
 } from 'recharts'
 
 type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
@@ -100,6 +104,18 @@ type PaymentTrend = {
   amount: number
   count: number
 }
+
+// Phase 7.4 - Chart colors for PieChart
+const CHART_COLORS = [
+  '#00D4AA', // FlowTrade cyan
+  '#8B5CF6', // Purple
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#3B82F6', // Blue
+  '#10B981', // Emerald
+  '#EC4899', // Pink
+  '#6366F1', // Indigo
+]
 
 export default function PaymentsPage() {
   const { user } = useAuth()
@@ -507,6 +523,22 @@ export default function PaymentsPage() {
       case 2: return 'text-amber-600' // Bronze
       default: return 'text-gray-500'
     }
+  }
+
+  // Phase 7.4 - PieChart data formatter
+  const pieChartData = useMemo(() => {
+    return methodBreakdown.map(item => ({
+      name: formatPaymentMethod(item.method),
+      value: item.count,
+      total: item.total,
+      percentage: item.percentage
+    }))
+  }, [methodBreakdown])
+
+  // Phase 7.4 - Custom label for PieChart
+  const renderCustomLabel = ({ name, percentage }: { name: string; percentage: number }) => {
+    if (percentage < 5) return null // Don't show labels for tiny slices
+    return `${name} ${Math.round(percentage)}%`
   }
 
   // Phase 7.3 - Export to CSV
@@ -1147,13 +1179,13 @@ export default function PaymentsPage() {
         </CardContent>
       </Card>
 
-      {/* Payment Methods & Top Customers Grid - Phase 7.2 Completion */}
+      {/* Payment Methods & Top Customers Grid - Phase 7.2/7.4 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Payment Method Breakdown Card */}
+        {/* Payment Method Breakdown Card - Phase 7.4 PieChart */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-purple-400" />
+              <PieChartIcon className="h-5 w-5 text-purple-400" />
               Payment Methods
             </CardTitle>
             <CardDescription className="text-gray-400">
@@ -1168,35 +1200,63 @@ export default function PaymentsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {methodBreakdown.map((method) => (
-                  <div key={method.method} className="space-y-2">
-                    <div className="flex items-center justify-between">
+                {/* PieChart - Phase 7.4 */}
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                      label={renderCustomLabel}
+                      labelLine={false}
+                    >
+                      {pieChartData.map((_, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          stroke="transparent"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                      formatter={(value: number, name: string, props: { payload: { total: number; percentage: number } }) => [
+                        `${value} payments (${formatCurrency(props.payload.total)})`,
+                        name
+                      ]}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      formatter={(value) => <span className="text-gray-300 text-sm">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {/* Method List with totals */}
+                <div className="space-y-2 pt-2 border-t border-flowtrade-navy-lighter">
+                  {methodBreakdown.map((method, index) => (
+                    <div key={method.method} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        {getMethodIcon(method.method)}
-                        <span className="text-white text-sm font-medium">
-                          {formatPaymentMethod(method.method)}
-                        </span>
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                        />
+                        <span className="text-gray-300">{formatPaymentMethod(method.method)}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-white font-bold">
-                          {formatCurrency(method.total)}
-                        </span>
-                        <span className="text-gray-500 text-xs ml-2">
-                          ({method.count} payments)
-                        </span>
-                      </div>
+                      <span className="text-white font-medium">{formatCurrency(method.total)}</span>
                     </div>
-                    <div className="relative h-2 bg-flowtrade-navy rounded-full overflow-hidden">
-                      <div 
-                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full transition-all duration-500"
-                        style={{ width: `${method.percentage}%` }}
-                      />
-                    </div>
-                    <p className="text-gray-500 text-xs text-right">
-                      {Math.round(method.percentage)}% of payments
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
