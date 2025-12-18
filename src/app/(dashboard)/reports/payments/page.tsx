@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DateRangePicker, DateRange } from '@/components/ui/date-range-picker'
+import { subDays } from 'date-fns'
 import {
   DollarSign,
   TrendingUp,
@@ -13,7 +15,6 @@ import {
   XCircle,
   Clock,
   Loader2,
-  Calendar,
   Receipt,
   ArrowDownRight,
   Wallet,
@@ -38,8 +39,6 @@ import {
   Cell,
   Legend
 } from 'recharts'
-
-type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
 
 type Payment = {
   id: string
@@ -84,7 +83,6 @@ type PaymentMetrics = {
   refundTotal: number
 }
 
-// Phase 7.2 Completion - Types for additional analytics
 type PaymentMethodBreakdown = {
   method: string
   count: number
@@ -105,7 +103,6 @@ type PaymentTrend = {
   count: number
 }
 
-// Phase 7.4 - Chart colors for PieChart
 const CHART_COLORS = [
   '#00D4AA', // FlowTrade cyan
   '#8B5CF6', // Purple
@@ -119,55 +116,31 @@ const CHART_COLORS = [
 
 export default function PaymentsPage() {
   const { user } = useAuth()
-  const [period, setPeriod] = useState<ReportPeriod>('30d')
+  
+  // Phase 7.5: Custom date range state (default: last 30 days)
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  })
+  
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null)
   const [metrics, setMetrics] = useState<PaymentMetrics | null>(null)
   const [recentPayments, setRecentPayments] = useState<(Payment & { customer?: Customer; invoice?: Invoice })[]>([])
   const [allPayments, setAllPayments] = useState<(Payment & { customer?: Customer; invoice?: Invoice })[]>([])
-  
-  // Phase 7.2 Completion - State variables for additional analytics
   const [methodBreakdown, setMethodBreakdown] = useState<PaymentMethodBreakdown[]>([])
   const [customerLeaderboard, setCustomerLeaderboard] = useState<CustomerLeaderboardEntry[]>([])
   const [trends, setTrends] = useState<PaymentTrend[]>([])
 
+  // Format date range for display
   const periodLabel = useMemo(() => {
-    switch (period) {
-      case '7d': return 'Last 7 Days'
-      case '30d': return 'Last 30 Days'
-      case '90d': return 'Last 90 Days'
-      case '12m': return 'Last 12 Months'
-      case 'all': return 'All Time'
-    }
-  }, [period])
+    const from = dateRange.from.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+    const to = dateRange.to.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+    return `${from} - ${to}`
+  }, [dateRange])
 
-  const getDateRange = useCallback((p: ReportPeriod): { start: Date; end: Date } => {
-    const end = new Date()
-    const start = new Date()
-    
-    switch (p) {
-      case '7d':
-        start.setDate(start.getDate() - 7)
-        break
-      case '30d':
-        start.setDate(start.getDate() - 30)
-        break
-      case '90d':
-        start.setDate(start.getDate() - 90)
-        break
-      case '12m':
-        start.setFullYear(start.getFullYear() - 1)
-        break
-      case 'all':
-        start.setFullYear(2020)
-        break
-    }
-    
-    return { start, end }
-  }, [])
-
-  // Phase 7.2 Completion - Calculate payment method breakdown
+  // Calculate payment method breakdown
   const calculateMethodBreakdown = useCallback((payments: Payment[]): PaymentMethodBreakdown[] => {
     const successfulPayments = payments.filter(p => p.status === 'succeeded')
     const methodMap = new Map<string, { count: number; total: number }>()
@@ -193,11 +166,10 @@ export default function PaymentsPage() {
       })
     })
     
-    // Sort by count descending
     return breakdown.sort((a, b) => b.count - a.count)
   }, [])
 
-  // Phase 7.2 Completion - Calculate customer leaderboard
+  // Calculate customer leaderboard
   const calculateCustomerLeaderboard = useCallback((
     payments: Payment[], 
     customerMap: Map<string, Customer>
@@ -234,11 +206,10 @@ export default function PaymentsPage() {
       })
     })
     
-    // Sort by total paid descending and take top 5
     return leaderboard.sort((a, b) => b.totalPaid - a.totalPaid).slice(0, 5)
   }, [])
 
-  // Phase 7.2 Completion - Calculate payment trends
+  // Calculate payment trends
   const calculateTrends = useCallback((payments: Payment[], start: Date, end: Date): PaymentTrend[] => {
     const successfulPayments = payments.filter(p => p.status === 'succeeded')
     const dayMap = new Map<string, { amount: number; count: number }>()
@@ -268,12 +239,11 @@ export default function PaymentsPage() {
     dayMap.forEach((value, date) => {
       trendData.push({
         date,
-        amount: value.amount / 100, // Convert cents to dollars for display
+        amount: value.amount / 100, // Convert cents to dollars
         count: value.count
       })
     })
     
-    // Sort by date
     return trendData.sort((a, b) => a.date.localeCompare(b.date))
   }, [])
 
@@ -306,13 +276,16 @@ export default function PaymentsPage() {
     }
 
     const orgId = userData.org_id
-    const { start, end } = getDateRange(period)
+    
+    // Use custom date range
+    const start = dateRange.from
+    const end = dateRange.to
     const startISO = start.toISOString()
     const endISO = end.toISOString()
 
-    // Previous period for comparison
-    const prevStart = new Date(start)
-    prevStart.setTime(prevStart.getTime() - (end.getTime() - start.getTime()))
+    // Previous period for comparison (same duration before start date)
+    const duration = end.getTime() - start.getTime()
+    const prevStart = new Date(start.getTime() - duration)
 
     // Fetch payments, invoices, and customers in parallel
     const [paymentsResult, prevPaymentsResult, invoicesResult, customersResult] = await Promise.all([
@@ -388,7 +361,7 @@ export default function PaymentsPage() {
       refundTotal
     })
 
-    // Enrich all payments with customer and invoice data (for export)
+    // Enrich all payments with customer and invoice data
     const enrichedPayments = payments.map(payment => ({
       ...payment,
       customer: payment.customer_id ? customerMap.get(payment.customer_id) : undefined,
@@ -397,15 +370,13 @@ export default function PaymentsPage() {
 
     setAllPayments(enrichedPayments)
     setRecentPayments(enrichedPayments.slice(0, 20))
-
-    // Phase 7.2 Completion - Calculate additional metrics
     setMethodBreakdown(calculateMethodBreakdown(payments))
     setCustomerLeaderboard(calculateCustomerLeaderboard(payments, customerMap))
     setTrends(calculateTrends(payments, start, end))
 
     setLoading(false)
     setRefreshing(false)
-  }, [user, period, getDateRange, calculateMethodBreakdown, calculateCustomerLeaderboard, calculateTrends])
+  }, [user, dateRange, calculateMethodBreakdown, calculateCustomerLeaderboard, calculateTrends])
 
   useEffect(() => {
     fetchPaymentData()
@@ -415,7 +386,7 @@ export default function PaymentsPage() {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
       currency: 'AUD'
-    }).format(amount / 100) // Stripe amounts are in cents
+    }).format(amount / 100)
   }
 
   const formatPercent = (value: number) => `${Math.round(value)}%`
@@ -489,7 +460,6 @@ export default function PaymentsPage() {
 
   const formatPaymentMethod = (method: string | null) => {
     if (!method) return 'Unknown'
-    // Format common payment method types
     const formatted = method.replace(/_/g, ' ')
     return formatted.charAt(0).toUpperCase() + formatted.slice(1)
   }
@@ -504,14 +474,13 @@ export default function PaymentsPage() {
 
   const getMedalColor = (index: number) => {
     switch (index) {
-      case 0: return 'text-yellow-400' // Gold
-      case 1: return 'text-gray-300' // Silver
-      case 2: return 'text-amber-600' // Bronze
+      case 0: return 'text-yellow-400'
+      case 1: return 'text-gray-300'
+      case 2: return 'text-amber-600'
       default: return 'text-gray-500'
     }
   }
 
-  // Phase 7.4 - PieChart data formatter
   const pieChartData = useMemo(() => {
     return methodBreakdown.map(item => ({
       name: formatPaymentMethod(item.method),
@@ -521,20 +490,18 @@ export default function PaymentsPage() {
     }))
   }, [methodBreakdown])
 
-  // Phase 7.4 - Custom label for PieChart
   const renderCustomLabel = ({ name, percentage }: { name: string; percentage: number }) => {
-    if (percentage < 5) return null // Don't show labels for tiny slices
+    if (percentage < 5) return null
     return `${name} ${Math.round(percentage)}%`
   }
 
-  // Phase 7.3 - Export to CSV
+  // Export to CSV
   const exportToCSV = useCallback(() => {
     if (allPayments.length === 0) return
     
     setExporting('csv')
     
     try {
-      // CSV Headers
       const headers = [
         'Date',
         'Customer',
@@ -546,7 +513,6 @@ export default function PaymentsPage() {
         'Stripe Payment ID'
       ]
       
-      // CSV Rows
       const rows = allPayments.map(payment => [
         formatDateForExport(payment.created_at),
         getCustomerName(payment.customer),
@@ -558,18 +524,16 @@ export default function PaymentsPage() {
         payment.stripe_payment_intent_id || ''
       ])
       
-      // Combine headers and rows
       const csvContent = [
         headers.join(','),
         ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       ].join('\n')
       
-      // Create and download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
       
-      const filename = `flowtrade-payments-${period}-${new Date().toISOString().split('T')[0]}.csv`
+      const filename = `flowtrade-payments-${dateRange.from.toISOString().split('T')[0]}-to-${dateRange.to.toISOString().split('T')[0]}.csv`
       
       link.setAttribute('href', url)
       link.setAttribute('download', filename)
@@ -583,23 +547,23 @@ export default function PaymentsPage() {
     } finally {
       setExporting(null)
     }
-  }, [allPayments, period])
+  }, [allPayments, dateRange])
 
-  // Phase 7.3 - Export to PDF (using printable HTML)
+  // Export to PDF
   const exportToPDF = useCallback(() => {
     if (!metrics) return
     
     setExporting('pdf')
     
     try {
-      const { start, end } = getDateRange(period)
+      const start = dateRange.from
+      const end = dateRange.to
       const reportDate = new Date().toLocaleDateString('en-AU', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
       })
       
-      // Create printable HTML content
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -880,13 +844,11 @@ export default function PaymentsPage() {
         </html>
       `
       
-      // Open in new window for printing
       const printWindow = window.open('', '_blank')
       if (printWindow) {
         printWindow.document.write(printContent)
         printWindow.document.close()
         
-        // Wait for content to load, then print
         printWindow.onload = () => {
           setTimeout(() => {
             printWindow.print()
@@ -898,7 +860,7 @@ export default function PaymentsPage() {
     } finally {
       setExporting(null)
     }
-  }, [metrics, recentPayments, methodBreakdown, customerLeaderboard, period, periodLabel, revenueChange, getDateRange])
+  }, [metrics, recentPayments, methodBreakdown, customerLeaderboard, dateRange, periodLabel, revenueChange])
 
   if (loading) {
     return (
@@ -920,8 +882,8 @@ export default function PaymentsPage() {
           <p className="text-gray-400">Track payment performance and revenue metrics</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          {/* Export Buttons - Phase 7.3 */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Export Buttons */}
           <div className="flex items-center gap-2 border-r border-flowtrade-navy-lighter pr-3">
             <button
               onClick={exportToCSV}
@@ -961,21 +923,11 @@ export default function PaymentsPage() {
             Refresh
           </button>
           
-          {/* Period Selector */}
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as ReportPeriod)}
-              className="bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
-            >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-              <option value="12m">Last 12 Months</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
+          {/* Phase 7.5: Date Range Picker */}
+          <DateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+          />
         </div>
       </div>
 
@@ -1102,7 +1054,7 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      {/* Payment Trends Chart - Phase 7.2 Completion */}
+      {/* Payment Trends Chart */}
       <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -1165,9 +1117,9 @@ export default function PaymentsPage() {
         </CardContent>
       </Card>
 
-      {/* Payment Methods & Top Customers Grid - Phase 7.2/7.4 */}
+      {/* Payment Methods & Top Customers Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Payment Method Breakdown Card - Phase 7.4 PieChart */}
+        {/* Payment Method Breakdown Card */}
         <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
@@ -1186,7 +1138,6 @@ export default function PaymentsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* PieChart - Phase 7.4 */}
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
@@ -1228,7 +1179,6 @@ export default function PaymentsPage() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Method List with totals */}
                 <div className="space-y-2 pt-2 border-t border-flowtrade-navy-lighter">
                   {methodBreakdown.map((method, index) => (
                     <div key={method.method} className="flex items-center justify-between text-sm">
@@ -1308,7 +1258,7 @@ export default function PaymentsPage() {
             Recent Payments
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Last 20 payments in {periodLabel.toLowerCase()}
+            Last 20 payments in selected period
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1326,10 +1276,8 @@ export default function PaymentsPage() {
                   className="flex items-center justify-between bg-flowtrade-navy rounded-lg p-4 hover:bg-flowtrade-navy-lighter/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    {/* Status icon */}
                     {getStatusIcon(payment.status)}
                     
-                    {/* Payment details */}
                     <div>
                       <p className="text-white font-medium">
                         {getCustomerName(payment.customer)}
@@ -1353,12 +1301,10 @@ export default function PaymentsPage() {
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    {/* Status badge */}
                     <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(payment.status)}`}>
                       {payment.status}
                     </span>
                     
-                    {/* Amount */}
                     <div className="text-right">
                       <p className={`font-bold ${
                         payment.status === 'succeeded' ? 'text-green-400' :
@@ -1370,7 +1316,6 @@ export default function PaymentsPage() {
                       </p>
                     </div>
                     
-                    {/* Stripe link */}
                     {payment.stripe_payment_intent_id && (
                       <a
                         href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_intent_id}`}
