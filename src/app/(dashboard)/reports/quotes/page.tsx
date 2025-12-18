@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { 
@@ -11,10 +11,10 @@ import {
   DollarSign,
   Users,
   RefreshCw,
-  Download,
   Loader2,
   BarChart3,
-  XCircle
+  XCircle,
+  FileSpreadsheet
 } from 'lucide-react'
 import { 
   AreaChart, 
@@ -102,6 +102,7 @@ export default function QuotesReportPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null)
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [metrics, setMetrics] = useState<QuoteMetrics | null>(null)
   const [dailyTrends, setDailyTrends] = useState<DailyTrend[]>([])
@@ -122,6 +123,10 @@ export default function QuotesReportPage() {
 
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), 'd MMM')
+  }
+
+  const formatDateFull = (dateString: string) => {
+    return format(parseISO(dateString), 'd MMM yyyy')
   }
 
   const getCustomerName = (customer: Quote['customer']) => {
@@ -300,9 +305,10 @@ export default function QuotesReportPage() {
     setDateRange(range)
   }
 
-  const periodLabel = dateRange.from && dateRange.to 
-    ? `${format(dateRange.from, 'd MMM yyyy').toLowerCase()} - ${format(dateRange.to, 'd MMM yyyy').toLowerCase()}`
-    : 'Select date range'
+  const periodLabel = useMemo(() => {
+    if (!dateRange.from || !dateRange.to) return 'Select date range'
+    return `${format(dateRange.from, 'd MMM yyyy')} - ${format(dateRange.to, 'd MMM yyyy')}`
+  }, [dateRange])
 
   const pieChartData = metrics ? Object.entries(metrics.statusBreakdown)
     .filter(([, value]) => value > 0)
@@ -312,34 +318,347 @@ export default function QuotesReportPage() {
       color: STATUS_COLORS[status] || '#6B7280',
     })) : []
 
-  const exportToCSV = () => {
+  // Export to CSV
+  const exportToCSV = useCallback(() => {
     if (quotes.length === 0) return
 
-    const headers = ['Quote Number', 'Customer', 'Status', 'Total', 'Valid Until', 'Created At']
-    const rows = quotes.map(quote => [
-      quote.quote_number,
-      getCustomerName(quote.customer),
-      quote.status,
-      quote.total?.toString() || '0',
-      quote.valid_until || '',
-      quote.created_at,
-    ])
+    setExporting('csv')
 
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
-      .join('\n')
+    try {
+      const headers = ['Quote Number', 'Customer', 'Status', 'Total', 'Valid Until', 'Created At']
+      const rows = quotes.map(quote => [
+        quote.quote_number,
+        getCustomerName(quote.customer),
+        quote.status,
+        quote.total?.toString() || '0',
+        quote.valid_until || '',
+        quote.created_at,
+      ])
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const dateStr = dateRange.from && dateRange.to 
-      ? `${format(dateRange.from, 'yyyyMMdd')}-${format(dateRange.to, 'yyyyMMdd')}`
-      : format(new Date(), 'yyyyMMdd')
-    a.href = url
-    a.download = `quotes-report-${dateStr}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const dateStr = dateRange.from && dateRange.to 
+        ? `${format(dateRange.from, 'yyyyMMdd')}-${format(dateRange.to, 'yyyyMMdd')}`
+        : format(new Date(), 'yyyyMMdd')
+      a.href = url
+      a.download = `quotes-report-${dateStr}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('CSV export error:', error)
+    } finally {
+      setExporting(null)
+    }
+  }, [quotes, dateRange])
+
+  // Export to PDF
+  const exportToPDF = useCallback(() => {
+    if (!metrics) return
+
+    setExporting('pdf')
+
+    try {
+      const reportDate = new Date().toLocaleDateString('en-AU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>FlowTrade Quotes Report - ${periodLabel}</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              padding: 40px;
+              color: #1f2937;
+              line-height: 1.6;
+            }
+            .header { 
+              border-bottom: 3px solid #00D4AA;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .logo { 
+              font-size: 28px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .logo span { color: #00D4AA; }
+            .report-title {
+              font-size: 20px;
+              color: #6b7280;
+              margin-top: 8px;
+            }
+            .report-meta {
+              font-size: 14px;
+              color: #9ca3af;
+              margin-top: 4px;
+            }
+            .metrics-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+            .metric-card {
+              background: #f9fafb;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 20px;
+            }
+            .metric-label {
+              font-size: 12px;
+              color: #6b7280;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .metric-value {
+              font-size: 24px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-top: 4px;
+            }
+            .metric-sub {
+              font-size: 12px;
+              color: #9ca3af;
+              margin-top: 4px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #0f172a;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 13px;
+            }
+            th {
+              background: #f3f4f6;
+              padding: 12px 8px;
+              text-align: left;
+              font-weight: 600;
+              color: #374151;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            td {
+              padding: 10px 8px;
+              border-bottom: 1px solid #e5e7eb;
+              color: #4b5563;
+            }
+            .status-draft { color: #6B7280; }
+            .status-sent { color: #3B82F6; }
+            .status-viewed { color: #8B5CF6; }
+            .status-accepted { color: #10B981; font-weight: 500; }
+            .status-declined { color: #EF4444; font-weight: 500; }
+            .status-expired { color: #F97316; }
+            .amount { font-weight: 600; text-align: right; }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 12px;
+              color: #9ca3af;
+              text-align: center;
+            }
+            .summary-row {
+              display: grid;
+              grid-template-columns: repeat(6, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .summary-item {
+              background: #f9fafb;
+              padding: 12px;
+              border-radius: 6px;
+              text-align: center;
+            }
+            .summary-count {
+              font-size: 18px;
+              font-weight: 700;
+            }
+            .summary-label {
+              font-size: 10px;
+              color: #6b7280;
+              text-transform: uppercase;
+            }
+            .gray { color: #6B7280; }
+            .blue { color: #3B82F6; }
+            .purple { color: #8B5CF6; }
+            .green { color: #10B981; }
+            .red { color: #EF4444; }
+            .orange { color: #F97316; }
+            @media print {
+              body { padding: 20px; }
+              .metric-card { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">Flow<span>Trade</span></div>
+            <div class="report-title">Quotes Analytics Report</div>
+            <div class="report-meta">
+              Period: ${periodLabel}
+              <br>Generated: ${reportDate}
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Total Quotes</div>
+              <div class="metric-value">${metrics.totalQuotes}</div>
+              <div class="metric-sub">${periodLabel.toLowerCase()}</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Conversion Rate</div>
+              <div class="metric-value">${metrics.conversionRate}%</div>
+              <div class="metric-sub">${metrics.acceptedQuotes} accepted of ${metrics.acceptedQuotes + metrics.declinedQuotes + metrics.expiredQuotes} finalized</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Total Value</div>
+              <div class="metric-value">${formatCurrency(metrics.totalValue)}</div>
+              <div class="metric-sub">All quotes in period</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Avg Quote Value</div>
+              <div class="metric-value">${formatCurrency(metrics.avgQuoteValue)}</div>
+              <div class="metric-sub">Per quote average</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Pending</div>
+              <div class="metric-value">${metrics.pendingQuotes}</div>
+              <div class="metric-sub">Draft + Sent + Viewed</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Declined/Expired</div>
+              <div class="metric-value">${metrics.declinedQuotes + metrics.expiredQuotes}</div>
+              <div class="metric-sub">${metrics.declinedQuotes} declined, ${metrics.expiredQuotes} expired</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Status Breakdown</div>
+            <div class="summary-row">
+              <div class="summary-item">
+                <div class="summary-count gray">${metrics.statusBreakdown.draft}</div>
+                <div class="summary-label">Draft</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count blue">${metrics.statusBreakdown.sent}</div>
+                <div class="summary-label">Sent</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count purple">${metrics.statusBreakdown.viewed}</div>
+                <div class="summary-label">Viewed</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count green">${metrics.statusBreakdown.accepted}</div>
+                <div class="summary-label">Accepted</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count red">${metrics.statusBreakdown.declined}</div>
+                <div class="summary-label">Declined</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-count orange">${metrics.statusBreakdown.expired}</div>
+                <div class="summary-label">Expired</div>
+              </div>
+            </div>
+          </div>
+
+          ${topCustomers.length > 0 ? `
+          <div class="section">
+            <div class="section-title">Top Customers by Quote Value</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Customer</th>
+                  <th>Quotes</th>
+                  <th style="text-align: right;">Total Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${topCustomers.map((c, i) => `
+                  <tr>
+                    <td>#${i + 1}</td>
+                    <td>${c.name}</td>
+                    <td>${c.quoteCount}</td>
+                    <td class="amount">${formatCurrency(c.totalValue)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
+
+          <div class="section">
+            <div class="section-title">Recent Quotes (Last 20)</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Quote #</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th style="text-align: right;">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${quotes.slice(0, 20).map(q => `
+                  <tr>
+                    <td>${q.quote_number}</td>
+                    <td>${getCustomerName(q.customer)}</td>
+                    <td class="status-${q.status}">${STATUS_LABELS[q.status] || q.status}</td>
+                    <td>${formatDateFull(q.created_at)}</td>
+                    <td class="amount">${formatCurrency(q.total)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>Generated by FlowTrade • flowtrade.com.au</p>
+            <p>This report contains confidential business information.</p>
+          </div>
+        </body>
+        </html>
+      `
+
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(printContent)
+        printWindow.document.close()
+
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print()
+          }, 250)
+        }
+      }
+    } catch (error) {
+      console.error('PDF export error:', error)
+    } finally {
+      setExporting(null)
+    }
+  }, [metrics, quotes, topCustomers, periodLabel])
 
   if (loading) {
     return (
@@ -361,19 +680,31 @@ export default function QuotesReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-r border-flowtrade-navy-lighter pr-3">
             <button
               onClick={exportToCSV}
-              disabled={quotes.length === 0}
-              className="flex items-center gap-2 px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={exporting !== null || quotes.length === 0}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-flowtrade-navy-light text-gray-400 border border-flowtrade-navy-lighter hover:text-green-400 hover:border-green-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export to CSV"
             >
-              <Download className="h-4 w-4" />
+              {exporting === 'csv' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
               CSV
             </button>
             <button
-              className="flex items-center gap-2 px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 transition-colors"
+              onClick={exportToPDF}
+              disabled={exporting !== null || !metrics}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-flowtrade-navy-light text-gray-400 border border-flowtrade-navy-lighter hover:text-red-400 hover:border-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export to PDF"
             >
-              <Download className="h-4 w-4" />
+              {exporting === 'pdf' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
               PDF
             </button>
           </div>
@@ -489,7 +820,7 @@ export default function QuotesReportPage() {
               <TrendingUp className="h-5 w-5 text-flowtrade-cyan" />
               Quote Trends
             </h3>
-            <p className="text-sm text-gray-400">Daily quote volume for {periodLabel}</p>
+            <p className="text-sm text-gray-400">Daily quote volume for {periodLabel.toLowerCase()}</p>
           </div>
           
           {dailyTrends.length > 0 ? (
