@@ -5,12 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { 
   FileText,
-  Send,
-  CheckCircle,
-  XCircle,
   Clock,
-  Eye,
-  AlertCircle,
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -18,7 +13,8 @@ import {
   RefreshCw,
   Download,
   Loader2,
-  BarChart3
+  BarChart3,
+  XCircle
 } from 'lucide-react'
 import { 
   AreaChart, 
@@ -34,7 +30,7 @@ import {
   Legend
 } from 'recharts'
 import { DateRangePicker, DateRange } from '@/components/ui/date-range-picker'
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from 'date-fns'
 
 type Quote = {
   id: string
@@ -85,12 +81,12 @@ type TopCustomer = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: '#6B7280',      // gray
-  sent: '#3B82F6',       // blue
-  viewed: '#8B5CF6',     // purple
-  accepted: '#10B981',   // green
-  declined: '#EF4444',   // red
-  expired: '#F97316',    // orange
+  draft: '#6B7280',
+  sent: '#3B82F6',
+  viewed: '#8B5CF6',
+  accepted: '#10B981',
+  declined: '#EF4444',
+  expired: '#F97316',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -115,7 +111,6 @@ export default function QuotesReportPage() {
     to: new Date()
   })
 
-  // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
@@ -125,19 +120,16 @@ export default function QuotesReportPage() {
     }).format(amount)
   }
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), 'd MMM')
   }
 
-  // Get customer display name
   const getCustomerName = (customer: Quote['customer']) => {
     if (!customer) return 'No Customer'
     if (customer.company_name) return customer.company_name
     return `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unnamed'
   }
 
-  // Calculate metrics from quotes
   const calculateMetrics = useCallback((quotesData: Quote[]): QuoteMetrics => {
     const statusBreakdown = {
       draft: 0,
@@ -164,7 +156,6 @@ export default function QuotesReportPage() {
     const declinedQuotes = statusBreakdown.declined
     const expiredQuotes = statusBreakdown.expired
     
-    // Conversion rate: accepted / (accepted + declined + expired) - quotes that had a final outcome
     const finalizedQuotes = acceptedQuotes + declinedQuotes + expiredQuotes
     const conversionRate = finalizedQuotes > 0 
       ? Math.round((acceptedQuotes / finalizedQuotes) * 100) 
@@ -185,7 +176,6 @@ export default function QuotesReportPage() {
     }
   }, [])
 
-  // Calculate daily trends
   const calculateDailyTrends = useCallback((quotesData: Quote[], from: Date, to: Date): DailyTrend[] => {
     const days = eachDayOfInterval({ start: from, end: to })
     
@@ -208,7 +198,6 @@ export default function QuotesReportPage() {
     return dailyData
   }, [])
 
-  // Calculate top customers
   const calculateTopCustomers = useCallback((quotesData: Quote[]): TopCustomer[] => {
     const customerMap = new Map<string, { name: string; quoteCount: number; totalValue: number }>()
 
@@ -236,7 +225,6 @@ export default function QuotesReportPage() {
       .slice(0, 5)
   }, [])
 
-  // Fetch quote data
   const fetchQuoteData = useCallback(async () => {
     if (!user || !dateRange.from || !dateRange.to) return
 
@@ -249,7 +237,6 @@ export default function QuotesReportPage() {
     }
 
     try {
-      // Get user's org_id first
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('org_id')
@@ -263,7 +250,6 @@ export default function QuotesReportPage() {
         return
       }
 
-      // Fetch quotes with customer info for date range
       const fromDate = startOfDay(dateRange.from).toISOString()
       const toDate = endOfDay(dateRange.to).toISOString()
 
@@ -310,17 +296,14 @@ export default function QuotesReportPage() {
     fetchQuoteData()
   }, [fetchQuoteData])
 
-  // Handle date range change
   const handleDateRangeChange = (range: DateRange) => {
     setDateRange(range)
   }
 
-  // Get period label for display
   const periodLabel = dateRange.from && dateRange.to 
     ? `${format(dateRange.from, 'd MMM yyyy').toLowerCase()} - ${format(dateRange.to, 'd MMM yyyy').toLowerCase()}`
     : 'Select date range'
 
-  // Prepare pie chart data
   const pieChartData = metrics ? Object.entries(metrics.statusBreakdown)
     .filter(([, value]) => value > 0)
     .map(([status, value]) => ({
@@ -329,7 +312,6 @@ export default function QuotesReportPage() {
       color: STATUS_COLORS[status] || '#6B7280',
     })) : []
 
-  // Export to CSV
   const exportToCSV = () => {
     if (quotes.length === 0) return
 
@@ -369,7 +351,6 @@ export default function QuotesReportPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -380,7 +361,6 @@ export default function QuotesReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Export Buttons */}
           <div className="flex items-center gap-2">
             <button
               onClick={exportToCSV}
@@ -398,7 +378,6 @@ export default function QuotesReportPage() {
             </button>
           </div>
 
-          {/* Refresh Button */}
           <button
             onClick={fetchQuoteData}
             disabled={refreshing}
@@ -408,7 +387,6 @@ export default function QuotesReportPage() {
             Refresh
           </button>
 
-          {/* Date Range Picker */}
           <DateRangePicker
             value={dateRange}
             onChange={handleDateRangeChange}
@@ -416,9 +394,7 @@ export default function QuotesReportPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* Total Quotes */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Total Quotes</h3>
@@ -427,7 +403,6 @@ export default function QuotesReportPage() {
           <p className="text-2xl font-bold text-white">{metrics?.totalQuotes || 0}</p>
         </div>
 
-        {/* Pending */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Pending</h3>
@@ -437,7 +412,6 @@ export default function QuotesReportPage() {
           <p className="text-xs text-gray-500 mt-1">Draft + Sent + Viewed</p>
         </div>
 
-        {/* Conversion Rate */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Conversion</h3>
@@ -447,7 +421,6 @@ export default function QuotesReportPage() {
           <p className="text-xs text-gray-500 mt-1">{metrics?.acceptedQuotes || 0} accepted</p>
         </div>
 
-        {/* Average Value */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Avg Value</h3>
@@ -456,7 +429,6 @@ export default function QuotesReportPage() {
           <p className="text-2xl font-bold text-white">{formatCurrency(metrics?.avgQuoteValue || 0)}</p>
         </div>
 
-        {/* Declined */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Declined</h3>
@@ -466,7 +438,6 @@ export default function QuotesReportPage() {
           <p className="text-xs text-gray-500 mt-1">{metrics?.expiredQuotes || 0} expired</p>
         </div>
 
-        {/* Total Value */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-gray-400">Total Value</h3>
@@ -476,7 +447,6 @@ export default function QuotesReportPage() {
         </div>
       </div>
 
-      {/* Status Breakdown Bar */}
       <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-4">
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-2">
@@ -512,9 +482,7 @@ export default function QuotesReportPage() {
         </div>
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quote Trends Chart */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -568,7 +536,6 @@ export default function QuotesReportPage() {
           )}
         </div>
 
-        {/* Status Distribution Pie Chart */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -619,9 +586,7 @@ export default function QuotesReportPage() {
         </div>
       </div>
 
-      {/* Bottom Row: Top Customers + Recent Quotes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Customers */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -659,7 +624,6 @@ export default function QuotesReportPage() {
           )}
         </div>
 
-        {/* Recent Quotes */}
         <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
