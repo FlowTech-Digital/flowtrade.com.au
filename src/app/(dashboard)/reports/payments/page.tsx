@@ -1215,8 +1215,8 @@ export default function PaymentsPage() {
                         borderRadius: '8px',
                         color: '#F9FAFB'
                       }}
-                      formatter={(value: number, name: string, props: { payload: { total: number; percentage: number } }) => [
-                        `${value} payments (${formatCurrency(props.payload.total)})`,
+                      formatter={(value: number, name: string, props) => [
+                        `${value} payments (${formatCurrency(props.payload?.total ?? 0)})`,
                         name
                       ]}
                     />
