@@ -15,9 +15,8 @@ import {
   BarChart3,
   AlertCircle,
   CheckCircle,
-  XCircle,
-  Send,
-  FileSpreadsheet
+  FileSpreadsheet,
+  AlertTriangle
 } from 'lucide-react'
 import { 
   AreaChart, 
@@ -30,10 +29,12 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  BarChart,
+  Bar
 } from 'recharts'
 import { DateRangePicker, DateRange } from '@/components/ui/date-range-picker'
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from 'date-fns'
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns'
 
 type Invoice = {
   id: string
@@ -86,6 +87,15 @@ type TopCustomer = {
   totalValue: number
 }
 
+type AgingBucket = {
+  label: string
+  range: string
+  count: number
+  value: number
+  color: string
+  invoices: Invoice[]
+}
+
 const STATUS_COLORS: Record<string, string> = {
   draft: '#6B7280',
   sent: '#3B82F6',
@@ -100,6 +110,13 @@ const STATUS_LABELS: Record<string, string> = {
   paid: 'Paid',
   overdue: 'Overdue',
   cancelled: 'Cancelled',
+}
+
+const AGING_COLORS = {
+  current: '#10B981',   // Green - 0-30 days
+  overdue: '#F59E0B',   // Yellow - 31-60 days
+  serious: '#F97316',   // Orange - 61-90 days
+  critical: '#EF4444',  // Red - 90+ days
 }
 
 export default function InvoicesReportPage() {
@@ -247,6 +264,93 @@ export default function InvoicesReportPage() {
       .sort((a, b) => b.totalValue - a.totalValue)
       .slice(0, 5)
   }, [])
+
+  // Calculate aging buckets for unpaid invoices
+  const calculateAgingBuckets = useCallback((invoicesData: Invoice[]): AgingBucket[] => {
+    const today = new Date()
+    
+    // Filter to unpaid invoices only (sent or overdue status)
+    const unpaidInvoices = invoicesData.filter(inv => 
+      inv.status === 'sent' || inv.status === 'overdue'
+    )
+
+    const buckets: AgingBucket[] = [
+      { label: 'Current', range: '0-30 days', count: 0, value: 0, color: AGING_COLORS.current, invoices: [] },
+      { label: 'Overdue', range: '31-60 days', count: 0, value: 0, color: AGING_COLORS.overdue, invoices: [] },
+      { label: 'Serious', range: '61-90 days', count: 0, value: 0, color: AGING_COLORS.serious, invoices: [] },
+      { label: 'Critical', range: '90+ days', count: 0, value: 0, color: AGING_COLORS.critical, invoices: [] },
+    ]
+
+    unpaidInvoices.forEach(invoice => {
+      if (!invoice.due_date) {
+        // If no due date, use created_at
+        const createdDate = parseISO(invoice.created_at)
+        const daysSinceCreated = differenceInDays(today, createdDate)
+        
+        if (daysSinceCreated <= 30) {
+          buckets[0].count++
+          buckets[0].value += invoice.total || 0
+          buckets[0].invoices.push(invoice)
+        } else if (daysSinceCreated <= 60) {
+          buckets[1].count++
+          buckets[1].value += invoice.total || 0
+          buckets[1].invoices.push(invoice)
+        } else if (daysSinceCreated <= 90) {
+          buckets[2].count++
+          buckets[2].value += invoice.total || 0
+          buckets[2].invoices.push(invoice)
+        } else {
+          buckets[3].count++
+          buckets[3].value += invoice.total || 0
+          buckets[3].invoices.push(invoice)
+        }
+        return
+      }
+
+      const dueDate = parseISO(invoice.due_date)
+      const daysPastDue = differenceInDays(today, dueDate)
+
+      // Bucket based on days past due date
+      if (daysPastDue <= 30) {
+        buckets[0].count++
+        buckets[0].value += invoice.total || 0
+        buckets[0].invoices.push(invoice)
+      } else if (daysPastDue <= 60) {
+        buckets[1].count++
+        buckets[1].value += invoice.total || 0
+        buckets[1].invoices.push(invoice)
+      } else if (daysPastDue <= 90) {
+        buckets[2].count++
+        buckets[2].value += invoice.total || 0
+        buckets[2].invoices.push(invoice)
+      } else {
+        buckets[3].count++
+        buckets[3].value += invoice.total || 0
+        buckets[3].invoices.push(invoice)
+      }
+    })
+
+    return buckets
+  }, [])
+
+  const agingBuckets = useMemo(() => calculateAgingBuckets(invoices), [invoices, calculateAgingBuckets])
+
+  const agingChartData = useMemo(() => agingBuckets.map(bucket => ({
+    name: bucket.label,
+    count: bucket.count,
+    value: bucket.value,
+    color: bucket.color,
+  })), [agingBuckets])
+
+  const totalUnpaidValue = useMemo(() => 
+    agingBuckets.reduce((sum, bucket) => sum + bucket.value, 0),
+    [agingBuckets]
+  )
+
+  const totalUnpaidCount = useMemo(() => 
+    agingBuckets.reduce((sum, bucket) => sum + bucket.count, 0),
+    [agingBuckets]
+  )
 
   const fetchInvoiceData = useCallback(async () => {
     if (!user || !dateRange.from || !dateRange.to) return
@@ -526,6 +630,24 @@ export default function InvoicesReportPage() {
             .green { color: #10B981; }
             .red { color: #EF4444; }
             .orange { color: #F97316; }
+            .yellow { color: #F59E0B; }
+            .aging-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .aging-item {
+              background: #f9fafb;
+              padding: 12px;
+              border-radius: 6px;
+              text-align: center;
+              border-left: 4px solid;
+            }
+            .aging-current { border-color: #10B981; }
+            .aging-overdue { border-color: #F59E0B; }
+            .aging-serious { border-color: #F97316; }
+            .aging-critical { border-color: #EF4444; }
             @media print {
               body { padding: 20px; }
               .metric-card { break-inside: avoid; }
@@ -597,6 +719,32 @@ export default function InvoicesReportPage() {
               <div class="summary-item">
                 <div class="summary-count orange">${metrics.statusBreakdown.cancelled}</div>
                 <div class="summary-label">Cancelled</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Invoice Aging Analysis</div>
+            <div class="aging-grid">
+              <div class="aging-item aging-current">
+                <div class="summary-count green">${agingBuckets[0].count}</div>
+                <div class="summary-label">Current (0-30 days)</div>
+                <div class="metric-sub">${formatCurrency(agingBuckets[0].value)}</div>
+              </div>
+              <div class="aging-item aging-overdue">
+                <div class="summary-count yellow">${agingBuckets[1].count}</div>
+                <div class="summary-label">Overdue (31-60 days)</div>
+                <div class="metric-sub">${formatCurrency(agingBuckets[1].value)}</div>
+              </div>
+              <div class="aging-item aging-serious">
+                <div class="summary-count orange">${agingBuckets[2].count}</div>
+                <div class="summary-label">Serious (61-90 days)</div>
+                <div class="metric-sub">${formatCurrency(agingBuckets[2].value)}</div>
+              </div>
+              <div class="aging-item aging-critical">
+                <div class="summary-count red">${agingBuckets[3].count}</div>
+                <div class="summary-label">Critical (90+ days)</div>
+                <div class="metric-sub">${formatCurrency(agingBuckets[3].value)}</div>
               </div>
             </div>
           </div>
@@ -677,7 +825,7 @@ export default function InvoicesReportPage() {
     } finally {
       setExporting(null)
     }
-  }, [metrics, invoices, topCustomers, periodLabel])
+  }, [metrics, invoices, topCustomers, periodLabel, agingBuckets])
 
   if (loading) {
     return (
@@ -828,6 +976,104 @@ export default function InvoicesReportPage() {
             <span className="text-white font-semibold">{metrics?.statusBreakdown.cancelled || 0}</span>
           </div>
         </div>
+      </div>
+
+      {/* Invoice Aging Analysis Section */}
+      <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border border-flowtrade-navy-lighter rounded-xl p-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-400" />
+            Invoice Aging Analysis
+          </h3>
+          <p className="text-sm text-gray-400">Outstanding invoices by age ({totalUnpaidCount} invoices, {formatCurrency(totalUnpaidValue)} total)</p>
+        </div>
+
+        {/* Aging Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {agingBuckets.map((bucket, index) => (
+            <div 
+              key={bucket.label}
+              className="bg-flowtrade-navy/50 rounded-lg p-4 border-l-4"
+              style={{ borderLeftColor: bucket.color }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-400 text-sm">{bucket.label}</span>
+                <span className="text-xs text-gray-500">{bucket.range}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold" style={{ color: bucket.color }}>
+                  {bucket.count}
+                </span>
+                <span className="text-gray-500 text-sm">invoices</span>
+              </div>
+              <p className="text-white font-semibold mt-1">{formatCurrency(bucket.value)}</p>
+              {totalUnpaidValue > 0 && (
+                <div className="mt-2">
+                  <div className="w-full bg-flowtrade-navy rounded-full h-1.5">
+                    <div 
+                      className="h-1.5 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${Math.round((bucket.value / totalUnpaidValue) * 100)}%`,
+                        backgroundColor: bucket.color
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">
+                    {totalUnpaidValue > 0 ? Math.round((bucket.value / totalUnpaidValue) * 100) : 0}% of outstanding
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Aging Bar Chart */}
+        {totalUnpaidCount > 0 ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={agingChartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" horizontal={true} vertical={false} />
+              <XAxis 
+                type="number" 
+                stroke="#6B7280" 
+                fontSize={12}
+                tickFormatter={(value) => formatCurrencyCompact(value)}
+              />
+              <YAxis 
+                type="category" 
+                dataKey="name" 
+                stroke="#6B7280" 
+                fontSize={12}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#0f2744',
+                  border: '1px solid #1e3a5f',
+                  borderRadius: '8px',
+                  color: '#fff',
+                }}
+                formatter={(value: number, name: string) => {
+                  if (name === 'value') return [formatCurrency(value), 'Value']
+                  return [value, 'Invoices']
+                }}
+              />
+              <Bar 
+                dataKey="value" 
+                radius={[0, 4, 4, 0]}
+              >
+                {agingChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+            <CheckCircle className="h-12 w-12 mb-2 text-green-400 opacity-50" />
+            <p>No outstanding invoices</p>
+            <p className="text-xs mt-1">All invoices are paid or cancelled</p>
+          </div>
+        )}
       </div>
 
       {/* Invoice Volume Trends Chart */}
