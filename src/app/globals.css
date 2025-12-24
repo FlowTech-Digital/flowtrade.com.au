@@ -8,10 +8,10 @@
     --background: 217 39% 6%;      /* #0a0e17 dark navy */
     --foreground: 0 0% 100%;        /* white */
     
-    --card: 222 39% 11%;            /* #111827 */
+    --card: 220 39% 15%;            /* #1a2744 - LIGHTENED for contrast */
     --card-foreground: 0 0% 100%;
     
-    --popover: 222 39% 11%;
+    --popover: 220 39% 15%;
     --popover-foreground: 0 0% 100%;
     
     --primary: 190 100% 50%;        /* #00d4ff cyan */
@@ -29,8 +29,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 215 28% 17%;          /* #1f2937 */
-    --input: 215 28% 17%;
+    --border: 215 35% 25%;          /* #2a4a73 - VISIBLE border */
+    --input: 215 28% 20%;
     --ring: 190 100% 50%;           /* cyan ring */
     
     --radius: 0.5rem;
@@ -100,12 +100,12 @@
   
   /* Card enhancements for better separation */
   .card-elevated {
-    @apply bg-flowtrade-navy-light border border-flowtrade-navy-lighter shadow-card;
+    @apply bg-flowtrade-navy-light border border-flowtrade-navy-border shadow-card;
   }
   
   .card-elevated-hover {
-    @apply bg-flowtrade-navy-light border border-flowtrade-navy-lighter shadow-card 
-           hover:shadow-card-hover hover:border-flowtrade-navy-border transition-all duration-200;
+    @apply bg-flowtrade-navy-light border border-flowtrade-navy-border shadow-card 
+           hover:shadow-card-hover hover:border-flowtrade-cyan/30 transition-all duration-200;
   }
   
   /* Table row separation */
@@ -155,7 +155,7 @@
   
   /* Content section with visible boundary */
   .content-section {
-    @apply p-6 bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter;
+    @apply p-6 bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-border;
   }
   
   .content-section-header {
