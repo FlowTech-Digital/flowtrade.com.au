@@ -30,7 +30,7 @@ type OrganizationIntegration = {
   organization_id: string
   integration_type: 'stripe' | 'resend' | 'xero'
   status: IntegrationStatus
-  config: Record&lt;string, unknown&gt;
+  config: Record<string, unknown>
   connected_at: string | null
   error_message: string | null
 }
@@ -63,21 +63,21 @@ const statusConfig = {
 }
 
 // Map integration types to route paths
-const integrationRoutes: Record&lt;'stripe' | 'resend' | 'xero', string&gt; = {
+const integrationRoutes: Record<'stripe' | 'resend' | 'xero', string> = {
   stripe: '/settings/integrations/stripe',
   resend: '/settings/integrations/email',
-  xero: '/settings/integrations/xero', // Future use
+  xero: '/settings/integrations/xero',
 }
 
 export default function SettingsPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [org, setOrg] = useState&lt;Organization | null&gt;(null)
-  const [integrations, setIntegrations] = useState&lt;OrganizationIntegration[]&gt;([])
+  const [org, setOrg] = useState<Organization | null>(null)
+  const [integrations, setIntegrations] = useState<OrganizationIntegration[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [message, setMessage] = useState&lt;{ type: 'success' | 'error', text: string } | null&gt;(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -182,7 +182,7 @@ export default function SettingsPage() {
   }
 
   // Handle form input changes
-  const handleChange = (e: React.ChangeEvent&lt;HTMLInputElement | HTMLSelectElement&gt;) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -259,7 +259,7 @@ export default function SettingsPage() {
   }, [org])
 
   // Handle file input change
-  const handleFileChange = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) handleFileUpload(file)
   }
@@ -331,165 +331,165 @@ export default function SettingsPage() {
     const Icon = iconMap[type]
 
     return (
-      &lt;div className="bg-flowtrade-navy rounded-xl p-5 border border-flowtrade-navy-lighter relative overflow-hidden"&gt;
+      <div className="bg-flowtrade-navy rounded-xl p-5 border border-flowtrade-navy-lighter relative overflow-hidden">
         {comingSoon && (
-          &lt;div className="absolute top-3 right-3 bg-flowtrade-navy-lighter text-gray-400 text-xs px-2 py-1 rounded-full"&gt;
+          <div className="absolute top-3 right-3 bg-flowtrade-navy-lighter text-gray-400 text-xs px-2 py-1 rounded-full">
             Coming Soon
-          &lt;/div&gt;
+          </div>
         )}
-        &lt;div className="flex items-center gap-3 mb-4"&gt;
-          &lt;div className={`p-2.5 rounded-lg ${config.bgColor}`}&gt;
-            &lt;Icon className={`h-5 w-5 ${config.color}`} /&gt;
-          &lt;/div&gt;
-          &lt;div&gt;
-            &lt;h3 className="text-white font-medium"&gt;{title}&lt;/h3&gt;
-            &lt;p className="text-gray-500 text-sm"&gt;{description}&lt;/p&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-        &lt;div className="flex items-center justify-between"&gt;
-          &lt;div className="flex items-center gap-2"&gt;
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`p-2.5 rounded-lg ${config.bgColor}`}>
+            <Icon className={`h-5 w-5 ${config.color}`} />
+          </div>
+          <div>
+            <h3 className="text-white font-medium">{title}</h3>
+            <p className="text-gray-500 text-sm">{description}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             {StatusIcon && (
-              &lt;StatusIcon
+              <StatusIcon
                 className={`h-4 w-4 ${config.color} ${status === 'pending' ? 'animate-spin' : ''}`}
-              /&gt;
+              />
             )}
             {!StatusIcon && (
-              &lt;div className="h-2 w-2 rounded-full bg-gray-600" /&gt;
+              <div className="h-2 w-2 rounded-full bg-gray-600" />
             )}
-            &lt;span className={`text-sm font-medium ${config.color}`}&gt;
+            <span className={`text-sm font-medium ${config.color}`}>
               {config.label}
-            &lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div&gt;
+            </span>
+          </div>
+          <div>
             {status === 'not_connected' && !comingSoon && (
-              &lt;button 
-                onClick={() =&gt; navigateToIntegration(type)}
+              <button 
+                onClick={() => navigateToIntegration(type)}
                 className="px-4 py-1.5 bg-flowtrade-cyan text-flowtrade-navy text-sm font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors"
-              &gt;
+              >
                 Set Up
-              &lt;/button&gt;
+              </button>
             )}
             {status === 'pending' && (
-              &lt;button disabled className="px-4 py-1.5 bg-flowtrade-navy-lighter text-gray-400 text-sm font-medium rounded-lg flex items-center gap-2 cursor-not-allowed"&gt;
-                &lt;Loader2 className="h-3 w-3 animate-spin" /&gt;
+              <button disabled className="px-4 py-1.5 bg-flowtrade-navy-lighter text-gray-400 text-sm font-medium rounded-lg flex items-center gap-2 cursor-not-allowed">
+                <Loader2 className="h-3 w-3 animate-spin" />
                 Connecting
-              &lt;/button&gt;
+              </button>
             )}
             {status === 'connected' && (
-              &lt;button 
-                onClick={() =&gt; navigateToIntegration(type)}
+              <button 
+                onClick={() => navigateToIntegration(type)}
                 className="px-4 py-1.5 border border-flowtrade-navy-lighter text-gray-300 text-sm font-medium rounded-lg hover:bg-flowtrade-navy-lighter transition-colors"
-              &gt;
+              >
                 Manage
-              &lt;/button&gt;
+              </button>
             )}
             {status === 'error' && (
-              &lt;button 
-                onClick={() =&gt; navigateToIntegration(type)}
+              <button 
+                onClick={() => navigateToIntegration(type)}
                 className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
-              &gt;
+              >
                 Fix Issues
-              &lt;/button&gt;
+              </button>
             )}
             {comingSoon && (
-              &lt;button disabled className="px-4 py-1.5 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"&gt;
+              <button disabled className="px-4 py-1.5 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed">
                 Notify Me
-              &lt;/button&gt;
+              </button>
             )}
-          &lt;/div&gt;
-        &lt;/div&gt;
+          </div>
+        </div>
         {status === 'connected' && details && (
-          &lt;p className="mt-3 text-sm text-gray-400 border-t border-flowtrade-navy-lighter pt-3"&gt;{details}&lt;/p&gt;
+          <p className="mt-3 text-sm text-gray-400 border-t border-flowtrade-navy-lighter pt-3">{details}</p>
         )}
-      &lt;/div&gt;
+      </div>
     )
   }
 
   if (loading) {
     return (
-      &lt;div className="flex items-center justify-center min-h-[400px]"&gt;
-        &lt;Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" /&gt;
-      &lt;/div&gt;
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan" />
+      </div>
     )
   }
 
   return (
-    &lt;div className="max-w-4xl"&gt;
-      &lt;div className="mb-8"&gt;
-        &lt;h1 className="text-2xl font-bold text-white"&gt;Settings&lt;/h1&gt;
-        &lt;p className="text-gray-400 mt-1"&gt;Manage your integrations and organization settings&lt;/p&gt;
-      &lt;/div&gt;
+    <div className="max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Settings</h1>
+        <p className="text-gray-400 mt-1">Manage your integrations and organization settings</p>
+      </div>
 
       {/* Message Banner */}
       {message && (
-        &lt;div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+        <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
           message.type === 'success' 
             ? 'bg-green-900/30 border border-green-800 text-green-400'
             : 'bg-red-900/30 border border-red-800 text-red-400'
-        }`}&gt;
-          {message.type === 'success' ? &lt;Check className="h-5 w-5" /&gt; : &lt;AlertCircle className="h-5 w-5" /&gt;}
+        }`}>
+          {message.type === 'success' ? <Check className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
           {message.text}
-        &lt;/div&gt;
+        </div>
       )}
 
       {/* Integrations Section */}
-      &lt;div className="mb-8"&gt;
-        &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Integrations&lt;/h2&gt;
-        &lt;div className="grid grid-cols-1 md:grid-cols-3 gap-4"&gt;
-          &lt;IntegrationCard
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-white mb-4">Integrations</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <IntegrationCard
             type="stripe"
             title="Payments"
             description="Accept credit cards via Stripe"
-          /&gt;
-          &lt;IntegrationCard
+          />
+          <IntegrationCard
             type="resend"
             title="Email"
             description="Send from your own domain"
-          /&gt;
-          &lt;IntegrationCard
+          />
+          <IntegrationCard
             type="xero"
             title="Accounting"
             description="Sync invoices with Xero"
             comingSoon={true}
-          /&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+          />
+        </div>
+      </div>
 
       {/* Logo Upload Section */}
-      &lt;div className="bg-flowtrade-navy-light rounded-xl p-6 mb-6 border border-flowtrade-navy-lighter"&gt;
-        &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Business Logo&lt;/h2&gt;
+      <div className="bg-flowtrade-navy-light rounded-xl p-6 mb-6 border border-flowtrade-navy-lighter">
+        <h2 className="text-lg font-semibold text-white mb-4">Business Logo</h2>
         
-        &lt;div className="flex items-start gap-6"&gt;
+        <div className="flex items-start gap-6">
           {/* Current Logo Preview */}
-          &lt;div className="flex-shrink-0"&gt;
+          <div className="flex-shrink-0">
             {org?.logo_url ? (
-              &lt;div className="relative group"&gt;
-                &lt;Image 
+              <div className="relative group">
+                <Image 
                   src={org.logo_url} 
                   alt="Business logo" 
                   width={96}
                   height={96}
                   className="w-24 h-24 object-contain rounded-lg bg-white p-2"
                   unoptimized
-                /&gt;
-                &lt;button
+                />
+                <button
                   onClick={handleRemoveLogo}
                   disabled={uploading}
                   className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                &gt;
-                  &lt;X className="h-4 w-4 text-white" /&gt;
-                &lt;/button&gt;
-              &lt;/div&gt;
+                >
+                  <X className="h-4 w-4 text-white" />
+                </button>
+              </div>
             ) : (
-              &lt;div className="w-24 h-24 rounded-lg bg-flowtrade-navy-lighter flex items-center justify-center"&gt;
-                &lt;Building2 className="h-10 w-10 text-gray-600" /&gt;
-              &lt;/div&gt;
+              <div className="w-24 h-24 rounded-lg bg-flowtrade-navy-lighter flex items-center justify-center">
+                <Building2 className="h-10 w-10 text-gray-600" />
+              </div>
             )}
-          &lt;/div&gt;
+          </div>
 
           {/* Upload Zone */}
-          &lt;div className="flex-1"&gt;
-            &lt;div
+          <div className="flex-1">
+            <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -498,210 +498,210 @@ export default function SettingsPage() {
                   ? 'border-flowtrade-cyan bg-flowtrade-cyan/10' 
                   : 'border-flowtrade-navy-lighter hover:border-gray-600'
               }`}
-            &gt;
+            >
               {uploading ? (
-                &lt;Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan mx-auto" /&gt;
+                <Loader2 className="h-8 w-8 animate-spin text-flowtrade-cyan mx-auto" />
               ) : (
-                &lt;&gt;
-                  &lt;Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" /&gt;
-                  &lt;p className="text-gray-400 text-sm mb-2"&gt;
+                <>
+                  <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                  <p className="text-gray-400 text-sm mb-2">
                     Drag and drop your logo here, or
-                  &lt;/p&gt;
-                  &lt;label className="inline-block"&gt;
-                    &lt;input
+                  </p>
+                  <label className="inline-block">
+                    <input
                       type="file"
                       accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       onChange={handleFileChange}
                       className="hidden"
-                    /&gt;
-                    &lt;span className="text-flowtrade-cyan hover:text-flowtrade-cyan/80 cursor-pointer text-sm font-medium"&gt;
+                    />
+                    <span className="text-flowtrade-cyan hover:text-flowtrade-cyan/80 cursor-pointer text-sm font-medium">
                       browse to upload
-                    &lt;/span&gt;
-                  &lt;/label&gt;
-                  &lt;p className="text-gray-600 text-xs mt-2"&gt;
+                    </span>
+                  </label>
+                  <p className="text-gray-600 text-xs mt-2">
                     PNG, JPG, SVG or WebP (max 2MB)
-                  &lt;/p&gt;
-                &lt;/&gt;
+                  </p>
+                </>
               )}
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Organization Details Form */}
-      &lt;form onSubmit={handleSave} className="bg-flowtrade-navy-light rounded-xl p-6 border border-flowtrade-navy-lighter"&gt;
-        &lt;h2 className="text-lg font-semibold text-white mb-4"&gt;Organization Details&lt;/h2&gt;
+      <form onSubmit={handleSave} className="bg-flowtrade-navy-light rounded-xl p-6 border border-flowtrade-navy-lighter">
+        <h2 className="text-lg font-semibold text-white mb-4">Organization Details</h2>
         
-        &lt;div className="space-y-6"&gt;
+        <div className="space-y-6">
           {/* Business Information Section */}
-          &lt;div className="space-y-4"&gt;
-            &lt;h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider"&gt;Business Information&lt;/h3&gt;
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Business Information</h3>
             
             {/* Business Name */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
-                &lt;Building2 className="h-4 w-4 inline mr-2" /&gt;
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <Building2 className="h-4 w-4 inline mr-2" />
                 Business Name
-              &lt;/label&gt;
-              &lt;input
+              </label>
+              <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
+              />
+            </div>
 
             {/* ABN */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
-                &lt;FileText className="h-4 w-4 inline mr-2" /&gt;
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <FileText className="h-4 w-4 inline mr-2" />
                 ABN
-              &lt;/label&gt;
-              &lt;input
+              </label>
+              <input
                 type="text"
                 name="abn"
                 value={formData.abn}
                 onChange={handleChange}
                 placeholder="XX XXX XXX XXX"
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
+              />
+            </div>
 
             {/* Primary Trade (read-only) */}
             {org?.primary_trade && (
-              &lt;div&gt;
-                &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                   Primary Trade
-                &lt;/label&gt;
-                &lt;input
+                </label>
+                <input
                   type="text"
                   value={org.primary_trade.charAt(0).toUpperCase() + org.primary_trade.slice(1)}
                   disabled
                   className="w-full px-4 py-2 bg-flowtrade-navy-lighter border border-flowtrade-navy-lighter rounded-lg text-gray-500 cursor-not-allowed"
-                /&gt;
-                &lt;p className="text-xs text-gray-600 mt-1"&gt;Contact support to change your primary trade&lt;/p&gt;
-              &lt;/div&gt;
+                />
+                <p className="text-xs text-gray-600 mt-1">Contact support to change your primary trade</p>
+              </div>
             )}
-          &lt;/div&gt;
+          </div>
 
           {/* Contact Details Section */}
-          &lt;div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter"&gt;
-            &lt;h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider"&gt;Contact Details&lt;/h3&gt;
+          <div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Contact Details</h3>
             
             {/* Email */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
-                &lt;Mail className="h-4 w-4 inline mr-2" /&gt;
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <Mail className="h-4 w-4 inline mr-2" />
                 Business Email
-              &lt;/label&gt;
-              &lt;input
+              </label>
+              <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="contact@yourbusiness.com.au"
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
+              />
+            </div>
 
             {/* Phone */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
-                &lt;Phone className="h-4 w-4 inline mr-2" /&gt;
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                <Phone className="h-4 w-4 inline mr-2" />
                 Phone Number
-              &lt;/label&gt;
-              &lt;input
+              </label>
+              <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="0400 000 000"
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
+              />
+            </div>
+          </div>
 
           {/* Address Section */}
-          &lt;div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter"&gt;
-            &lt;h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider"&gt;
-              &lt;MapPin className="h-4 w-4 inline mr-2" /&gt;
+          <div className="space-y-4 pt-4 border-t border-flowtrade-navy-lighter">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <MapPin className="h-4 w-4 inline mr-2" />
               Business Address
-            &lt;/h3&gt;
+            </h3>
             
             {/* Address Line 1 */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
                 Street Address
-              &lt;/label&gt;
-              &lt;input
+              </label>
+              <input
                 type="text"
                 name="address_line1"
                 value={formData.address_line1}
                 onChange={handleChange}
                 placeholder="123 Main Street"
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
+              />
+            </div>
 
             {/* Address Line 2 */}
-            &lt;div&gt;
-              &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
-                Address Line 2 &lt;span className="text-gray-600"&gt;(optional)&lt;/span&gt;
-              &lt;/label&gt;
-              &lt;input
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Address Line 2 <span className="text-gray-600">(optional)</span>
+              </label>
+              <input
                 type="text"
                 name="address_line2"
                 value={formData.address_line2}
                 onChange={handleChange}
                 placeholder="Unit 1, Building A"
                 className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-              /&gt;
-            &lt;/div&gt;
+              />
+            </div>
 
             {/* Suburb, State, Postcode Row */}
-            &lt;div className="grid grid-cols-3 gap-4"&gt;
+            <div className="grid grid-cols-3 gap-4">
               {/* Suburb */}
-              &lt;div&gt;
-                &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                   Suburb
-                &lt;/label&gt;
-                &lt;input
+                </label>
+                <input
                   type="text"
                   name="suburb"
                   value={formData.suburb}
                   onChange={handleChange}
                   placeholder="Sydney"
                   className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-                /&gt;
-              &lt;/div&gt;
+                />
+              </div>
 
               {/* State */}
-              &lt;div&gt;
-                &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                   State
-                &lt;/label&gt;
-                &lt;select
+                </label>
+                <select
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-                &gt;
-                  {australianStates.map(state =&gt; (
-                    &lt;option key={state.value} value={state.value}&gt;
+                >
+                  {australianStates.map(state => (
+                    <option key={state.value} value={state.value}>
                       {state.label}
-                    &lt;/option&gt;
+                    </option>
                   ))}
-                &lt;/select&gt;
-              &lt;/div&gt;
+                </select>
+              </div>
 
               {/* Postcode */}
-              &lt;div&gt;
-                &lt;label className="block text-sm font-medium text-gray-400 mb-1"&gt;
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                   Postcode
-                &lt;/label&gt;
-                &lt;input
+                </label>
+                <input
                   type="text"
                   name="postcode"
                   value={formData.postcode}
@@ -709,30 +709,30 @@ export default function SettingsPage() {
                   placeholder="2000"
                   maxLength={4}
                   className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan focus:border-transparent"
-                /&gt;
-              &lt;/div&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Save Button */}
-        &lt;div className="mt-6 flex justify-end"&gt;
-          &lt;button
+        <div className="mt-6 flex justify-end">
+          <button
             type="submit"
             disabled={saving}
             className="px-6 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          &gt;
+          >
             {saving ? (
-              &lt;&gt;
-                &lt;Loader2 className="h-4 w-4 animate-spin" /&gt;
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
-              &lt;/&gt;
+              </>
             ) : (
               'Save Changes'
             )}
-          &lt;/button&gt;
-        &lt;/div&gt;
-      &lt;/form&gt;
-    &lt;/div&gt;
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
