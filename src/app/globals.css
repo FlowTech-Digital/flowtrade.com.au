@@ -5,17 +5,17 @@
 @layer base {
   :root {
     /* FlowTrade Dark Theme - Default */
-    --background: 217 39% 6%;      /* #0a0e17 dark navy */
+    --background: 220 45% 4%;        /* #070b12 - DARKER for better card contrast */
     --foreground: 0 0% 100%;        /* white */
     
-    --card: 220 39% 15%;            /* #1a2744 - LIGHTENED for contrast */
+    --card: 220 39% 15%;            /* #1a2744 - cards stand out against darker bg */
     --card-foreground: 0 0% 100%;
     
     --popover: 220 39% 15%;
     --popover-foreground: 0 0% 100%;
     
     --primary: 190 100% 50%;        /* #00d4ff cyan */
-    --primary-foreground: 217 39% 6%;
+    --primary-foreground: 220 45% 4%;
     
     --secondary: 215 28% 17%;       /* #1f2937 */
     --secondary-foreground: 0 0% 100%;
