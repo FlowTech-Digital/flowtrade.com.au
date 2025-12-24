@@ -11,6 +11,7 @@ import {
   Users, 
   DollarSign,
   TrendingUp,
+  TrendingDown,
   Clock,
   CheckCircle,
   Plus,
@@ -18,13 +19,17 @@ import {
   Loader2,
   Receipt,
   AlertTriangle,
-  Calendar
+  Calendar,
+  BarChart3,
+  PieChart,
+  LineChart
 } from 'lucide-react'
 
 type DashboardStats = {
   totalQuotes: number
   pendingQuotes: number
   acceptedQuotes: number
+  pendingQuotesValue: number
   totalJobs: number
   activeJobs: number
   completedJobs: number
@@ -32,6 +37,8 @@ type DashboardStats = {
   totalInvoices: number
   outstandingAmount: number
   paidAmount: number
+  mtdRevenue: number
+  lastMonthRevenue: number
   totalCustomers: number
   overdueCount: number
   overdueAmount: number
@@ -70,6 +77,7 @@ type InvoiceRow = {
   total: number | null
   invoice_number: string
   created_at: string
+  paid_at: string | null
   customer: { first_name: string | null; last_name: string | null; company_name: string | null } | null
 }
 
@@ -105,6 +113,12 @@ export default function DashboardPage() {
 
       const orgId = userData.org_id
 
+      // Calculate date ranges for MTD comparison
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+
       // Fetch all stats in parallel
       const [quotesResult, jobsResult, invoicesResult, customersResult] = await Promise.all([
         // Quotes stats (with details for activity feed)
@@ -121,10 +135,10 @@ export default function DashboardPage() {
           .eq('org_id', orgId)
           .order('created_at', { ascending: false }),
         
-        // Invoices stats (with amounts)
+        // Invoices stats (with amounts and paid_at for MTD calc)
         supabase
           .from('invoices')
-          .select('id, status, total, invoice_number, created_at, customer:customers(first_name, last_name, company_name)')
+          .select('id, status, total, invoice_number, created_at, paid_at, customer:customers(first_name, last_name, company_name)')
           .eq('org_id', orgId)
           .order('created_at', { ascending: false }),
         
@@ -139,6 +153,9 @@ export default function DashboardPage() {
       const quotes = (quotesResult.data || []) as QuoteRow[]
       const pendingQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length
       const acceptedQuotes = quotes.filter((q) => q.status === 'accepted').length
+      const pendingQuotesValue = quotes
+        .filter((q) => q.status === 'sent' || q.status === 'draft')
+        .reduce((sum, q) => sum + (q.total || 0), 0)
 
       // Process jobs
       const jobs = (jobsResult.data || []) as JobRow[]
@@ -153,6 +170,24 @@ export default function DashboardPage() {
         .reduce((sum, inv) => sum + (inv.total || 0), 0)
       const paidAmount = invoices
         .filter((inv) => inv.status === 'paid')
+        .reduce((sum, inv) => sum + (inv.total || 0), 0)
+      
+      // Calculate MTD revenue (paid invoices this month)
+      const mtdRevenue = invoices
+        .filter((inv) => {
+          if (inv.status !== 'paid' || !inv.paid_at) return false
+          const paidDate = new Date(inv.paid_at)
+          return paidDate >= startOfMonth
+        })
+        .reduce((sum, inv) => sum + (inv.total || 0), 0)
+
+      // Calculate last month revenue
+      const lastMonthRevenue = invoices
+        .filter((inv) => {
+          if (inv.status !== 'paid' || !inv.paid_at) return false
+          const paidDate = new Date(inv.paid_at)
+          return paidDate >= startOfLastMonth && paidDate <= endOfLastMonth
+        })
         .reduce((sum, inv) => sum + (inv.total || 0), 0)
       
       // Process overdue invoices
@@ -207,6 +242,7 @@ export default function DashboardPage() {
         totalQuotes: quotes.length,
         pendingQuotes,
         acceptedQuotes,
+        pendingQuotesValue,
         totalJobs: jobs.length,
         activeJobs,
         completedJobs,
@@ -214,6 +250,8 @@ export default function DashboardPage() {
         totalInvoices: invoices.length,
         outstandingAmount,
         paidAmount,
+        mtdRevenue,
+        lastMonthRevenue,
         totalCustomers: customersResult.data?.length || 0,
         overdueCount,
         overdueAmount
@@ -310,6 +348,11 @@ export default function DashboardPage() {
     return status.replace(/_/g, ' ')
   }
 
+  // Calculate revenue growth percentage
+  const revenueGrowth = stats && stats.lastMonthRevenue > 0
+    ? Math.round(((stats.mtdRevenue - stats.lastMonthRevenue) / stats.lastMonthRevenue) * 100)
+    : stats?.mtdRevenue ? 100 : 0
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -387,21 +430,85 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Revenue Card */}
-          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/invoices?status=paid')}>
+          {/* MTD Revenue Card with Growth */}
+          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/reports/payments')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">MTD Revenue</CardTitle>
               <div className="p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
                 <DollarSign className="h-5 w-5 text-green-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white">
-                {formatCurrency(stats?.paidAmount || 0)}
+                {formatCurrency(stats?.mtdRevenue || 0)}
               </div>
-              <p className="text-sm text-green-400/80 mt-1 font-medium">
-                Paid invoices
-              </p>
+              <div className="flex items-center gap-1.5 mt-1">
+                {revenueGrowth >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-400" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-400" />
+                )}
+                <p className={`text-sm font-medium ${revenueGrowth >= 0 ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                  {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth}% vs last month
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Pipeline Overview - NEW */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Pipeline</h2>
+          <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Pending Quotes Value */}
+          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg cursor-pointer hover:border-flowtrade-cyan/40 transition-all" onClick={() => router.push('/quotes?status=sent')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Open Quotes</p>
+                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.pendingQuotesValue || 0)}</p>
+                  <p className="text-xs text-flowtrade-cyan/70 mt-1">{stats?.pendingQuotes || 0} quotes pending</p>
+                </div>
+                <div className="p-3 bg-flowtrade-cyan/10 rounded-xl">
+                  <FileText className="h-6 w-6 text-flowtrade-cyan" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Invoices */}
+          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg cursor-pointer hover:border-blue-400/40 transition-all" onClick={() => router.push('/invoices?status=sent')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Awaiting Payment</p>
+                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.outstandingAmount || 0)}</p>
+                  <p className="text-xs text-blue-400/70 mt-1">Sent invoices</p>
+                </div>
+                <div className="p-3 bg-blue-400/10 rounded-xl">
+                  <Receipt className="h-6 w-6 text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Total Revenue */}
+          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg cursor-pointer hover:border-green-400/40 transition-all" onClick={() => router.push('/invoices?status=paid')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Revenue</p>
+                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.paidAmount || 0)}</p>
+                  <p className="text-xs text-green-400/70 mt-1">All time paid</p>
+                </div>
+                <div className="p-3 bg-green-400/10 rounded-xl">
+                  <DollarSign className="h-6 w-6 text-green-400" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -506,6 +613,72 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-3xl font-bold text-white">{stats?.scheduledJobs || 0}</div>
               <p className="text-sm text-blue-400/80 mt-1 font-medium">Upcoming work</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Reports Navigation - NEW */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Reports &amp; Analytics</h2>
+          <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Payment Analytics */}
+          <Card 
+            className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg cursor-pointer hover:border-green-400/40 hover:shadow-green-400/10 transition-all group"
+            onClick={() => router.push('/reports/payments')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
+                  <BarChart3 className="h-6 w-6 text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold group-hover:text-green-400 transition-colors">Payment Analytics</h3>
+                  <p className="text-sm text-gray-400">Revenue trends &amp; payment methods</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quote Analytics */}
+          <Card 
+            className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg cursor-pointer hover:border-flowtrade-cyan/40 hover:shadow-flowtrade-cyan/10 transition-all group"
+            onClick={() => router.push('/reports/quotes')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all">
+                  <PieChart className="h-6 w-6 text-flowtrade-cyan" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold group-hover:text-flowtrade-cyan transition-colors">Quote Analytics</h3>
+                  <p className="text-sm text-gray-400">Conversion rates &amp; pipeline</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-flowtrade-cyan group-hover:translate-x-1 transition-all" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoice Analytics */}
+          <Card 
+            className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg cursor-pointer hover:border-blue-400/40 hover:shadow-blue-400/10 transition-all group"
+            onClick={() => router.push('/reports/invoices')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
+                  <LineChart className="h-6 w-6 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold group-hover:text-blue-400 transition-colors">Invoice Analytics</h3>
+                  <p className="text-sm text-gray-400">Aging analysis &amp; collection</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+              </div>
             </CardContent>
           </Card>
         </div>
