@@ -281,6 +281,16 @@ export default function InvoicesReportPage() {
       { label: 'Critical', range: '90+ days', count: 0, value: 0, color: AGING_COLORS.critical, invoices: [] },
     ]
 
+    // Helper function to safely update bucket - avoids TypeScript undefined errors
+    const updateBucket = (index: number, invoice: Invoice) => {
+      const bucket = buckets[index]
+      if (bucket) {
+        bucket.count++
+        bucket.value += invoice.total || 0
+        bucket.invoices.push(invoice)
+      }
+    }
+
     unpaidInvoices.forEach(invoice => {
       if (!invoice.due_date) {
         // If no due date, use created_at
@@ -288,21 +298,13 @@ export default function InvoicesReportPage() {
         const daysSinceCreated = differenceInDays(today, createdDate)
         
         if (daysSinceCreated <= 30) {
-          buckets[0].count++
-          buckets[0].value += invoice.total || 0
-          buckets[0].invoices.push(invoice)
+          updateBucket(0, invoice)
         } else if (daysSinceCreated <= 60) {
-          buckets[1].count++
-          buckets[1].value += invoice.total || 0
-          buckets[1].invoices.push(invoice)
+          updateBucket(1, invoice)
         } else if (daysSinceCreated <= 90) {
-          buckets[2].count++
-          buckets[2].value += invoice.total || 0
-          buckets[2].invoices.push(invoice)
+          updateBucket(2, invoice)
         } else {
-          buckets[3].count++
-          buckets[3].value += invoice.total || 0
-          buckets[3].invoices.push(invoice)
+          updateBucket(3, invoice)
         }
         return
       }
@@ -312,21 +314,13 @@ export default function InvoicesReportPage() {
 
       // Bucket based on days past due date
       if (daysPastDue <= 30) {
-        buckets[0].count++
-        buckets[0].value += invoice.total || 0
-        buckets[0].invoices.push(invoice)
+        updateBucket(0, invoice)
       } else if (daysPastDue <= 60) {
-        buckets[1].count++
-        buckets[1].value += invoice.total || 0
-        buckets[1].invoices.push(invoice)
+        updateBucket(1, invoice)
       } else if (daysPastDue <= 90) {
-        buckets[2].count++
-        buckets[2].value += invoice.total || 0
-        buckets[2].invoices.push(invoice)
+        updateBucket(2, invoice)
       } else {
-        buckets[3].count++
-        buckets[3].value += invoice.total || 0
-        buckets[3].invoices.push(invoice)
+        updateBucket(3, invoice)
       }
     })
 
@@ -497,6 +491,12 @@ export default function InvoicesReportPage() {
         month: 'long',
         day: 'numeric'
       })
+
+      // Safe access to aging buckets with fallback values
+      const bucket0 = agingBuckets[0] || { count: 0, value: 0 }
+      const bucket1 = agingBuckets[1] || { count: 0, value: 0 }
+      const bucket2 = agingBuckets[2] || { count: 0, value: 0 }
+      const bucket3 = agingBuckets[3] || { count: 0, value: 0 }
 
       const printContent = `
         <!DOCTYPE html>
@@ -727,24 +727,24 @@ export default function InvoicesReportPage() {
             <div class="section-title">Invoice Aging Analysis</div>
             <div class="aging-grid">
               <div class="aging-item aging-current">
-                <div class="summary-count green">${agingBuckets[0].count}</div>
+                <div class="summary-count green">${bucket0.count}</div>
                 <div class="summary-label">Current (0-30 days)</div>
-                <div class="metric-sub">${formatCurrency(agingBuckets[0].value)}</div>
+                <div class="metric-sub">${formatCurrency(bucket0.value)}</div>
               </div>
               <div class="aging-item aging-overdue">
-                <div class="summary-count yellow">${agingBuckets[1].count}</div>
+                <div class="summary-count yellow">${bucket1.count}</div>
                 <div class="summary-label">Overdue (31-60 days)</div>
-                <div class="metric-sub">${formatCurrency(agingBuckets[1].value)}</div>
+                <div class="metric-sub">${formatCurrency(bucket1.value)}</div>
               </div>
               <div class="aging-item aging-serious">
-                <div class="summary-count orange">${agingBuckets[2].count}</div>
+                <div class="summary-count orange">${bucket2.count}</div>
                 <div class="summary-label">Serious (61-90 days)</div>
-                <div class="metric-sub">${formatCurrency(agingBuckets[2].value)}</div>
+                <div class="metric-sub">${formatCurrency(bucket2.value)}</div>
               </div>
               <div class="aging-item aging-critical">
-                <div class="summary-count red">${agingBuckets[3].count}</div>
+                <div class="summary-count red">${bucket3.count}</div>
                 <div class="summary-label">Critical (90+ days)</div>
-                <div class="metric-sub">${formatCurrency(agingBuckets[3].value)}</div>
+                <div class="metric-sub">${formatCurrency(bucket3.value)}</div>
               </div>
             </div>
           </div>
