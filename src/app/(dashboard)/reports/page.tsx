@@ -17,7 +17,8 @@ import {
   Calendar,
   BarChart3,
   PieChart,
-  ArrowRight
+  ArrowRight,
+  Receipt
 } from 'lucide-react'
 
 type ReportPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
@@ -87,6 +88,15 @@ type CustomerMetrics = {
   newCustomers: number
 }
 
+type InvoiceMetrics = {
+  totalInvoices: number
+  paidInvoices: number
+  outstandingInvoices: number
+  overdueInvoices: number
+  totalValue: number
+  collectionRate: number
+}
+
 export default function ReportsPage() {
   const { user } = useAuth()
   const [period, setPeriod] = useState<ReportPeriod>('30d')
@@ -95,6 +105,7 @@ export default function ReportsPage() {
   const [jobMetrics, setJobMetrics] = useState<JobMetrics | null>(null)
   const [quoteMetrics, setQuoteMetrics] = useState<QuoteMetrics | null>(null)
   const [customerMetrics, setCustomerMetrics] = useState<CustomerMetrics | null>(null)
+  const [invoiceMetrics, setInvoiceMetrics] = useState<InvoiceMetrics | null>(null)
 
   const periodLabel = useMemo(() => {
     switch (period) {
@@ -324,6 +335,22 @@ export default function ReportsPage() {
         activeCustomers: activeCustomerIds.size,
         topCustomers,
         newCustomers
+      })
+
+      // Calculate Invoice Metrics
+      const paidInvoicesCount = invoices.filter((inv: Invoice) => inv.status === 'paid').length
+      const outstandingInvoices = invoices.filter((inv: Invoice) => inv.status === 'sent').length
+      const overdueInvoices = invoices.filter((inv: Invoice) => inv.status === 'overdue').length
+      const totalInvoiceValue = invoices.reduce((sum: number, inv: Invoice) => sum + (inv.total || 0), 0)
+      const collectionRate = invoices.length > 0 ? (paidInvoicesCount / invoices.length) * 100 : 0
+
+      setInvoiceMetrics({
+        totalInvoices: invoices.length,
+        paidInvoices: paidInvoicesCount,
+        outstandingInvoices,
+        overdueInvoices,
+        totalValue: totalInvoiceValue,
+        collectionRate
       })
 
       setLoading(false)
@@ -687,6 +714,54 @@ export default function ReportsPage() {
             ) : (
               <p className="text-sm text-gray-500 text-center py-8">No revenue data for this period</p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Invoice Analytics - with View Details link */}
+        <Card className="bg-flowtrade-navy-light border-flowtrade-navy-lighter lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-orange-400" />
+                Invoice Analytics
+              </CardTitle>
+              <Link 
+                href="/reports/invoices"
+                className="flex items-center gap-1 text-xs text-flowtrade-cyan hover:text-flowtrade-cyan/80 transition-colors"
+              >
+                View Details
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <CardDescription className="text-gray-400">{periodLabel}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Total Invoices</p>
+                <p className="text-2xl font-bold text-white">{invoiceMetrics?.totalInvoices || 0}</p>
+              </div>
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Paid</p>
+                <p className="text-2xl font-bold text-green-400">{invoiceMetrics?.paidInvoices || 0}</p>
+              </div>
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Outstanding</p>
+                <p className="text-2xl font-bold text-blue-400">{invoiceMetrics?.outstandingInvoices || 0}</p>
+              </div>
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Overdue</p>
+                <p className="text-2xl font-bold text-red-400">{invoiceMetrics?.overdueInvoices || 0}</p>
+              </div>
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Total Value</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(invoiceMetrics?.totalValue || 0)}</p>
+              </div>
+              <div className="bg-flowtrade-navy rounded-lg p-4">
+                <p className="text-sm text-gray-400">Collection Rate</p>
+                <p className="text-2xl font-bold text-flowtrade-cyan">{formatPercent(invoiceMetrics?.collectionRate || 0)}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

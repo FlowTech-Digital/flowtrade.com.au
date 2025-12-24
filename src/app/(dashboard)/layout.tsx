@@ -29,6 +29,7 @@ const navigation: NavItem[] = [
       { name: 'Overview', href: '/reports' },
       { name: 'Quotes Analytics', href: '/reports/quotes' },
       { name: 'Payment Analytics', href: '/reports/payments' },
+      { name: 'Invoice Analytics', href: '/reports/invoices' },
     ]
   },
   { name: 'Settings', href: '/settings', icon: Settings },
