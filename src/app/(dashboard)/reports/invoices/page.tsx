@@ -990,7 +990,7 @@ export default function InvoicesReportPage() {
 
         {/* Aging Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {agingBuckets.map((bucket, index) => (
+          {agingBuckets.map((bucket) => (
             <div 
               key={bucket.label}
               className="bg-flowtrade-navy/50 rounded-lg p-4 border-l-4"
@@ -1061,8 +1061,8 @@ export default function InvoicesReportPage() {
                 dataKey="value" 
                 radius={[0, 4, 4, 0]}
               >
-                {agingChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {agingChartData.map((entry) => (
+                  <Cell key={`cell-${entry.name}`} fill={entry.color} />
                 ))}
               </Bar>
             </BarChart>
