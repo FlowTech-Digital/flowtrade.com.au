@@ -792,7 +792,7 @@ export default function JobDetailPage() {
               </button>
             )}
 
-            {/* More Actions Dropdown */}
+            {/* More Actions Dropdown - Fixed positioning */}
             <div className="relative">
               <button
                 onClick={() => setShowActionsMenu(!showActionsMenu)}
@@ -804,8 +804,8 @@ export default function JobDetailPage() {
               {showActionsMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
-                  {/* Dropdown: right-0 to keep within viewport */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
+                  {/* Dropdown: fixed position on mobile to ensure visibility, absolute on desktop */}
+                  <div className="fixed sm:absolute right-4 sm:right-0 top-auto sm:top-full mt-2 w-[calc(100vw-2rem)] sm:w-48 max-w-[200px] bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
                     {job.quote && (
                       <button
                         onClick={() => router.push(`/quotes/${job.quote!.id}`)}
