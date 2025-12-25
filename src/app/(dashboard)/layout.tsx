@@ -215,7 +215,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-flowtrade-navy">
+    <div className="flex min-h-screen bg-flowtrade-navy overflow-x-hidden">
       {/* Mobile menu backdrop */}
       {mobileMenuOpen && (
         <div 
@@ -356,8 +356,8 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 lg:pl-64">
+      {/* Main content - MOBILE FIX: Added overflow-x-hidden and max-w-full */}
+      <main className="flex-1 lg:pl-64 w-full max-w-full overflow-x-hidden">
         {/* Top bar for mobile */}
         <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-4 bg-flowtrade-navy-light border-b border-flowtrade-navy-lighter lg:hidden">
           {/* Hamburger menu button */}
@@ -389,8 +389,8 @@ export default function DashboardLayout({
           </button>
         </header>
 
-        {/* Page content */}
-        <div className="p-6 lg:p-8">
+        {/* Page content - MOBILE FIX: Added overflow-x-hidden and box-sizing control */}
+        <div className="p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-x-hidden box-border">
           {children}
         </div>
       </main>
