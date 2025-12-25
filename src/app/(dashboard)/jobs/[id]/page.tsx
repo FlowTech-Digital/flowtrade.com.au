@@ -709,12 +709,12 @@ export default function JobDetailPage() {
   const statusConfig = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Success Message Toast */}
       {successMessage && (
         <div className="fixed top-4 right-4 z-50 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
-          <CheckCircle className="h-5 w-5" />
-          <span>{successMessage}</span>
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <span className="text-sm">{successMessage}</span>
           <button
             onClick={() => setSuccessMessage(null)}
             className="ml-2 text-green-400 hover:text-green-300"
@@ -727,8 +727,8 @@ export default function JobDetailPage() {
       {/* Error Message Toast */}
       {error && (
         <div className="fixed top-4 right-4 z-50 bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
-          <AlertCircle className="h-5 w-5" />
-          <span>{error}</span>
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span className="text-sm">{error}</span>
           <button
             onClick={() => setError(null)}
             className="ml-2 text-red-400 hover:text-red-300"
@@ -738,54 +738,56 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-center gap-4">
+      {/* Header - MOBILE RESPONSIVE: Stack on mobile */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
+        {/* Left: Back + Title */}
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <button
             onClick={() => router.push('/jobs')}
-            className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors flex-shrink-0"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white">{job.job_number}</h1>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.bgColor} ${statusConfig.color}`}>
-                <StatusIcon className="h-4 w-4" />
-                {statusConfig.label}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{job.job_number}</h1>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium border ${statusConfig.bgColor} ${statusConfig.color} flex-shrink-0`}>
+                <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">{statusConfig.label}</span>
               </span>
             </div>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-400 text-sm mt-1 truncate">
               Created {formatDateTime(job.created_at)}
             </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Right: Action Buttons - MOBILE RESPONSIVE */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'invoiced' && (
             <button
               onClick={() => router.push(`/jobs/${jobId}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-flowtrade-navy-lighter text-white text-sm rounded-lg hover:bg-flowtrade-navy transition-colors"
             >
               <Pencil className="h-4 w-4" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </button>
           )}
 
-          {/* Generate Invoice Button - for completed jobs */}
+          {/* Generate Invoice Button - for completed jobs - MOBILE RESPONSIVE */}
           {job.status === 'completed' && (
             <button
               onClick={generateInvoice}
               disabled={generatingInvoice}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
               {generatingInvoice ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <FilePlus className="h-4 w-4" />
               )}
-              Generate Invoice
+              <span className="hidden sm:inline">Generate Invoice</span>
+              <span className="sm:hidden">Invoice</span>
             </button>
           )}
 
@@ -864,7 +866,7 @@ export default function JobDetailPage() {
                   {job.customer?.email && (
                     <div className="flex items-center gap-2 text-gray-400">
                       <Mail className="h-4 w-4" />
-                      <a href={`mailto:${job.customer.email}`} className="hover:text-white">
+                      <a href={`mailto:${job.customer.email}`} className="hover:text-white truncate">
                         {job.customer.email}
                       </a>
                     </div>
@@ -884,7 +886,7 @@ export default function JobDetailPage() {
               <div>
                 <h3 className="text-sm font-medium text-gray-400 mb-3">Job Site</h3>
                 <div className="flex items-start gap-2">
-                  <MapPin className="h-5 w-5 text-flowtrade-cyan mt-0.5" />
+                  <MapPin className="h-5 w-5 text-flowtrade-cyan mt-0.5 flex-shrink-0" />
                   <span className="text-white">{getJobSiteAddress()}</span>
                 </div>
               </div>
@@ -1040,8 +1042,8 @@ export default function JobDetailPage() {
               <div className="space-y-4">
                 {activities.map((activity) => (
                   <div key={activity.id} className="flex gap-3">
-                    <div className="w-2 h-2 mt-2 rounded-full bg-flowtrade-cyan" />
-                    <div>
+                    <div className="w-2 h-2 mt-2 rounded-full bg-flowtrade-cyan flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-white text-sm">{activity.action}</p>
                       {activity.details && (
                         <p className="text-gray-500 text-xs">{activity.details}</p>
