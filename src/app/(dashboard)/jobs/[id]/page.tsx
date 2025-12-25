@@ -709,7 +709,7 @@ export default function JobDetailPage() {
   const statusConfig = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden">
+    <div className="w-full max-w-full">
       {/* Success Message Toast */}
       {successMessage && (
         <div className="fixed top-4 right-4 z-50 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in slide-in-from-top-2">
@@ -792,7 +792,7 @@ export default function JobDetailPage() {
               </button>
             )}
 
-            {/* More Actions Dropdown - Fixed positioning for mobile */}
+            {/* More Actions Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowActionsMenu(!showActionsMenu)}
@@ -804,8 +804,8 @@ export default function JobDetailPage() {
               {showActionsMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
-                  {/* Dropdown: left-0 on mobile to prevent overflow, right-0 on desktop */}
-                  <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
+                  {/* Dropdown: right-0 to keep within viewport */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
                     {job.quote && (
                       <button
                         onClick={() => router.push(`/quotes/${job.quote!.id}`)}
