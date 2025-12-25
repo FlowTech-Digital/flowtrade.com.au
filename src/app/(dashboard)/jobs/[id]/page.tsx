@@ -738,10 +738,10 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {/* Header - MOBILE RESPONSIVE: Stack on mobile */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
-        {/* Left: Back + Title */}
-        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+      {/* Header - MOBILE RESPONSIVE */}
+      <div className="mb-6 sm:mb-8">
+        {/* Row 1: Back button + Title + Status badge */}
+        <div className="flex items-start gap-3 sm:gap-4 mb-4">
           <button
             onClick={() => router.push('/jobs')}
             className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors flex-shrink-0"
@@ -753,7 +753,7 @@ export default function JobDetailPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{job.job_number}</h1>
               <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium border ${statusConfig.bgColor} ${statusConfig.color} flex-shrink-0`}>
                 <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">{statusConfig.label}</span>
+                {statusConfig.label}
               </span>
             </div>
             <p className="text-gray-400 text-sm mt-1 truncate">
@@ -762,78 +762,81 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* Right: Action Buttons - MOBILE RESPONSIVE */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'invoiced' && (
-            <button
-              onClick={() => router.push(`/jobs/${jobId}/edit`)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-flowtrade-navy-lighter text-white text-sm rounded-lg hover:bg-flowtrade-navy transition-colors"
-            >
-              <Pencil className="h-4 w-4" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-          )}
-
-          {/* Generate Invoice Button - for completed jobs - MOBILE RESPONSIVE */}
+        {/* Row 2: Action Buttons - MOBILE: Generate Invoice full width, hamburger to right */}
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3">
+          {/* Generate Invoice Button - Full width on mobile for completed jobs */}
           {job.status === 'completed' && (
             <button
               onClick={generateInvoice}
               disabled={generatingInvoice}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 w-full sm:w-auto order-1 sm:order-none"
             >
               {generatingInvoice ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <FilePlus className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Generate Invoice</span>
-              <span className="sm:hidden">Invoice</span>
+              Generate Invoice
             </button>
           )}
 
-          {/* More Actions Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </button>
+          {/* Edit + More Actions row */}
+          <div className="flex items-center justify-end gap-2 order-2 sm:order-none">
+            {job.status !== 'completed' && job.status !== 'cancelled' && job.status !== 'invoiced' && (
+              <button
+                onClick={() => router.push(`/jobs/${jobId}/edit`)}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-flowtrade-navy-lighter text-white text-sm rounded-lg hover:bg-flowtrade-navy transition-colors"
+              >
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
 
-            {showActionsMenu && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
-                  {job.quote && (
+            {/* More Actions Dropdown - Fixed positioning for mobile */}
+            <div className="relative">
+              <button
+                onClick={() => setShowActionsMenu(!showActionsMenu)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-flowtrade-navy-lighter rounded-lg transition-colors"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </button>
+
+              {showActionsMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
+                  {/* Dropdown: left-0 on mobile to prevent overflow, right-0 on desktop */}
+                  <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-48 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg shadow-lg z-20 py-1">
+                    {job.quote && (
+                      <button
+                        onClick={() => router.push(`/quotes/${job.quote!.id}`)}
+                        className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View Quote
+                      </button>
+                    )}
                     <button
-                      onClick={() => router.push(`/quotes/${job.quote!.id}`)}
+                      onClick={() => router.push('/invoices')}
                       className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
                     >
-                      <FileText className="h-4 w-4" />
-                      View Quote
+                      <Receipt className="h-4 w-4" />
+                      View Invoices
                     </button>
-                  )}
-                  <button
-                    onClick={() => router.push('/invoices')}
-                    className="w-full px-4 py-2 text-left text-gray-300 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                  >
-                    <Receipt className="h-4 w-4" />
-                    View Invoices
-                  </button>
-                  <div className="border-t border-flowtrade-navy-lighter my-1" />
-                  <button
-                    onClick={() => {
-                      setShowActionsMenu(false)
-                      setShowDeleteModal(true)
-                    }}
-                    className="w-full px-4 py-2 text-left text-red-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Job
-                  </button>
-                </div>
-              </>
-            )}
+                    <div className="border-t border-flowtrade-navy-lighter my-1" />
+                    <button
+                      onClick={() => {
+                        setShowActionsMenu(false)
+                        setShowDeleteModal(true)
+                      }}
+                      className="w-full px-4 py-2 text-left text-red-400 hover:bg-flowtrade-navy-lighter flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Job
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
