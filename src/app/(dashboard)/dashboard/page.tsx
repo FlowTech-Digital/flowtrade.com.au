@@ -366,31 +366,31 @@ export default function DashboardPage() {
     : 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Page Header */}
       <div className="pb-4 border-b border-flowtrade-navy-lighter">
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Welcome to FlowTrade</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
+        <p className="text-gray-400 mt-1 text-sm sm:text-base">Welcome to FlowTrade</p>
       </div>
 
       {/* Main Stats Grid - Primary KPIs */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Key Metrics</h2>
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter whitespace-nowrap">Key Metrics</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Total Quotes Card */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg shadow-flowtrade-cyan/5 hover:shadow-flowtrade-cyan/10 hover:border-flowtrade-cyan/40 hover:ring-2 hover:ring-flowtrade-cyan/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/quotes')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Total Quotes</CardTitle>
-              <div className="p-2.5 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all">
-                <FileText className="h-5 w-5 text-flowtrade-cyan" />
+              <div className="p-2 sm:p-2.5 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all flex-shrink-0">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-flowtrade-cyan" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">{stats?.totalQuotes || 0}</div>
-              <p className="text-sm text-flowtrade-cyan/80 mt-1 font-medium">
+              <div className="text-2xl sm:text-3xl font-bold text-white">{stats?.totalQuotes || 0}</div>
+              <p className="text-xs sm:text-sm text-flowtrade-cyan/80 mt-1 font-medium">
                 {stats?.pendingQuotes || 0} pending
               </p>
             </CardContent>
@@ -400,13 +400,13 @@ export default function DashboardPage() {
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-amber-400/20 shadow-lg shadow-amber-400/5 hover:shadow-amber-400/10 hover:border-amber-400/40 hover:ring-2 hover:ring-amber-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/jobs')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Active Jobs</CardTitle>
-              <div className="p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50 transition-all">
-                <Briefcase className="h-5 w-5 text-amber-400" />
+              <div className="p-2 sm:p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50 transition-all flex-shrink-0">
+                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">{stats?.activeJobs || 0}</div>
-              <p className="text-sm text-amber-400/80 mt-1 font-medium">
+              <div className="text-2xl sm:text-3xl font-bold text-white">{stats?.activeJobs || 0}</div>
+              <p className="text-xs sm:text-sm text-amber-400/80 mt-1 font-medium">
                 {stats?.completedJobs || 0} completed
               </p>
             </CardContent>
@@ -416,15 +416,15 @@ export default function DashboardPage() {
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg shadow-blue-400/5 hover:shadow-blue-400/10 hover:border-blue-400/40 hover:ring-2 hover:ring-blue-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/invoices?status=sent')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Outstanding</CardTitle>
-              <div className="p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
-                <Clock className="h-5 w-5 text-blue-400" />
+              <div className="p-2 sm:p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all flex-shrink-0">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
+            <CardContent className="min-w-0">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate">
                 {formatCurrency(stats?.outstandingAmount || 0)}
               </div>
-              <p className="text-sm text-blue-400/80 mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-blue-400/80 mt-1 font-medium">
                 {stats?.totalInvoices || 0} invoices
               </p>
             </CardContent>
@@ -434,21 +434,21 @@ export default function DashboardPage() {
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/reports/payments')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">MTD Revenue</CardTitle>
-              <div className="p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
-                <DollarSign className="h-5 w-5 text-green-400" />
+              <div className="p-2 sm:p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all flex-shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
+            <CardContent className="min-w-0">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate">
                 {formatCurrency(stats?.mtdRevenue || 0)}
               </div>
-              <div className="flex items-center gap-1.5 mt-1">
+              <div className="flex items-center gap-1.5 mt-1 min-w-0">
                 {revenueGrowth >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-400" />
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-red-400" />
+                  <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-400 flex-shrink-0" />
                 )}
-                <p className={`text-sm font-medium ${revenueGrowth >= 0 ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                <p className={`text-xs sm:text-sm font-medium truncate ${revenueGrowth >= 0 ? 'text-green-400/80' : 'text-red-400/80'}`}>
                   {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth}% vs last month
                 </p>
               </div>
@@ -457,24 +457,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Pipeline Overview - NEW */}
+      {/* Pipeline Overview */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Pipeline</h2>
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Pipeline</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {/* Pending Quotes Value */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg cursor-pointer hover:border-flowtrade-cyan/40 transition-all" onClick={() => router.push('/quotes?status=sent')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Open Quotes</p>
-                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.pendingQuotesValue || 0)}</p>
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-400">Open Quotes</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white mt-1 truncate">{formatCurrency(stats?.pendingQuotesValue || 0)}</p>
                   <p className="text-xs text-flowtrade-cyan/70 mt-1">{stats?.pendingQuotes || 0} quotes pending</p>
                 </div>
-                <div className="p-3 bg-flowtrade-cyan/10 rounded-xl">
-                  <FileText className="h-6 w-6 text-flowtrade-cyan" />
+                <div className="p-2.5 sm:p-3 bg-flowtrade-cyan/10 rounded-xl flex-shrink-0">
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-flowtrade-cyan" />
                 </div>
               </div>
             </CardContent>
@@ -482,31 +482,31 @@ export default function DashboardPage() {
 
           {/* Pending Invoices */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg cursor-pointer hover:border-blue-400/40 transition-all" onClick={() => router.push('/invoices?status=sent')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Awaiting Payment</p>
-                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.outstandingAmount || 0)}</p>
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-400">Awaiting Payment</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white mt-1 truncate">{formatCurrency(stats?.outstandingAmount || 0)}</p>
                   <p className="text-xs text-blue-400/70 mt-1">Sent invoices</p>
                 </div>
-                <div className="p-3 bg-blue-400/10 rounded-xl">
-                  <Receipt className="h-6 w-6 text-blue-400" />
+                <div className="p-2.5 sm:p-3 bg-blue-400/10 rounded-xl flex-shrink-0">
+                  <Receipt className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Total Revenue */}
-          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg cursor-pointer hover:border-green-400/40 transition-all" onClick={() => router.push('/invoices?status=paid')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Revenue</p>
-                  <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats?.paidAmount || 0)}</p>
+          <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg cursor-pointer hover:border-green-400/40 transition-all sm:col-span-2 md:col-span-1" onClick={() => router.push('/invoices?status=paid')}>
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-400">Total Revenue</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white mt-1 truncate">{formatCurrency(stats?.paidAmount || 0)}</p>
                   <p className="text-xs text-green-400/70 mt-1">All time paid</p>
                 </div>
-                <div className="p-3 bg-green-400/10 rounded-xl">
-                  <DollarSign className="h-6 w-6 text-green-400" />
+                <div className="p-2.5 sm:p-3 bg-green-400/10 rounded-xl flex-shrink-0">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
                 </div>
               </div>
             </CardContent>
@@ -524,24 +524,25 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-semibold text-red-300 flex items-center gap-2">
               <span className="animate-pulse">⚠️</span> Overdue Invoices
             </CardTitle>
-            <div className="p-2.5 bg-red-500/30 rounded-xl ring-2 ring-red-500/40">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
+            <div className="p-2 sm:p-2.5 bg-red-500/30 rounded-xl ring-2 ring-red-500/40 flex-shrink-0">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
               <div>
-                <div className="text-3xl font-bold text-red-400">{stats.overdueCount}</div>
-                <p className="text-sm text-red-300/80 font-medium">
+                <div className="text-2xl sm:text-3xl font-bold text-red-400">{stats.overdueCount}</div>
+                <p className="text-xs sm:text-sm text-red-300/80 font-medium">
                   {stats.overdueCount === 1 ? 'invoice overdue' : 'invoices overdue'}
                 </p>
               </div>
-              <div className="h-14 w-px bg-red-500/30 mx-6" />
-              <div className="text-right">
-                <div className="text-3xl font-bold text-red-400">
+              <div className="hidden sm:block h-14 w-px bg-red-500/30 mx-6" />
+              <div className="h-px w-full sm:hidden bg-red-500/30" />
+              <div className="sm:text-right">
+                <div className="text-2xl sm:text-3xl font-bold text-red-400 truncate">
                   {formatCurrency(stats.overdueAmount)}
                 </div>
-                <p className="text-sm text-red-300/80 font-medium">total overdue</p>
+                <p className="text-xs sm:text-sm text-red-300/80 font-medium">total overdue</p>
               </div>
             </div>
           </CardContent>
@@ -551,51 +552,51 @@ export default function DashboardPage() {
       {/* Secondary Stats - Performance Metrics */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Performance</h2>
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Performance</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Customers Card */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-purple-400/20 shadow-lg shadow-purple-400/5 hover:shadow-purple-400/10 hover:border-purple-400/40 hover:ring-2 hover:ring-purple-400/20 transition-all duration-300 cursor-pointer group" onClick={() => router.push('/customers')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Customers</CardTitle>
-              <div className="p-2.5 bg-purple-400/20 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50 transition-all">
-                <Users className="h-5 w-5 text-purple-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Customers</CardTitle>
+              <div className="p-1.5 sm:p-2.5 bg-purple-400/20 rounded-lg sm:rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50 transition-all flex-shrink-0">
+                <Users className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-purple-400" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{stats?.totalCustomers || 0}</div>
-              <p className="text-sm text-purple-400/80 mt-1 font-medium">Total customers</p>
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{stats?.totalCustomers || 0}</div>
+              <p className="text-xs sm:text-sm text-purple-400/80 mt-1 font-medium">Total customers</p>
             </CardContent>
           </Card>
 
           {/* Conversion Rate Card */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg shadow-flowtrade-cyan/5 hover:shadow-flowtrade-cyan/10 hover:border-flowtrade-cyan/40 hover:ring-2 hover:ring-flowtrade-cyan/20 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Conversion Rate</CardTitle>
-              <div className="p-2.5 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all">
-                <TrendingUp className="h-5 w-5 text-flowtrade-cyan" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Conversion</CardTitle>
+              <div className="p-1.5 sm:p-2.5 bg-flowtrade-cyan/20 rounded-lg sm:rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all flex-shrink-0">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-flowtrade-cyan" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
                 {stats?.totalQuotes ? `${conversionRate}%` : '--%'}
               </div>
-              <p className="text-sm text-flowtrade-cyan/80 mt-1 font-medium">Quotes to jobs</p>
+              <p className="text-xs sm:text-sm text-flowtrade-cyan/80 mt-1 font-medium">Quotes to jobs</p>
             </CardContent>
           </Card>
 
           {/* Completed Jobs Card */}
           <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Completed Jobs</CardTitle>
-              <div className="p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
-                <CheckCircle className="h-5 w-5 text-green-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Completed</CardTitle>
+              <div className="p-1.5 sm:p-2.5 bg-green-400/20 rounded-lg sm:rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all flex-shrink-0">
+                <CheckCircle className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-green-400" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{stats?.completedJobs || 0}</div>
-              <p className="text-sm text-green-400/80 mt-1 font-medium">All time</p>
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{stats?.completedJobs || 0}</div>
+              <p className="text-xs sm:text-sm text-green-400/80 mt-1 font-medium">All time</p>
             </CardContent>
           </Card>
 
@@ -604,42 +605,42 @@ export default function DashboardPage() {
             className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg shadow-blue-400/5 cursor-pointer hover:shadow-blue-400/10 hover:border-blue-400/40 hover:ring-2 hover:ring-blue-400/20 transition-all duration-300 group"
             onClick={() => router.push('/jobs?status=scheduled')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Scheduled Jobs</CardTitle>
-              <div className="p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
-                <Calendar className="h-5 w-5 text-blue-400" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Scheduled</CardTitle>
+              <div className="p-1.5 sm:p-2.5 bg-blue-400/20 rounded-lg sm:rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all flex-shrink-0">
+                <Calendar className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-400" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">{stats?.scheduledJobs || 0}</div>
-              <p className="text-sm text-blue-400/80 mt-1 font-medium">Upcoming work</p>
+            <CardContent className="px-3 sm:px-6">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{stats?.scheduledJobs || 0}</div>
+              <p className="text-xs sm:text-sm text-blue-400/80 mt-1 font-medium">Upcoming</p>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Reports Navigation - NEW */}
+      {/* Reports Navigation */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider px-3 py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Reports &amp; Analytics</h2>
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter whitespace-nowrap">Reports</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {/* Payment Analytics */}
           <Card 
             className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 shadow-lg cursor-pointer hover:border-green-400/40 hover:shadow-green-400/10 transition-all group"
             onClick={() => router.push('/reports/payments')}
           >
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
-                  <BarChart3 className="h-6 w-6 text-green-400" />
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all flex-shrink-0">
+                  <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold group-hover:text-green-400 transition-colors">Payment Analytics</h3>
-                  <p className="text-sm text-gray-400">Revenue trends &amp; payment methods</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold group-hover:text-green-400 transition-colors text-sm sm:text-base">Payment Analytics</h3>
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">Revenue trends &amp; methods</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -649,35 +650,35 @@ export default function DashboardPage() {
             className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-cyan/20 shadow-lg cursor-pointer hover:border-flowtrade-cyan/40 hover:shadow-flowtrade-cyan/10 transition-all group"
             onClick={() => router.push('/reports/quotes')}
           >
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all">
-                  <PieChart className="h-6 w-6 text-flowtrade-cyan" />
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50 transition-all flex-shrink-0">
+                  <PieChart className="h-5 w-5 sm:h-6 sm:w-6 text-flowtrade-cyan" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold group-hover:text-flowtrade-cyan transition-colors">Quote Analytics</h3>
-                  <p className="text-sm text-gray-400">Conversion rates &amp; pipeline</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold group-hover:text-flowtrade-cyan transition-colors text-sm sm:text-base">Quote Analytics</h3>
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">Conversion rates &amp; pipeline</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-flowtrade-cyan group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-flowtrade-cyan group-hover:translate-x-1 transition-all flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           {/* Invoice Analytics */}
           <Card 
-            className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg cursor-pointer hover:border-blue-400/40 hover:shadow-blue-400/10 transition-all group"
+            className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 shadow-lg cursor-pointer hover:border-blue-400/40 hover:shadow-blue-400/10 transition-all group sm:col-span-2 md:col-span-1"
             onClick={() => router.push('/reports/invoices')}
           >
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
-                  <LineChart className="h-6 w-6 text-blue-400" />
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all flex-shrink-0">
+                  <LineChart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold group-hover:text-blue-400 transition-colors">Invoice Analytics</h3>
-                  <p className="text-sm text-gray-400">Aging analysis &amp; collection</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold group-hover:text-blue-400 transition-colors text-sm sm:text-base">Invoice Analytics</h3>
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">Aging analysis &amp; collection</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -685,78 +686,78 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions & Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Quick Actions Card */}
         <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-navy-lighter shadow-xl">
-          <CardHeader className="pb-4 border-b border-flowtrade-navy-lighter/50">
-            <CardTitle className="text-white text-lg">Quick Actions</CardTitle>
-            <CardDescription className="text-gray-400">Get things done fast</CardDescription>
+          <CardHeader className="pb-3 sm:pb-4 border-b border-flowtrade-navy-lighter/50">
+            <CardTitle className="text-white text-base sm:text-lg">Quick Actions</CardTitle>
+            <CardDescription className="text-gray-400 text-xs sm:text-sm">Get things done fast</CardDescription>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3">
+          <CardContent className="pt-4 sm:pt-5 space-y-2 sm:space-y-3">
             <button
               onClick={() => router.push('/quotes/new')}
-              className="w-full flex items-center justify-between p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-flowtrade-cyan hover:bg-flowtrade-navy-hover hover:border-flowtrade-cyan/50 hover:shadow-lg hover:shadow-flowtrade-cyan/10 transition-all duration-300 group"
+              className="w-full flex items-center justify-between p-3 sm:p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-flowtrade-cyan hover:bg-flowtrade-navy-hover hover:border-flowtrade-cyan/50 hover:shadow-lg hover:shadow-flowtrade-cyan/10 transition-all duration-300 group"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-flowtrade-cyan/20 rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50">
-                  <Plus className="h-5 w-5 text-flowtrade-cyan" />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-2.5 bg-flowtrade-cyan/20 rounded-lg sm:rounded-xl ring-2 ring-flowtrade-cyan/30 group-hover:ring-flowtrade-cyan/50">
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-flowtrade-cyan" />
                 </div>
-                <span className="text-white font-semibold group-hover:text-flowtrade-cyan transition-colors">Create Quote</span>
+                <span className="text-white font-semibold group-hover:text-flowtrade-cyan transition-colors text-sm sm:text-base">Create Quote</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-flowtrade-cyan group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-flowtrade-cyan group-hover:translate-x-1 transition-all" />
             </button>
 
             <button
               onClick={() => router.push('/jobs/new')}
-              className="w-full flex items-center justify-between p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-amber-400 hover:bg-flowtrade-navy-hover hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/10 transition-all duration-300 group"
+              className="w-full flex items-center justify-between p-3 sm:p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-amber-400 hover:bg-flowtrade-navy-hover hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/10 transition-all duration-300 group"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50">
-                  <Briefcase className="h-5 w-5 text-amber-400" />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-2.5 bg-amber-400/20 rounded-lg sm:rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50">
+                  <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
                 </div>
-                <span className="text-white font-semibold group-hover:text-amber-400 transition-colors">New Job</span>
+                <span className="text-white font-semibold group-hover:text-amber-400 transition-colors text-sm sm:text-base">New Job</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
             </button>
 
             <button
               onClick={() => router.push('/invoices/new')}
-              className="w-full flex items-center justify-between p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-green-400 hover:bg-flowtrade-navy-hover hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10 transition-all duration-300 group"
+              className="w-full flex items-center justify-between p-3 sm:p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-green-400 hover:bg-flowtrade-navy-hover hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10 transition-all duration-300 group"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50">
-                  <Receipt className="h-5 w-5 text-green-400" />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-2.5 bg-green-400/20 rounded-lg sm:rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50">
+                  <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                 </div>
-                <span className="text-white font-semibold group-hover:text-green-400 transition-colors">Create Invoice</span>
+                <span className="text-white font-semibold group-hover:text-green-400 transition-colors text-sm sm:text-base">Create Invoice</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
             </button>
 
             <button
               onClick={() => router.push('/customers/new')}
-              className="w-full flex items-center justify-between p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-purple-400 hover:bg-flowtrade-navy-hover hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-400/10 transition-all duration-300 group"
+              className="w-full flex items-center justify-between p-3 sm:p-4 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter border-l-purple-400 hover:bg-flowtrade-navy-hover hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-400/10 transition-all duration-300 group"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-purple-400/20 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50">
-                  <Users className="h-5 w-5 text-purple-400" />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-2.5 bg-purple-400/20 rounded-lg sm:rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 </div>
-                <span className="text-white font-semibold group-hover:text-purple-400 transition-colors">Add Customer</span>
+                <span className="text-white font-semibold group-hover:text-purple-400 transition-colors text-sm sm:text-base">Add Customer</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
             </button>
           </CardContent>
         </Card>
 
         {/* Recent Activity Card */}
         <Card className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-flowtrade-navy-lighter shadow-xl">
-          <CardHeader className="pb-4 border-b border-flowtrade-navy-lighter/50">
-            <CardTitle className="text-white text-lg">Recent Activity</CardTitle>
-            <CardDescription className="text-gray-400">Your latest quotes, jobs &amp; invoices</CardDescription>
+          <CardHeader className="pb-3 sm:pb-4 border-b border-flowtrade-navy-lighter/50">
+            <CardTitle className="text-white text-base sm:text-lg">Recent Activity</CardTitle>
+            <CardDescription className="text-gray-400 text-xs sm:text-sm">Your latest quotes, jobs &amp; invoices</CardDescription>
           </CardHeader>
-          <CardContent className="pt-5">
+          <CardContent className="pt-4 sm:pt-5">
             {recentActivity.length === 0 ? (
-              <div className="text-center py-10 px-4 bg-flowtrade-navy/50 rounded-xl border-2 border-dashed border-flowtrade-navy-lighter">
-                <p className="text-sm text-gray-400">No activity yet. Create your first quote to get started.</p>
+              <div className="text-center py-8 sm:py-10 px-4 bg-flowtrade-navy/50 rounded-xl border-2 border-dashed border-flowtrade-navy-lighter">
+                <p className="text-xs sm:text-sm text-gray-400">No activity yet. Create your first quote to get started.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -764,19 +765,19 @@ export default function DashboardPage() {
                   <button
                     key={`${activity.type}-${activity.id}`}
                     onClick={() => router.push(getActivityRoute(activity.type, activity.id))}
-                    className={`w-full flex items-center justify-between p-3.5 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter ${getActivityBorder(activity.type)} hover:bg-flowtrade-navy-hover hover:border-flowtrade-navy-border hover:shadow-md transition-all duration-200 text-left group`}
+                    className={`w-full flex items-center justify-between p-3 sm:p-3.5 bg-flowtrade-navy rounded-xl border-2 border-l-4 border-flowtrade-navy-lighter ${getActivityBorder(activity.type)} hover:bg-flowtrade-navy-hover hover:border-flowtrade-navy-border hover:shadow-md transition-all duration-200 text-left group`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${getActivityIconBg(activity.type)}`}>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getActivityIconBg(activity.type)}`}>
                         {getActivityIcon(activity.type)}
                       </div>
-                      <div>
-                        <p className="text-sm text-white font-semibold group-hover:text-flowtrade-cyan transition-colors">{activity.number}</p>
-                        <p className="text-xs text-gray-400">{activity.customerName}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm text-white font-semibold group-hover:text-flowtrade-cyan transition-colors truncate">{activity.number}</p>
+                        <p className="text-xs text-gray-400 truncate">{activity.customerName}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-white font-semibold">
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="text-xs sm:text-sm text-white font-semibold truncate max-w-[80px] sm:max-w-none">
                         {activity.amount ? formatCurrency(activity.amount) : '—'}
                       </p>
                       <p className={`text-xs capitalize font-medium ${getStatusColor(activity.type, activity.status)}`}>
