@@ -192,7 +192,7 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="w-full max-w-full overflow-x-hidden space-y-4 sm:space-y-6">
       {/* Header - Mobile Optimized */}
       <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-flowtrade-navy-lighter">
         <div>
@@ -209,52 +209,52 @@ export default function JobsPage() {
       </div>
 
       {/* Summary Stats - 2 columns on mobile, 4 on desktop */}
-      <div>
+      <div className="w-full max-w-full">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Overview</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-amber-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-amber-400/5 hover:shadow-amber-400/10 hover:border-amber-400/40 hover:ring-2 hover:ring-amber-400/20 transition-all duration-300 group">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full">
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-amber-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-amber-400/5 hover:shadow-amber-400/10 hover:border-amber-400/40 hover:ring-2 hover:ring-amber-400/20 transition-all duration-300 group min-w-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 sm:p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50 transition-all">
+              <div className="p-2 sm:p-2.5 bg-amber-400/20 rounded-xl ring-2 ring-amber-400/30 group-hover:ring-amber-400/50 transition-all flex-shrink-0">
                 <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
               </div>
-              <div>
-                <p className="text-xs sm:text-sm text-gray-400">Total Jobs</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-400 truncate">Total Jobs</p>
                 <p className="text-xl sm:text-2xl font-bold text-white">{jobs.length}</p>
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-blue-400/5 hover:shadow-blue-400/10 hover:border-blue-400/40 hover:ring-2 hover:ring-blue-400/20 transition-all duration-300 group">
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-blue-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-blue-400/5 hover:shadow-blue-400/10 hover:border-blue-400/40 hover:ring-2 hover:ring-blue-400/20 transition-all duration-300 group min-w-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 sm:p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
+              <div className="p-2 sm:p-2.5 bg-blue-400/20 rounded-xl ring-2 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all flex-shrink-0">
                 <Wrench className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
               </div>
-              <div>
-                <p className="text-xs sm:text-sm text-gray-400">Active</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-400 truncate">Active</p>
                 <p className="text-xl sm:text-2xl font-bold text-white">{activeJobs}</p>
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 group">
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-green-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-green-400/5 hover:shadow-green-400/10 hover:border-green-400/40 hover:ring-2 hover:ring-green-400/20 transition-all duration-300 group min-w-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 sm:p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all">
+              <div className="p-2 sm:p-2.5 bg-green-400/20 rounded-xl ring-2 ring-green-400/30 group-hover:ring-green-400/50 transition-all flex-shrink-0">
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
               </div>
-              <div>
-                <p className="text-xs sm:text-sm text-gray-400">Completed</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-400 truncate">Completed</p>
                 <p className="text-xl sm:text-2xl font-bold text-white">{completedJobs}</p>
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-purple-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-purple-400/5 hover:shadow-purple-400/10 hover:border-purple-400/40 hover:ring-2 hover:ring-purple-400/20 transition-all duration-300 group">
+          <div className="bg-gradient-to-br from-flowtrade-navy-light to-flowtrade-navy border-2 border-purple-400/20 rounded-xl p-3 sm:p-4 shadow-lg shadow-purple-400/5 hover:shadow-purple-400/10 hover:border-purple-400/40 hover:ring-2 hover:ring-purple-400/20 transition-all duration-300 group min-w-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 sm:p-2.5 bg-purple-400/20 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50 transition-all">
+              <div className="p-2 sm:p-2.5 bg-purple-400/20 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/50 transition-all flex-shrink-0">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
               </div>
-              <div>
-                <p className="text-xs sm:text-sm text-gray-400">Scheduled</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-400 truncate">Scheduled</p>
                 <p className="text-xl sm:text-2xl font-bold text-white">{scheduledJobs}</p>
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function JobsPage() {
       </div>
 
       {/* Filters Section - Mobile Optimized */}
-      <div>
+      <div className="w-full max-w-full">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">Search & Filter</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
@@ -304,7 +304,7 @@ export default function JobsPage() {
       </div>
 
       {/* Jobs List - Mobile Optimized Table */}
-      <div>
+      <div className="w-full max-w-full">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-xs sm:text-sm font-semibold text-gray-300 uppercase tracking-wider px-2 sm:px-3 py-1 sm:py-1.5 bg-flowtrade-navy rounded-lg border border-flowtrade-navy-lighter">All Jobs</h2>
           <div className="flex-1 h-px bg-gradient-to-r from-flowtrade-navy-lighter to-transparent"></div>
