@@ -33,11 +33,20 @@ export const metadata: Metadata = {
     title: 'FlowTrade - Smart Estimating for Australian Trades',
     description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades.',
     siteName: 'FlowTrade',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'FlowTrade - Smart Estimating for Australian Trades',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'FlowTrade - Smart Estimating for Australian Trades',
     description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
