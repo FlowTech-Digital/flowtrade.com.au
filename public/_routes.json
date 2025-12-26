@@ -1,6 +1,8 @@
 {
   "version": 1,
-  "include": ["/*"],
+  "include": [
+    "/*"
+  ],
   "exclude": [
     "/_next/static/*",
     "/images/*",
@@ -11,6 +13,7 @@
     "/og-image.png",
     "/og-image-v2.png",
     "/og-image-v3.png",
-    "/site.webmanifest"
+    "/site.webmanifest",
+    "/og-image-v4.png"
   ]
 }
