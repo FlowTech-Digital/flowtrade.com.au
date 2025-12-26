@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     siteName: 'FlowTrade',
     images: [
       {
-        url: 'https://flowtrade.com.au/og-image-v4.png?v=1',
+        url: 'https://flowtrade.com.au/og-image-v5.png',
         width: 1200,
         height: 630,
         alt: 'FlowTrade - Smart Estimating for Australian Trades',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FlowTrade - Smart Estimating for Australian Trades',
     description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades.',
-    images: ['https://flowtrade.com.au/og-image-v4.png?v=1'],
+    images: ['https://flowtrade.com.au/og-image-v5.png'],
   },
   robots: {
     index: true,
