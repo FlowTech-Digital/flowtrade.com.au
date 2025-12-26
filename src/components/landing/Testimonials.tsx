@@ -1,3 +1,24 @@
+const testimonials = [
+  {
+    initials: 'MT',
+    name: 'Mike T.',
+    role: 'Plumber, Melbourne',
+    quote: "Since switching to FlowTrade, I've been sending quotes from the van right after inspections. Clients love getting a professional quote within the hour.",
+  },
+  {
+    initials: 'JS',
+    name: 'James S.',
+    role: 'Electrician, Sydney',
+    quote: "My quotes look like they came from a much bigger operation now. Already had a couple of clients mention how professional everything feels.",
+  },
+  {
+    initials: 'RK',
+    name: 'Rachel K.',
+    role: 'HVAC, Brisbane',
+    quote: "Finally, software that doesn't make me feel like I need a degree in IT. Set it up in one afternoon and it's been smooth sailing since.",
+  },
+]
+
 export default function Testimonials() {
   return (
     <section className="py-20 bg-flowtrade-dark">
@@ -12,11 +33,11 @@ export default function Testimonials() {
           </p>
         </div>
 
-        {/* Placeholder Testimonials */}
+        {/* Testimonials */}
         <div className="grid md:grid-cols-3 gap-8">
-          {[1, 2, 3].map((_, index) => (
+          {testimonials.map((testimonial) => (
             <div
-              key={index}
+              key={testimonial.initials}
               className="p-8 bg-flowtrade-navy rounded-2xl border border-flowtrade-dark"
             >
               <div className="flex items-center mb-4">
@@ -32,19 +53,18 @@ export default function Testimonials() {
                 ))}
               </div>
               <p className="text-flowtrade-slate mb-6 italic">
-                &ldquo;We&apos;re just getting started, but early feedback has been incredible.
-                Our quoting time has been cut in half.&rdquo;
+                &ldquo;{testimonial.quote}&rdquo;
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-flowtrade-cyan/20 rounded-full flex items-center justify-center text-flowtrade-cyan font-bold">
-                  {['MT', 'JS', 'RK'][index]}
+                  {testimonial.initials}
                 </div>
                 <div className="ml-4">
                   <div className="font-semibold text-flowtrade-light">
-                    {['Mike T.', 'James S.', 'Rachel K.'][index]}
+                    {testimonial.name}
                   </div>
                   <div className="text-sm text-flowtrade-slate">
-                    {['Plumber, Melbourne', 'Electrician, Sydney', 'HVAC, Brisbane'][index]}
+                    {testimonial.role}
                   </div>
                 </div>
               </div>
