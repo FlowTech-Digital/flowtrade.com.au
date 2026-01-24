@@ -13,6 +13,15 @@ const TRADE_OPTIONS = [
   { value: 'roofing', label: 'Roofing' },
   { value: 'guttering', label: 'Guttering' },
   { value: 'fencing', label: 'Fencing' },
+  { value: 'mechanics', label: 'Auto Mechanics' },
+  { value: 'carpentry', label: 'Carpentry' },
+  { value: 'painting', label: 'Painting' },
+  { value: 'landscaping', label: 'Landscaping' },
+  { value: 'tiling', label: 'Tiling' },
+  { value: 'concreting', label: 'Concreting' },
+  { value: 'glazing', label: 'Glazing' },
+  { value: 'pest_control', label: 'Pest Control' },
+  { value: 'cleaning', label: 'Cleaning Services' },
   { value: 'general_construction', label: 'General Construction' },
 ]
 
