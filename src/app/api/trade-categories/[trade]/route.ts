@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { trade: string } }
+  { params }: { params: Promise<{ trade: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -14,7 +14,7 @@ export async function GET(
       )
     }
 
-    const { trade } = params
+    const { trade } = await params
 
     const { data, error } = await supabase
       .from('trade_default_categories')
