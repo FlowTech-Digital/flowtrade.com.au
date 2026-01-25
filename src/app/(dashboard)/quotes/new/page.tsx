@@ -22,6 +22,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react'
+import { QuickAddCategories } from '@/components/quotes/QuickAddCategories'
 
 // Types
 type Customer = {
@@ -62,6 +63,7 @@ type FormData = {
   terms_and_conditions: string
   internal_notes: string
   customer_notes: string
+  trade: string
 }
 
 const STEPS = [
@@ -127,6 +129,7 @@ export default function CreateQuotePage() {
     terms_and_conditions: DEFAULT_TERMS,
     internal_notes: '',
     customer_notes: '',
+    trade: 'general',
   })
 
   // New line item state
@@ -614,6 +617,54 @@ export default function CreateQuotePage() {
             <div>
               <h2 className="text-xl font-semibold text-white mb-2">Line Items</h2>
               <p className="text-gray-400">Add the items and services for this quote</p>
+            </div>
+
+            {/* Trade selector + Quick Add Categories */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Trade Type</label>
+                <select
+                  value={formData.trade}
+                  onChange={(e) => setFormData(prev => ({ ...prev, trade: e.target.value }))}
+                  className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
+                >
+                  <option value="general">General</option>
+                  <option value="plumber">Plumber</option>
+                  <option value="electrician">Electrician</option>
+                  <option value="hvac">HVAC</option>
+                  <option value="mechanics">Mechanics</option>
+                  <option value="carpentry">Carpentry</option>
+                  <option value="painting">Painting</option>
+                  <option value="landscaping">Landscaping</option>
+                  <option value="tiling">Tiling</option>
+                  <option value="concreting">Concreting</option>
+                  <option value="glazing">Glazing</option>
+                  <option value="pest_control">Pest Control</option>
+                  <option value="cleaning">Cleaning</option>
+                </select>
+              </div>
+
+              <QuickAddCategories
+                tradeType={formData.trade}
+                onAddCategory={(categoryName) => {
+                  const item = {
+                    id: crypto.randomUUID(),
+                    item_type: 'labor' as const,
+                    description: categoryName,
+                    quantity: 1,
+                    unit: 'lot',
+                    unit_price: 0,
+                    cost_price: 0,
+                    is_optional: false,
+                    total: 0,
+                  }
+                  setFormData(prev => ({
+                    ...prev,
+                    line_items: [...prev.line_items, item],
+                  }))
+                }}
+                usedCategories={formData.line_items.map(item => item.description)}
+              />
             </div>
 
             {/* Add Item Form */}
