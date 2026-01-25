@@ -99,7 +99,7 @@ export default function CreateQuotePage() {
   const [orgId, setOrgId] = useState<string | null>(null)
   
   // Check if user has custom categories (for showing Custom trade type option)
-  const { hasCustomCategories, loading: loadingCustomCheck } = useHasCustomCategories()
+  const { hasCustomCategories } = useHasCustomCategories()
   const [localHasCustom, setLocalHasCustom] = useState(false)
   
   // Combine server check with local state (for immediate UI update when adding first custom)
