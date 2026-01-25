@@ -15,9 +15,10 @@ export function QuickAddCategories({
   onAddCategory,
   usedCategories = []
 }: QuickAddCategoriesProps) {
-  const { categories, loading, error } = useTradeCategories(tradeType)
+  const { categories, loading, error, addCustomCategory } = useTradeCategories(tradeType)
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [customValue, setCustomValue] = useState('')
+  const [saving, setSaving] = useState(false)
 
   if (!tradeType) {
     return null
@@ -41,12 +42,23 @@ export function QuickAddCategories({
     (cat) => !usedCategories.includes(cat.category_name)
   )
 
-  const handleAddCustom = () => {
+  const handleAddCustom = async () => {
     const trimmed = customValue.trim()
-    if (trimmed && !usedCategories.includes(trimmed)) {
-      onAddCategory(trimmed)
-      setCustomValue('')
-      setShowCustomInput(false)
+    if (!trimmed || usedCategories.includes(trimmed)) return
+    
+    setSaving(true)
+    try {
+      // Save to database for future use
+      const saved = await addCustomCategory(trimmed)
+      
+      if (saved) {
+        // Add to current quote
+        onAddCategory(trimmed)
+        setCustomValue('')
+        setShowCustomInput(false)
+      }
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -71,7 +83,11 @@ export function QuickAddCategories({
             key={category.id}
             type="button"
             onClick={() => onAddCategory(category.category_name)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-full text-sm text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 hover:bg-flowtrade-navy-lighter transition-all duration-150"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-flowtrade-navy border rounded-full text-sm transition-all duration-150 ${
+              category.is_custom
+                ? 'border-flowtrade-cyan/30 text-flowtrade-cyan hover:border-flowtrade-cyan hover:bg-flowtrade-cyan/10'
+                : 'border-flowtrade-navy-lighter text-gray-300 hover:text-white hover:border-flowtrade-cyan/50 hover:bg-flowtrade-navy-lighter'
+            }`}
           >
             <Plus className="h-3.5 w-3.5" />
             {category.category_name}
@@ -97,15 +113,20 @@ export function QuickAddCategories({
               onKeyDown={handleKeyDown}
               placeholder="Custom category"
               autoFocus
-              className="w-32 sm:w-40 bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+              disabled={saving}
+              className="w-32 sm:w-40 bg-transparent text-sm text-white placeholder-gray-500 outline-none disabled:opacity-50"
             />
             <button
               type="button"
               onClick={handleAddCustom}
-              disabled={!customValue.trim()}
+              disabled={!customValue.trim() || saving}
               className="p-1.5 text-flowtrade-cyan hover:bg-flowtrade-cyan/20 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <Check className="h-3.5 w-3.5" />
+              {saving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
             </button>
             <button
               type="button"
@@ -113,7 +134,8 @@ export function QuickAddCategories({
                 setShowCustomInput(false)
                 setCustomValue('')
               }}
-              className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              disabled={saving}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-full disabled:opacity-50 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
