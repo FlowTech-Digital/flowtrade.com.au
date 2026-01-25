@@ -630,8 +630,8 @@ export default function CreateQuotePage() {
                   className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                 >
                   <option value="general">General</option>
-                  <option value="plumber">Plumber</option>
-                  <option value="electrician">Electrician</option>
+                  <option value="plumbing_drainage">Plumbing &amp; Drainage</option>
+                  <option value="electrical">Electrical</option>
                   <option value="hvac">HVAC</option>
                   <option value="mechanics">Mechanics</option>
                   <option value="carpentry">Carpentry</option>
