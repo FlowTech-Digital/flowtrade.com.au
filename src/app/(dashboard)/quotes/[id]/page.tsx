@@ -652,7 +652,7 @@ export default function QuoteDetailPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/quotes')}
@@ -661,7 +661,7 @@ export default function QuoteDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-white">{quote.quote_number}</h1>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
                 <StatusIcon className="h-4 w-4" />
@@ -681,15 +681,15 @@ export default function QuoteDetailPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Action Buttons - Responsive layout */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {quote.status === 'draft' && (
             <button
               onClick={() => router.push(`/quotes/${quoteId}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-flowtrade-navy-lighter text-white rounded-lg hover:bg-flowtrade-navy transition-colors text-sm sm:text-base"
             >
               <Edit className="h-4 w-4" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </button>
           )}
 
@@ -698,14 +698,15 @@ export default function QuoteDetailPage() {
               onClick={sendQuoteEmail}
               disabled={actionLoading === 'send' || !quote.customer?.email}
               title={!quote.customer?.email ? 'Customer email required' : undefined}
-              className="flex items-center gap-2 px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-flowtrade-cyan text-flowtrade-navy font-medium rounded-lg hover:bg-flowtrade-cyan/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {actionLoading === 'send' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              {quote.status === 'draft' ? 'Send Quote' : 'Resend'}
+              <span className="hidden sm:inline">{quote.status === 'draft' ? 'Send Quote' : 'Resend'}</span>
+              <span className="sm:hidden">Send</span>
             </button>
           )}
 
@@ -717,14 +718,15 @@ export default function QuoteDetailPage() {
             <button
               onClick={() => setShowConvertModal(true)}
               disabled={!!actionLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {actionLoading === 'convert' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Briefcase className="h-4 w-4" />
               )}
-              Convert to Job
+              <span className="hidden sm:inline">Convert to Job</span>
+              <span className="sm:hidden">Job</span>
             </button>
           )}
 

@@ -225,6 +225,9 @@ export default function SettingsPage() {
       setOrg(prev => prev ? { ...prev, ...formData } : null)
     }
     setSaving(false)
+    
+    // Scroll to top so user can see the notification
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Handle file upload

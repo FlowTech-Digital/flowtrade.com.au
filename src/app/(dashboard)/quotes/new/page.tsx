@@ -132,11 +132,11 @@ export default function CreateQuotePage() {
     trade: 'general',
   })
 
-  // New line item state
+  // New line item state - start with empty values for better mobile UX
   const [newItem, setNewItem] = useState<Omit<LineItem, 'id' | 'total'>>({
     item_type: 'labor',
     description: '',
-    quantity: 1,
+    quantity: 0,
     unit: 'hours',
     unit_price: 0,
     cost_price: 0,
@@ -321,10 +321,11 @@ export default function CreateQuotePage() {
       line_items: [...prev.line_items, item],
     }))
 
+    // Reset to empty values for better mobile UX
     setNewItem({
       item_type: 'labor',
       description: '',
-      quantity: 1,
+      quantity: 0,
       unit: 'hours',
       unit_price: 0,
       cost_price: 0,
@@ -692,9 +693,10 @@ export default function CreateQuotePage() {
                     type="number"
                     min="0"
                     step="0.5"
-                    value={newItem.quantity}
+                    value={newItem.quantity || ''}
                     onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
+                    placeholder="0"
+                    className="w-full px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                   />
                 </div>
 
@@ -717,9 +719,10 @@ export default function CreateQuotePage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={newItem.unit_price}
+                    value={newItem.unit_price || ''}
                     onChange={(e) => setNewItem(prev => ({ ...prev, unit_price: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
+                    placeholder="0.00"
+                    className="w-full px-3 py-2 bg-flowtrade-navy-light border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                   />
                 </div>
 
