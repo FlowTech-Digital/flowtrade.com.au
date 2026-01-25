@@ -647,20 +647,10 @@ export default function CreateQuotePage() {
               <QuickAddCategories
                 tradeType={formData.trade}
                 onAddCategory={(categoryName) => {
-                  const item = {
-                    id: crypto.randomUUID(),
-                    item_type: 'labor' as const,
-                    description: categoryName,
-                    quantity: 1,
-                    unit: 'lot',
-                    unit_price: 0,
-                    cost_price: 0,
-                    is_optional: false,
-                    total: 0,
-                  }
-                  setFormData(prev => ({
+                  // Populate the description field instead of adding directly to line items
+                  setNewItem(prev => ({
                     ...prev,
-                    line_items: [...prev.line_items, item],
+                    description: categoryName,
                   }))
                 }}
                 usedCategories={formData.line_items.map(item => item.description)}
