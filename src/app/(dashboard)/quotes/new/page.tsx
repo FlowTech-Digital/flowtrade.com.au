@@ -633,7 +633,7 @@ export default function CreateQuotePage() {
                   <option value="plumbing_drainage">Plumbing &amp; Drainage</option>
                   <option value="electrical">Electrical</option>
                   <option value="hvac">HVAC</option>
-                  <option value="mechanics">Mechanics</option>
+                  <option value="auto_mechanic">Auto Mechanic</option>
                   <option value="carpentry">Carpentry</option>
                   <option value="painting">Painting</option>
                   <option value="landscaping">Landscaping</option>
