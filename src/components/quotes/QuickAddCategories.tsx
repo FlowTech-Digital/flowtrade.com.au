@@ -123,7 +123,7 @@ export function QuickAddCategories({
       
       {availableCategories.length === 0 && !showCustomInput && (
         <p className="text-gray-500 text-sm">
-          All preset categories added. Use "Other..." to add custom.
+          All preset categories added. Use &ldquo;Other...&rdquo; to add custom.
         </p>
       )}
     </div>
