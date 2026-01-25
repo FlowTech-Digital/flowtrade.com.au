@@ -8,12 +8,14 @@ type QuickAddCategoriesProps = {
   tradeType: string | null
   onAddCategory: (categoryName: string) => void
   usedCategories?: string[]
+  onCustomCategoryAdded?: () => void
 }
 
 export function QuickAddCategories({
   tradeType,
   onAddCategory,
-  usedCategories = []
+  usedCategories = [],
+  onCustomCategoryAdded
 }: QuickAddCategoriesProps) {
   const { categories, loading, error, addCustomCategory } = useTradeCategories(tradeType)
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -48,15 +50,20 @@ export function QuickAddCategories({
     
     setSaving(true)
     try {
-      // Save to database for future use
-      const saved = await addCustomCategory(trimmed)
-      
-      if (saved) {
-        // Add to current quote
-        onAddCategory(trimmed)
-        setCustomValue('')
-        setShowCustomInput(false)
+      // Save to database for future use (skip if viewing 'custom' trade type)
+      if (tradeType !== 'custom') {
+        const saved = await addCustomCategory(trimmed)
+        
+        if (saved) {
+          // Notify parent that custom category was added
+          onCustomCategoryAdded?.()
+        }
       }
+      
+      // Add to current quote regardless
+      onAddCategory(trimmed)
+      setCustomValue('')
+      setShowCustomInput(false)
     } finally {
       setSaving(false)
     }
@@ -94,8 +101,8 @@ export function QuickAddCategories({
           </button>
         ))}
         
-        {/* Custom "Other" option */}
-        {!showCustomInput ? (
+        {/* Custom "Other" option - hide when viewing custom trade type */}
+        {tradeType !== 'custom' && !showCustomInput ? (
           <button
             type="button"
             onClick={() => setShowCustomInput(true)}
@@ -104,7 +111,7 @@ export function QuickAddCategories({
             <Plus className="h-3.5 w-3.5" />
             Other...
           </button>
-        ) : (
+        ) : showCustomInput ? (
           <div className="inline-flex items-center gap-1 bg-flowtrade-navy border border-flowtrade-cyan/50 rounded-full pl-3 pr-1 py-0.5">
             <input
               type="text"
@@ -140,10 +147,16 @@ export function QuickAddCategories({
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
-        )}
+        ) : null}
       </div>
       
-      {availableCategories.length === 0 && !showCustomInput && (
+      {availableCategories.length === 0 && tradeType === 'custom' && (
+        <p className="text-gray-500 text-sm">
+          No custom categories yet. Add some using other trade types!
+        </p>
+      )}
+      
+      {availableCategories.length === 0 && tradeType !== 'custom' && !showCustomInput && (
         <p className="text-gray-500 text-sm">
           All preset categories added. Use &ldquo;Other...&rdquo; to add custom.
         </p>

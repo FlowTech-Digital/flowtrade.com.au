@@ -12,6 +12,7 @@ export function useTradeCategories(tradeType: string | null) {
   const [categories, setCategories] = useState<TradeCategory[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasCustomCategories, setHasCustomCategories] = useState(false)
 
   const fetchCategories = useCallback(async () => {
     if (!tradeType) {
@@ -23,27 +24,45 @@ export function useTradeCategories(tradeType: string | null) {
     setError(null)
 
     try {
-      // Fetch default categories from API
-      const response = await fetch(`/api/trade-categories/${tradeType}`)
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch categories')
-      }
-
-      const defaultCategories = (data.categories || []).map((cat: TradeCategory) => ({
-        ...cat,
-        is_custom: false
-      }))
-
-      // Fetch user's custom categories from Supabase
       const supabase = createClient()
       let customCategories: TradeCategory[] = []
       
+      // Always fetch user's custom categories first
       if (supabase) {
         const { data: { user } } = await supabase.auth.getUser()
         
         if (user) {
+          // Check if user has ANY custom categories (for hasCustomCategories flag)
+          const { data: allCustomData } = await supabase
+            .from('user_custom_categories')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1)
+          
+          setHasCustomCategories((allCustomData || []).length > 0)
+          
+          // For 'custom' trade type, get ALL user's custom categories
+          if (tradeType === 'custom') {
+            const { data: customData } = await supabase
+              .from('user_custom_categories')
+              .select('id, category_name, trade_type')
+              .eq('user_id', user.id)
+              .order('category_name')
+            
+            customCategories = (customData || []).map((cat) => ({
+              id: cat.id,
+              category_name: cat.category_name,
+              display_order: 999,
+              is_custom: true
+            }))
+            
+            // For custom trade type, only return custom categories
+            setCategories(customCategories)
+            setLoading(false)
+            return
+          }
+          
+          // For other trade types, get custom categories for that trade type
           const { data: customData } = await supabase
             .from('user_custom_categories')
             .select('id, category_name')
@@ -59,6 +78,19 @@ export function useTradeCategories(tradeType: string | null) {
           }))
         }
       }
+
+      // Fetch default categories from API (skip for 'custom' trade type)
+      const response = await fetch(`/api/trade-categories/${tradeType}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch categories')
+      }
+
+      const defaultCategories = (data.categories || []).map((cat: TradeCategory) => ({
+        ...cat,
+        is_custom: false
+      }))
 
       // Combine: defaults first, then custom
       setCategories([...defaultCategories, ...customCategories])
@@ -76,7 +108,7 @@ export function useTradeCategories(tradeType: string | null) {
   }, [fetchCategories])
 
   const addCustomCategory = useCallback(async (categoryName: string): Promise<boolean> => {
-    if (!tradeType) return false
+    if (!tradeType || tradeType === 'custom') return false
     
     try {
       const supabase = createClient()
@@ -106,6 +138,9 @@ export function useTradeCategories(tradeType: string | null) {
         throw insertError
       }
 
+      // Update hasCustomCategories flag
+      setHasCustomCategories(true)
+      
       // Refresh categories
       await fetchCategories()
       return true
@@ -115,5 +150,42 @@ export function useTradeCategories(tradeType: string | null) {
     }
   }, [tradeType, fetchCategories])
 
-  return { categories, loading, error, addCustomCategory, refetch: fetchCategories }
+  return { categories, loading, error, addCustomCategory, refetch: fetchCategories, hasCustomCategories }
+}
+
+// Standalone hook to check if user has any custom categories
+export function useHasCustomCategories() {
+  const [hasCustom, setHasCustom] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function check() {
+      try {
+        const supabase = createClient()
+        if (!supabase) {
+          setLoading(false)
+          return
+        }
+        
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { data } = await supabase
+            .from('user_custom_categories')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1)
+          
+          setHasCustom((data || []).length > 0)
+        }
+      } catch (err) {
+        console.error('Error checking custom categories:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    check()
+  }, [])
+
+  return { hasCustomCategories: hasCustom, loading }
 }
