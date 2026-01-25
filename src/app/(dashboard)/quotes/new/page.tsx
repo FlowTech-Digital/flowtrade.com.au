@@ -23,6 +23,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { QuickAddCategories } from '@/components/quotes/QuickAddCategories'
+import { useHasCustomCategories } from '@/hooks/useTradeCategories'
 
 // Types
 type Customer = {
@@ -96,6 +97,13 @@ export default function CreateQuotePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [orgId, setOrgId] = useState<string | null>(null)
+  
+  // Check if user has custom categories (for showing Custom trade type option)
+  const { hasCustomCategories, loading: loadingCustomCheck } = useHasCustomCategories()
+  const [localHasCustom, setLocalHasCustom] = useState(false)
+  
+  // Combine server check with local state (for immediate UI update when adding first custom)
+  const showCustomTradeType = hasCustomCategories || localHasCustom
   
   // Customer search state
   const [customerSearch, setCustomerSearch] = useState('')
@@ -629,6 +637,10 @@ export default function CreateQuotePage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, trade: e.target.value }))}
                   className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
                 >
+                  {/* Custom option - only show if user has custom categories */}
+                  {showCustomTradeType && (
+                    <option value="custom" className="text-flowtrade-cyan">⭐ My Custom Categories</option>
+                  )}
                   <option value="general">General</option>
                   <option value="plumbing_drainage">Plumbing &amp; Drainage</option>
                   <option value="electrical">Electrical</option>
@@ -655,6 +667,10 @@ export default function CreateQuotePage() {
                   }))
                 }}
                 usedCategories={formData.line_items.map(item => item.description)}
+                onCustomCategoryAdded={() => {
+                  // Immediately show Custom trade type option when user adds their first custom category
+                  setLocalHasCustom(true)
+                }}
               />
             </div>
 
