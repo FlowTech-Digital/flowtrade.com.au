@@ -38,23 +38,26 @@ export function useTradeCategories(tradeType: string | null) {
 
       // Fetch user's custom categories from Supabase
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
       let customCategories: TradeCategory[] = []
-      if (user) {
-        const { data: customData } = await supabase
-          .from('user_custom_categories')
-          .select('id, category_name')
-          .eq('trade_type', tradeType)
-          .eq('user_id', user.id)
-          .order('category_name')
+      
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser()
         
-        customCategories = (customData || []).map((cat) => ({
-          id: cat.id,
-          category_name: cat.category_name,
-          display_order: 999,
-          is_custom: true
-        }))
+        if (user) {
+          const { data: customData } = await supabase
+            .from('user_custom_categories')
+            .select('id, category_name')
+            .eq('trade_type', tradeType)
+            .eq('user_id', user.id)
+            .order('category_name')
+          
+          customCategories = (customData || []).map((cat) => ({
+            id: cat.id,
+            category_name: cat.category_name,
+            display_order: 999,
+            is_custom: true
+          }))
+        }
       }
 
       // Combine: defaults first, then custom
@@ -77,6 +80,10 @@ export function useTradeCategories(tradeType: string | null) {
     
     try {
       const supabase = createClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+      
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
