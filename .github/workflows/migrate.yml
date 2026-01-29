@@ -1,11 +1,10 @@
-name: Run Database Migration
+name: Run Database Migration (DISABLED - Manual Only)
+
+# DISABLED: Auto-trigger removed to prevent CI/CD failure notifications
+# Production migrations run via flowtrade-sql MCP tool, not GitHub Actions
+# Re-enable path trigger when SUPABASE_DATABASE_URL secret is fully validated
 
 on:
-  push:
-    paths:
-      - 'supabase/migrations/*.sql'
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       migration_file:
