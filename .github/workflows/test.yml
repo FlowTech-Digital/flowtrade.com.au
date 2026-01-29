@@ -1,15 +1,10 @@
 name: FlowTrade Automated Tests
 
+# DISABLED: Requires Supabase secrets configuration
+# Re-enable by adding push/PR triggers when test infrastructure is ready
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-  schedule:
-    # Run daily at 6 AM AEST (8 PM UTC previous day)
-    - cron: '0 20 * * *'
   workflow_dispatch:
-    # Manual trigger option
+    # Manual trigger only - secrets not configured
 
 env:
   TEST_URL: https://flowtrade.com.au
