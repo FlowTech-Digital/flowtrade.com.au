@@ -39,10 +39,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Load public build env from wrangler.toml
         run: awk -F' = ' '/^NEXT_PUBLIC_/ { gsub(/"/,"",$2); print $1"="$2 }' wrangler.toml >> "$GITHUB_ENV"
