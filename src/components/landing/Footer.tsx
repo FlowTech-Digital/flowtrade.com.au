@@ -12,10 +12,10 @@ export default function Footer() {
               <FlowTradeLogo width={140} height={24} />
             </div>
             <p className="text-flowtrade-slate text-sm mb-4">
-              Trade management made simple for Australian tradies.
+              Job management made simple for Australian tradies.
             </p>
             <div className="flex items-center space-x-2">
-              <span className="text-lg">🇦🇺</span>
+              <span className="text-lg">\ud83c\udde6\ud83c\uddfa</span>
               <span className="text-flowtrade-slate text-sm">Made in Australia</span>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function Footer() {
         <div className="border-t border-flowtrade-navy mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-flowtrade-slate text-sm">
-              © 2025 FlowTech AI PTY LTD (ABN: 76689878420). All rights reserved.
+              \u00a9 2026 FlowTech AI PTY LTD (ABN: 76689878420). All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
               <a href="#" className="text-flowtrade-slate hover:text-flowtrade-light text-sm transition-colors">

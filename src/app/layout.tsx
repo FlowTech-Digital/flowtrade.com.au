@@ -1,21 +1,31 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { IBM_Plex_Sans, Michroma } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { Providers } from '@/providers/Providers'
 
-const inter = Inter({ 
+const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm-plex-sans',
+  display: 'swap',
+})
+
+const michroma = Michroma({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-michroma',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'FlowTrade - Smart Estimating for Australian Trades',
+    default: 'FlowTrade — Quote · Schedule · Invoice',
     template: '%s | FlowTrade',
   },
-  description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades. Create professional quotes in minutes, not hours.',
-  keywords: ['quoting software', 'estimating', 'HVAC', 'electrical', 'plumbing', 'trades', 'Australia'],
+  description:
+    'Job-management software for Australian trades. Quote, schedule, invoice and track every job from first quote to paid invoice — all from your phone.',
+  keywords: ['job management', 'quoting', 'scheduling', 'invoicing', 'trades', 'electricians', 'plumbers', 'HVAC', 'Australia'],
   authors: [{ name: 'FlowTrade' }],
   creator: 'FlowTrade',
   publisher: 'FlowTech AI PTY LTD',
@@ -30,22 +40,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_AU',
     url: 'https://flowtrade.com.au',
-    title: 'FlowTrade - Smart Estimating for Australian Trades',
-    description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades.',
+    title: 'FlowTrade — Quote · Schedule · Invoice',
+    description:
+      'Job-management software for Australian trades — quoting, scheduling, invoicing and job tracking.',
     siteName: 'FlowTrade',
     images: [
       {
         url: 'https://flowtrade.com.au/og-image-v5.png',
         width: 1200,
         height: 630,
-        alt: 'FlowTrade - Smart Estimating for Australian Trades',
+        alt: 'FlowTrade — Quote · Schedule · Invoice',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FlowTrade - Smart Estimating for Australian Trades',
-    description: 'AI-powered quoting and estimating software for HVAC, Electrical, and Plumbing trades.',
+    title: 'FlowTrade — Quote · Schedule · Invoice',
+    description:
+      'Job-management software for Australian trades — quoting, scheduling, invoicing and job tracking.',
     images: ['https://flowtrade.com.au/og-image-v5.png'],
   },
   robots: {
@@ -60,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${ibmPlexSans.variable} ${michroma.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
           {children}

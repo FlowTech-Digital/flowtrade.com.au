@@ -50,26 +50,27 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // FlowTrade Brand Colors (Official Guidelines)
+        // FlowTrade Brand Colours — v3.2 green system (LOCKED).
+        // Key names retained for compatibility; values are the green gradient + neutrals.
         flowtrade: {
-          // Primary cyan
-          cyan: '#00D4FF',
-          'cyan-dark': '#00B8E6',
-          'cyan-light': '#33DDFF',
-          // Dark backgrounds (gradient for visual hierarchy)
-          dark: '#0A1628',
-          navy: '#0F2744',
-          'navy-dark': '#0a1628',      // Darkest - main background
-          'navy-light': '#1a2744',      // Card backgrounds - LIGHTENED for contrast
-          'navy-lighter': '#243856',    // Borders, dividers - ENHANCED visibility
-          'navy-border': '#2a4a73',     // High contrast borders
-          'navy-hover': '#1e3352',      // Hover states
+          // Division green gradient (deep / mid / bright)
+          cyan: '#00955A',          // mid (primary brand green)
+          'cyan-dark': '#0A5C3A',   // deep
+          'cyan-light': '#1FC56F',  // bright
+          // Dark neutrals (Obsidian/Ink)
+          dark: '#0B1114',          // Obsidian - main background
+          navy: '#1A2230',          // Ink
+          'navy-dark': '#0B1114',   // Obsidian
+          'navy-light': '#1A2230',  // Ink - card backgrounds
+          'navy-lighter': '#2A3340',// borders, dividers
+          'navy-border': '#34404F', // high-contrast borders
+          'navy-hover': '#222C39',  // hover states
           // Neutral tones
-          slate: '#64748B',
-          light: '#E2E8F0',
-          // Accent
-          orange: '#F97316',
-          'orange-dark': '#EA580C',
+          slate: '#5B6675',         // Slate
+          light: '#E7ECF2',         // Mist
+          // Accent (remapped off orange -> green)
+          orange: '#1FC56F',
+          'orange-dark': '#00955A',
         },
       },
       borderRadius: {
@@ -78,14 +79,15 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-ibm-plex-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-michroma)', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        // Custom shadows for card depth - ENHANCED
-        'card': '0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(42, 74, 115, 0.5)',
-        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 212, 255, 0.3)',
+        // Custom shadows for card depth
+        'card': '0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(52, 64, 79, 0.5)',
+        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(31, 197, 111, 0.3)',
         'section': '0 1px 3px rgba(0, 0, 0, 0.3)',
-        'glow-cyan': '0 0 20px rgba(0, 212, 255, 0.25)',
+        'glow-cyan': '0 0 20px rgba(31, 197, 111, 0.25)',
       },
       keyframes: {
         'accordion-down': {
