@@ -1,0 +1,66 @@
+name: Deploy — CloudFlare Pages
+
+on:
+  push:
+    branches-ignore:
+      - main            # main never auto-deploys — production stays gated
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deploy target"
+        type: choice
+        options: [preview, production]
+        default: preview
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # 'production' env (manual + production target) can carry required reviewers in repo settings
+    environment: ${{ (github.event_name == 'workflow_dispatch' && inputs.target == 'production') && 'production' || 'preview' }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # production always builds from main; everything else builds the pushed/selected ref
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.target == 'production') && 'main' || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Load public build env from wrangler.toml
+        run: awk -F' = ' '/^NEXT_PUBLIC_/ { gsub(/"/,"",$2); print $1"="$2 }' wrangler.toml >> "$GITHUB_ENV"
+
+      - name: Build (OpenNext for CloudFlare)
+        run: npm run cf:build
+
+      - name: Resolve deploy branch
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target }}" = "production" ]; then
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to CloudFlare Pages
+        run: >
+          npx wrangler pages deploy .open-next
+          --project-name flowtrade-com-au
+          --branch "${{ steps.meta.outputs.branch }}"
