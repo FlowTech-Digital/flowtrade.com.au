@@ -1,16 +1,16 @@
-# FlowTrade - Trade Automation, Simplified
+# FlowTrade — Quote · Schedule · Invoice
 
-[![Deploy](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/deploy.yml/badge.svg)](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/deploy.yml)
+[![CI](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/test.yml/badge.svg)](https://github.com/FlowTech-Digital/flowtrade.com.au/actions/workflows/test.yml)
 
-AI-powered automation platform for Australian trades businesses.
+Job-management software for Australian trades businesses — quoting, scheduling, invoicing and job tracking, from first quote to paid invoice.
 
 ## Overview
 
-FlowTrade streamlines operations for trades businesses with intelligent automation:
+FlowTrade helps tradies run the day-to-day of the business from their phone:
 
-- **Smart Quoting** - 75% faster estimates with AI-powered calculations
-- **Route Optimization** - 30% reduction in travel time and fuel costs  
-- **Compliance** - Automated safety, licensing, and payroll management
+- **Quoting** — professional, branded quotes in minutes, with templates, photos and material lists.
+- **Scheduling** — drag-and-drop job scheduling, team dispatch and real-time status, online or offline.
+- **Invoicing** — one-tap quote-to-invoice, Xero/MYOB sync, on-site card payments and automatic reminders.
 
 ## Links
 
@@ -43,12 +43,25 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 14 (App Router) |
-| Database | Supabase (PostgreSQL) |
+| Framework | Next.js 14 (App Router) + TypeScript |
+| Database | Supabase (PostgreSQL, RLS enforced) |
 | Auth | Supabase Auth |
 | Styling | Tailwind CSS |
-| Hosting | CloudFlare Pages |
+| Hosting | CloudFlare Pages (via OpenNext) |
 | CI/CD | GitHub Actions |
+
+## Deployment
+
+Production deploys are driven by **CloudFlare Pages Git-integration**: every push to `main`
+triggers an OpenNext build (`nodejs_compat`) and deploy of the `flowtrade` Pages project.
+Branch pushes produce CloudFlare **preview** deployments for review before merge.
+
+Notes:
+- `.github/workflows/deploy.yml` is an intentional empty placeholder — deploys are handled by
+  CloudFlare's Git-integration, not by a GitHub Actions deploy job. (`test.yml` runs CI;
+  `migrate.yml` runs Supabase migrations.)
+- `.redeploy-trigger` and `.cloudflare-rebuild` are no-op marker files; touching one and pushing
+  forces CloudFlare to run a fresh build when a content-free rebuild is needed.
 
 ## Project Structure
 
@@ -64,34 +77,28 @@ flowtrade.com.au/
 │   ├── services/      # API service layer
 │   └── types/         # TypeScript definitions
 ├── supabase/
-│   ├── migrations/    # Database migrations
+│   ├── migrations/    # Database migrations (RLS enforced)
 │   └── config.toml    # Supabase config
 ├── public/            # Static assets
 ├── tests/             # Test files
 └── docs/              # Documentation
 ```
 
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [User Guide](docs/USER_GUIDE.md) | End-user features and workflows |
-| [Architecture](docs/ARCHITECTURE.md) | System design and data flow |
-| [Database Schema](docs/DATABASE_SCHEMA.md) | Supabase tables and relationships |
-| [Development](docs/DEVELOPMENT.md) | Local setup and contribution guide |
-| [Deployment](docs/DEPLOYMENT.md) | CloudFlare Pages and CI/CD |
-| [API Reference](docs/API.md) | API endpoints and usage |
-| [Environment](docs/ENVIRONMENT.md) | Environment variables |
-
-## Brand
+## Brand (v3.2 — FlowTrade green · v4.1 TRADE mark)
 
 | Element | Value |
 |---------|-------|
-| Primary Cyan | `#00D4FF` |
-| Secondary Teal | `#00B4D8` |
-| Dark Background | `#0A1628` |
-| Heading Font | Montserrat |
-| Body Font | Inter |
+| Gradient (deep → mid → bright) | `#0A5C3A` → `#00955A` → `#1FC56F` |
+| Obsidian (background) | `#0B1114` |
+| Ink (cards) | `#1A2230` |
+| Slate | `#5B6675` |
+| Mist (text on dark) | `#E7ECF2` |
+| Wordmark / short caps | Michroma |
+| Headings / body / UI | IBM Plex Sans |
+| Tagline (LOCKED) | Quote · Schedule · Invoice |
+
+Canonical brand source: FlowTech Group Brand Guideline (v3.2 colour §5, typography §6;
+v4-final · TRADE v4.1 logo system).
 
 ## Analytics
 
@@ -101,8 +108,8 @@ flowtrade.com.au/
 
 ## Part of FlowTech AI
 
-FlowTrade is a division of [FlowTech AI](https://flowtechai.com.au) - Multi-Agent Automation.
+FlowTrade is a division of [FlowTech AI](https://flowtechai.com.au) — *Intelligence Behind the System*.
 
 ---
 
-© 2025 FlowTech AI PTY LTD | ABN: 76689878420
+© 2026 FlowTech AI PTY LTD | ABN: 76689878420
