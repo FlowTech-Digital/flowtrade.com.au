@@ -89,10 +89,10 @@ export default function Footer() {
               © 2026 FlowTech AI PTY LTD (ABN: 76689878420). All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
-              <a href="#" className="text-flowtrade-slate hover:text-flowtrade-light text-sm transition-colors">
+              <a href="/privacy-policy" className="text-flowtrade-slate hover:text-flowtrade-light text-sm transition-colors">
                 Privacy Policy
               </a>
-              <a href="#" className="text-flowtrade-slate hover:text-flowtrade-light text-sm transition-colors">
+              <a href="/terms" className="text-flowtrade-slate hover:text-flowtrade-light text-sm transition-colors">
                 Terms of Service
               </a>
             </div>
