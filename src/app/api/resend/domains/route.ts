@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily create Resend client on first use (avoids build-time construction)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     // Create domain in Resend
-    const { data: domainData, error: resendError } = await resend.domains.create({
+    const { data: domainData, error: resendError } = await getResend().domains.create({
       name: domain,
     });
 

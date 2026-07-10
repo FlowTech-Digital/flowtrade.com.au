@@ -10,7 +10,10 @@ function getSupabaseClient() {
   );
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+// Lazily create Stripe client on first use (avoids build-time construction)
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '');
+}
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 // Webhook event logger for audit trail
@@ -36,6 +39,7 @@ async function logWebhookEvent(
 
 export async function POST(request: NextRequest) {
   const supabase = getSupabaseClient();
+  const stripe = getStripe();
   let eventId = 'unknown';
   let eventType = 'unknown';
 
