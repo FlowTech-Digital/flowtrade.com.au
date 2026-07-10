@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily create Resend client on first use (avoids build-time construction)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(
   _request: Request,
@@ -10,6 +13,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const resend = getResend();
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });

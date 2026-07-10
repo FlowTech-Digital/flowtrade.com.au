@@ -7,7 +7,10 @@ import { Resend } from 'resend'
 import { InvoiceEmail } from '@/lib/email/templates/InvoiceEmail'
 import { generatePortalToken } from '@/lib/portal/tokens'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazily create Resend client on first use (avoids build-time construction)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export async function POST(
   _request: Request,
@@ -140,7 +143,7 @@ export async function POST(
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'FlowTrade <invoices@resend.dev>'
 
     // Send email via Resend
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    const { data: emailData, error: emailError } = await getResend().emails.send({
       from: fromEmail,
       to: invoice.customer.email,
       subject: `Invoice ${invoice.invoice_number} from ${businessName}`,

@@ -3,10 +3,13 @@
 
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazily initialise Resend client on first use so `next build` page-data
+// collection doesn't require RESEND_API_KEY at build time
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
-export { resend }
+export { getResend }
 
 // Email configuration - Production (flowtrade.com.au verified)
 export const EMAIL_CONFIG = {
