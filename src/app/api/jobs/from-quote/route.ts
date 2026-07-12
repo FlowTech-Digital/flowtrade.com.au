@@ -78,11 +78,13 @@ export async function POST(request: NextRequest) {
 
     const jobNumber = jobNumberResult || `JOB-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Date.now().toString().slice(-4)}`
 
-    // Build job notes from quote description and line items
-    const jobNotesContent = quote.job_description || 
-      (quote.line_items && quote.line_items.length > 0
-        ? quote.line_items.map((item: { description: string }) => item.description).join('\n')
-        : `Job created from quote ${quote.quote_number}`)
+    // Build job notes from the quote description.
+    // NOTE: this used to fall back to flattening the quote's line items into a
+    // newline-joined STRING. That destroyed the structured line items at the
+    // quote -> job boundary, which is why invoice_line_items was empty for every
+    // invoice. The line items are now copied properly into job_line_items below;
+    // job_notes is just a note again.
+    const jobNotesContent = quote.job_description || `Job created from quote ${quote.quote_number}`
 
     // Create the job - ONLY use columns that exist in jobs table schema
     // Schema verified columns: org_id, quote_id, customer_id, property_id, job_number,
@@ -117,6 +119,64 @@ export async function POST(request: NextRequest) {
         { error: `Failed to create job: ${createError.message}` },
         { status: 500 }
       )
+    }
+
+    // Copy the quote's line items onto the job.
+    //
+    // The job is the editable stage: the tradie adjusts these (variations, extra
+    // materials, actual hours) and the invoice is then built from them. Optional
+    // items are carried across with is_optional intact so they can be kept or
+    // removed once the customer decides.
+    if (quote.line_items && quote.line_items.length > 0) {
+      const jobLineItems = quote.line_items.map((item: {
+        id: string
+        item_order: number | null
+        item_type: string | null
+        category: string | null
+        description: string
+        detailed_notes: string | null
+        quantity: number
+        unit: string | null
+        unit_cost: number | null
+        unit_price: number
+        markup_percent: number | null
+        line_total: number
+        line_cost: number | null
+        supplier_name: string | null
+        supplier_sku: string | null
+        is_taxable: boolean | null
+        is_optional: boolean | null
+      }, index: number) => ({
+        job_id: newJob.id,
+        item_order: item.item_order ?? index + 1,
+        item_type: item.item_type,
+        category: item.category,
+        description: item.description,
+        detailed_notes: item.detailed_notes,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_cost: item.unit_cost,
+        unit_price: item.unit_price,
+        markup_percent: item.markup_percent,
+        line_total: item.line_total,
+        line_cost: item.line_cost,
+        supplier_name: item.supplier_name,
+        supplier_sku: item.supplier_sku,
+        is_taxable: item.is_taxable ?? true,
+        is_optional: item.is_optional ?? false,
+        source_quote_line_item_id: item.id,
+      }))
+
+      const { error: lineItemsError } = await supabase
+        .from('job_line_items')
+        .insert(jobLineItems)
+
+      if (lineItemsError) {
+        // Do not fail the conversion - the job exists and is usable - but this
+        // must be loud, because a silent failure here is exactly the bug that
+        // left every invoice with no line detail.
+        console.error('Failed to copy quote line items onto job:', lineItemsError)
+      }
     }
 
     // Log activity for the new job
