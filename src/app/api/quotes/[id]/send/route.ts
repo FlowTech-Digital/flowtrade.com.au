@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { QuoteEmail } from '@/lib/email/templates/QuoteEmail'
 import { EMAIL_CONFIG } from '@/lib/email'
+import { buildQuotePDFBase64 } from '@/lib/pdf/server/buildQuotePDF'
+import { orgToBusinessInfo } from '@/lib/pdf/server/orgBusinessInfo'
 
 // Create Supabase client inside handler (edge runtime requires this)
 function getSupabaseClient() {
@@ -155,12 +157,40 @@ export async function POST(
     // Use centralized EMAIL_CONFIG for from address
     const fromAddress = `${businessName} <${EMAIL_CONFIG.fromDomain}>`
 
-    // Send email via Resend with portal link
+    // Build the quote PDF so it can be attached. This is the same document the
+    // customer portal serves, via the shared server-safe builder.
+    const { data: pdfLineItems } = await supabase
+      .from('quote_line_items')
+      .select('*')
+      .eq('quote_id', quoteId)
+      .order('item_order')
+
+    // The email body says "Please find your quote attached", so a missing PDF is
+    // not something to shrug off - fail loudly rather than send a lie.
+    let quotePdfBase64: string
+    try {
+      quotePdfBase64 = buildQuotePDFBase64({
+        quote: quoteData,
+        lineItems: pdfLineItems || [],
+        org: orgToBusinessInfo(quoteData.organization),
+      })
+    } catch (pdfError) {
+      console.error('Quote PDF build failed:', pdfError)
+      return NextResponse.json(
+        { error: 'Could not generate the quote PDF, so the quote was not sent. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    // Send email via Resend with portal link + the quote PDF attached
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: quoteData.customer.email,
       replyTo: quoteData.organization?.email || EMAIL_CONFIG.replyTo,
       subject: `Quote ${quoteData.quote_number} from ${businessName}`,
+      attachments: [
+        { filename: `${quoteData.quote_number}.pdf`, content: quotePdfBase64 },
+      ],
       react: QuoteEmail({
         customerName,
         quoteNumber: quoteData.quote_number,
