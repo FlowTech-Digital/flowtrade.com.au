@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { InvoiceEmail } from '@/lib/email/templates/InvoiceEmail'
 import { generatePortalToken } from '@/lib/portal/tokens'
+import { buildInvoicePDFBase64 } from '@/lib/pdf/server/buildInvoicePDF'
+import { orgToBusinessInfo } from '@/lib/pdf/server/orgBusinessInfo'
 
 // Lazily create Resend client on first use (avoids build-time construction)
 function getResend() {
@@ -44,7 +46,11 @@ export async function POST(
           last_name,
           company_name,
           email,
-          phone
+          phone,
+          street_address,
+          suburb,
+          state,
+          postcode
         ),
         job:jobs(
           id,
@@ -55,7 +61,14 @@ export async function POST(
           id,
           name,
           email,
-          phone
+          phone,
+          abn,
+          address_line1,
+          address_line2,
+          suburb,
+          state,
+          postcode,
+          logo_url
         )
       `)
       .eq('id', id)
@@ -142,11 +155,39 @@ export async function POST(
     // Get from email from env or fallback
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'FlowTrade <invoices@resend.dev>'
 
+    // Build the invoice PDF so it can be attached - the same document the portal
+    // serves, via the shared server-safe builder.
+    const { data: pdfLineItems } = await supabase
+      .from('invoice_line_items')
+      .select('*')
+      .eq('invoice_id', id)
+      .order('item_order')
+
+    // The email body says "Please find your invoice attached", so a missing PDF
+    // is not something to shrug off - fail loudly rather than send a lie.
+    let invoicePdfBase64: string
+    try {
+      invoicePdfBase64 = await buildInvoicePDFBase64({
+        invoice,
+        lineItems: pdfLineItems || [],
+        businessInfo: orgToBusinessInfo(invoice.org) || undefined,
+      })
+    } catch (pdfError) {
+      console.error('Invoice PDF build failed:', pdfError)
+      return NextResponse.json(
+        { error: 'Could not generate the invoice PDF, so the invoice was not sent. Please try again.' },
+        { status: 500 }
+      )
+    }
+
     // Send email via Resend
     const { data: emailData, error: emailError } = await getResend().emails.send({
       from: fromEmail,
       to: invoice.customer.email,
       subject: `Invoice ${invoice.invoice_number} from ${businessName}`,
+      attachments: [
+        { filename: `${invoice.invoice_number}.pdf`, content: invoicePdfBase64 },
+      ],
       react: InvoiceEmail({
         customerName: getCustomerName(),
         invoiceNumber: invoice.invoice_number,
@@ -178,8 +219,10 @@ export async function POST(
         .eq('id', id)
     }
 
-    // Log the email send with portal URL
-    await supabase.from('invoice_events').insert({
+    // Log the email send with portal URL.
+    // NOTE: invoice_events did not exist until 2026-07-12 - every insert here
+    // failed silently because the error was never checked. It is checked now.
+    const { error: eventError } = await supabase.from('invoice_events').insert({
       invoice_id: id,
       event_type: 'email_sent',
       event_data: {
@@ -189,6 +232,10 @@ export async function POST(
         resend_id: emailData?.id
       }
     })
+
+    if (eventError) {
+      console.error('invoice_events insert failed:', eventError)
+    }
 
     return NextResponse.json({
       success: true,
