@@ -34,11 +34,15 @@ export async function GET(
       );
     }
 
-    // Get the quote
+    // Get the quote.
+    // NOTE: this used to read tokenData.quote_id - a column that does not exist
+    // on portal_tokens (the FK is `resource_id`). It resolved to undefined, so
+    // this route returned "Quote not found" on EVERY request: the customer's
+    // "Download PDF" button in QuotePortalView has never once worked.
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select('*, customer:customers(*)')
-      .eq('id', tokenData.quote_id)
+      .eq('id', tokenData.resource_id)
       .single();
 
     if (quoteError || !quote) {
