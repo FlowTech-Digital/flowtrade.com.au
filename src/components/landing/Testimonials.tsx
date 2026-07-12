@@ -1,7 +1,7 @@
 const principles = [
   {
     title: 'Quote from the van',
-    body: 'Build a quote on site while the job is still fresh - line items, materials and your saved formulas, priced and sent before you drive away.',
+    body: 'Build a quote on site while the job is still fresh — line items, materials and your saved formulas, priced and sent before you drive away.',
   },
   {
     title: 'Your customer just clicks',
@@ -9,7 +9,7 @@ const principles = [
   },
   {
     title: 'Accepted quote becomes the job',
-    body: 'No re-typing. An accepted quote turns into a scheduled job, and the job turns into an invoice - the same numbers the whole way through.',
+    body: 'No re-typing. An accepted quote turns into a scheduled job, and the job turns into an invoice — the same numbers the whole way through.',
   },
 ]
 
@@ -23,7 +23,7 @@ export default function Testimonials() {
             Built for Australian trades
           </h2>
           <p className="text-xl text-flowtrade-slate max-w-2xl mx-auto">
-            Quote, schedule and invoice in one run - without the paperwork night.
+            Quote, schedule and invoice in one run — without the paperwork night.
           </p>
         </div>
 

@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
 
     setDone(true)
     setLoading(false)
-    // updateUser leaves the user signed in - send them straight to the app.
+    // updateUser leaves the user signed in — send them straight to the app.
     setTimeout(() => router.push('/dashboard'), 1500)
   }
 
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
               disabled={loading}
               className="w-full rounded-lg bg-flowtrade-cyan px-4 py-2 font-semibold text-flowtrade-navy transition hover:opacity-90 disabled:opacity-50"
             >
-              {loading ? 'Updating...' : 'Update password'}
+              {loading ? 'Updating…' : 'Update password'}
             </button>
           </form>
         )}
