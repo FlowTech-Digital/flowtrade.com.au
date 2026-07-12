@@ -94,12 +94,59 @@ export async function POST(request: NextRequest) {
     }
 
     const invoiceNumber = await generateInvoiceNumber(supabase, userData.org_id)
-    
-    // Use actual_total if available, otherwise quoted_total
-    const subtotal = job.actual_total || job.quoted_total || 0
-    const gstRate = 0.10  // 10% GST
-    const gstAmount = subtotal * gstRate
-    const total = subtotal + gstAmount
+
+    // Pull the job's line items - these are the editable lines the tradie
+    // adjusted on the job (variations, extra materials, actual hours).
+    const { data: jobLineItems, error: jobLineItemsError } = await supabase
+      .from('job_line_items')
+      .select('*')
+      .eq('job_id', job_id)
+      .order('item_order')
+
+    if (jobLineItemsError) {
+      console.error('Failed to read job line items:', jobLineItemsError)
+    }
+
+    // Only bill lines that are actually being charged: optional lines the
+    // customer did not take should be removed on the job, but guard anyway.
+    const billableLines = (jobLineItems || []).filter(
+      (item: { is_optional?: boolean | null }) => !item.is_optional
+    )
+
+    const gstRate = 0.10 // 10% GST
+
+    // GST IS APPLIED TO THE WHOLE SUBTOTAL - deliberately NOT per-line is_taxable.
+    //
+    // quote_line_items.is_taxable defaults to true but the app writes `false` on
+    // almost every line (39 of 40 rows in production), and the quote engine
+    // ignores the column entirely: quotes.gst_amount is subtotal * quotes.tax_rate,
+    // which comes out at exactly 10% on 23 of 24 quotes.
+    //
+    // So honouring per-line is_taxable here would bill $0 GST on an invoice whose
+    // quote charged 10% - i.e. an Australian tax invoice understating GST. The
+    // invoice must agree with the quote. Revisit only once is_taxable is real
+    // (see the punch-list item on the quote UI writing it false).
+    let subtotal: number
+    let gstAmount: number
+
+    if (billableLines.length > 0) {
+      subtotal = billableLines.reduce(
+        (sum: number, item: { line_total?: number | null }) => sum + Number(item.line_total || 0),
+        0
+      )
+      gstAmount = subtotal * gstRate
+    } else {
+      // No line items on the job (e.g. a job created before the chain was
+      // fixed, or a job entered without lines). Fall back to the job totals.
+      subtotal = job.actual_total || job.quoted_total || 0
+      gstAmount = subtotal * gstRate
+    }
+
+    // Round to cents - floating point sums otherwise leak fractions of a cent
+    // into a financial document.
+    subtotal = Math.round(subtotal * 100) / 100
+    gstAmount = Math.round(gstAmount * 100) / 100
+    const total = Math.round((subtotal + gstAmount) * 100) / 100
     
     // Calculate due date (14 days from now)
     const dueDate = new Date()
@@ -125,6 +172,55 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       return NextResponse.json({ error: createError.message }, { status: 500 })
+    }
+
+    // Copy the job's line items onto the invoice.
+    //
+    // This never happened before: invoices/from-job wrote an invoice with a
+    // total and no lines, so invoice_line_items was empty for every invoice and
+    // the invoice PDF rendered an empty table.
+    if (billableLines.length > 0) {
+      const invoiceLineItems = billableLines.map(
+        (
+          item: {
+            item_order?: number | null
+            description: string
+            quantity: number
+            unit?: string | null
+            unit_price: number
+            line_total: number
+            is_taxable?: boolean | null
+          },
+          index: number
+        ) => ({
+          invoice_id: invoice.id,
+          item_order: item.item_order ?? index + 1,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          unit_price: item.unit_price,
+          line_total: item.line_total,
+          is_taxable: item.is_taxable ?? true,
+        })
+      )
+
+      const { error: invoiceLineItemsError } = await supabase
+        .from('invoice_line_items')
+        .insert(invoiceLineItems)
+
+      if (invoiceLineItemsError) {
+        // The invoice exists but has no detail - that is exactly the failure we
+        // are fixing, so surface it rather than swallowing it.
+        console.error('Failed to copy job line items onto invoice:', invoiceLineItemsError)
+        return NextResponse.json(
+          {
+            error: 'Invoice was created but its line items could not be saved.',
+            details: invoiceLineItemsError.message,
+            invoice_id: invoice.id,
+          },
+          { status: 500 }
+        )
+      }
     }
 
     // Update job status to 'invoiced' if it was 'completed'
