@@ -2,23 +2,30 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ForgotPasswordPage() {
+  const { resetPassword } = useAuth()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
-    // TODO: Implement Supabase password reset
-    // Password reset request for email will be logged server-side
-    
-    setTimeout(() => {
+    setError(null)
+
+    const { error: resetError } = await resetPassword(email)
+
+    if (resetError) {
+      setError(resetError.message)
       setLoading(false)
-      setSent(true)
-    }, 1000)
+      return
+    }
+
+    setLoading(false)
+    setSent(true)
   }
 
   if (sent) {
@@ -47,6 +54,12 @@ export default function ForgotPasswordPage() {
             Enter your email and we&apos;ll send you a reset link
           </p>
         </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
