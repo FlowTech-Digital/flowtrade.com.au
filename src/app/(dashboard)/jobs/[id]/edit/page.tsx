@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
+import JobLineItems from '@/components/jobs/JobLineItems'
 import {
   ArrowLeft,
   Save,
@@ -97,6 +98,15 @@ export default function EditJobPage() {
   const router = useRouter()
   const params = useParams()
   const jobId = params.id as string
+  // When a job has line items, THEY are the source of truth for actual_total -
+  // the manual field below must not be allowed to drift away from the lines the
+  // invoice is built from.
+  const [lineCount, setLineCount] = useState(0)
+  const [lineSubtotal, setLineSubtotal] = useState(0)
+  const handleLinesChanged = useCallback((count: number, subtotal: number) => {
+    setLineCount(count)
+    setLineSubtotal(subtotal)
+  }, [])
 
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
@@ -233,7 +243,13 @@ export default function EditJobPage() {
       scheduled_date: formData.scheduled_date || null,
       scheduled_time_start: formData.scheduled_time_start ? `${formData.scheduled_time_start}:00` : null,
       scheduled_time_end: formData.scheduled_time_end ? `${formData.scheduled_time_end}:00` : null,
-      actual_total: formData.actual_total ? parseFloat(formData.actual_total) : null,
+      // Line items win: never overwrite the line-derived total with the manual box.
+      actual_total:
+        lineCount > 0
+          ? lineSubtotal
+          : formData.actual_total
+            ? parseFloat(formData.actual_total)
+            : null,
       invoice_number: formData.invoice_number || null,
       payment_method: formData.payment_method || null,
       job_notes: formData.job_notes || null,
@@ -409,18 +425,42 @@ export default function EditJobPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Actual Total ($)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.actual_total}
-                  onChange={(e) => setFormData(prev => ({ ...prev, actual_total: e.target.value }))}
-                  placeholder="Enter actual total"
-                  className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
-                />
+                {lineCount > 0 ? (
+                  <>
+                    <div className="px-4 py-2 bg-flowtrade-navy-lighter rounded-lg text-white">
+                      {formatCurrency(lineSubtotal)}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Derived from the line items below - edit those to change it.
+                    </p>
+                  </>
+                ) : (
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.actual_total}
+                    onChange={(e) => setFormData(prev => ({ ...prev, actual_total: e.target.value }))}
+                    placeholder="Enter actual total"
+                    className="w-full px-4 py-2 bg-flowtrade-navy border border-flowtrade-navy-lighter rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-flowtrade-cyan"
+                  />
+                )}
               </div>
             </div>
           </div>
+
+          {/* Line Items - the editable stage.
+              Quote line items are copied here on conversion; adjust them for
+              variations and actual work done. The invoice is built from these
+              lines, so what is saved here is what gets billed. */}
+          <JobLineItems
+            jobId={jobId}
+            locked={job.status === 'invoiced'}
+            onLinesChanged={handleLinesChanged}
+            onTotalsSaved={(actualTotal) =>
+              setFormData((prev) => ({ ...prev, actual_total: actualTotal.toString() }))
+            }
+          />
 
           {/* Invoice */}
           <div className="bg-flowtrade-navy-light rounded-xl border border-flowtrade-navy-lighter p-6">
